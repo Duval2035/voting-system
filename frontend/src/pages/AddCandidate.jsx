@@ -10,32 +10,33 @@ const AddCandidate = () => {
     fullName: "",
     position: "",
     biography: "",
-    image: null,
+    imageUrl: "", // New field for image URL
   });
 
   const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    setFormData({
-      ...formData,
-      [name]: files ? files[0] : value,
-    });
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const data = new FormData();
-    data.append("fullName", formData.fullName);
-    data.append("position", formData.position);
-    data.append("biography", formData.biography);
-    data.append("image", formData.image);
+    const payload = {
+      fullName: formData.fullName,
+      position: formData.position,
+      biography: formData.biography,
+      imageUrl: formData.imageUrl,
+    };
 
     try {
       const response = await fetch(
         `http://localhost:5000/api/elections/${electionId}/candidates`,
         {
           method: "POST",
-          body: data,
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
         }
       );
 
@@ -85,12 +86,13 @@ const AddCandidate = () => {
           />
         </label>
         <label>
-          Image:
+          Image URL:
           <input
-            type="file"
-            name="image"
-            accept="image/*"
+            type="url"
+            name="imageUrl"
+            value={formData.imageUrl}
             onChange={handleChange}
+            placeholder="Paste image URL here (e.g. https://imgur.com/xyz.png)"
             required
           />
         </label>

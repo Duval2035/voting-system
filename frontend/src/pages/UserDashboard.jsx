@@ -1,57 +1,56 @@
-import React, { useState, useEffect } from "react";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
+// src/pages/UserDashboard.jsx
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import API_BASE_URL from "../config";
 import "./UserDashboard.css";
 
 const UserDashboard = () => {
-  const [userPolls, setUserPolls] = useState([]);
-  const [userStatus, setUserStatus] = useState({});
+  const [elections, setElections] = useState([]);
+  const organizationName = localStorage.getItem("organizationName");
 
   useEffect(() => {
-    setUserPolls([
-      { id: 1, title: "Election for City Mayor", status: "active" },
-      { id: 2, title: "Presidential Election", status: "upcoming" },
-    ]);
-    setUserStatus({
-      votedPolls: [1],
-    });
-  }, []);
+    const fetchElections = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${API_BASE_URL}/elections`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-  const handleVote = (pollId) => {
-    if (userStatus.votedPolls.includes(pollId)) {
-      alert("You have already voted in this election.");
-    } else {
-      alert("Vote submitted!");
-      setUserStatus((prevState) => ({
-        ...prevState,
-        votedPolls: [...prevState.votedPolls, pollId],
-      }));
-    }
-  };
+        const data = await res.json();
+        if (res.ok) {
+          const now = new Date();
+          const visible = data.filter(
+            (election) =>
+              election.organizationName === organizationName &&
+              new Date(election.startDate) <= now &&
+              new Date(election.endDate) >= now
+          );
+          setElections(visible);
+        }
+      } catch (error) {
+        console.error("Failed to fetch elections", error);
+      }
+    };
+
+    fetchElections();
+  }, [organizationName]);
 
   return (
-    <div>
-      <div className="dashboard-container">
-        <h2>Welcome, User!</h2>
-        <div className="polls-list">
-          <h3>Active Polls</h3>
-          {userPolls.filter((poll) => poll.status === "active").map((poll) => (
-            <div className="poll" key={poll.id}>
-              <h4>{poll.title}</h4>
-              <button onClick={() => handleVote(poll.id)}>Vote</button>
-            </div>
+    <div className="user-dashboard">
+      <h2>Available Elections for {organizationName}</h2>
+      {elections.length === 0 ? (
+        <p>No elections available right now.</p>
+      ) : (
+        <ul>
+          {elections.map((election) => (
+            <li key={election._id}>
+              <Link to={`/vote/${election._id}`}>{election.title}</Link>
+            </li>
           ))}
-        </div>
-        <div className="polls-list">
-          <h3>Upcoming Polls</h3>
-          {userPolls.filter((poll) => poll.status === "upcoming").map((poll) => (
-            <div className="poll" key={poll.id}>
-              <h4>{poll.title}</h4>
-              <button disabled>Voting not yet available</button>
-            </div>
-          ))}
-        </div>
-      </div>
+        </ul>
+      )}
     </div>
   );
 };

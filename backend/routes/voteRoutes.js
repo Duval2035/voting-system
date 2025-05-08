@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const { castVote } = require('../controllers/voteController');
-const { protect } = require('../middleware/authMiddleware');
+const { submitVote, getVotesByElection } = require('../controllers/voteController');
 
-// @route   POST /api/votes
-// @desc    Cast a vote
-// @access  Private
-router.post('/', protect, castVote);
+// Submit a vote
+router.post('/', submitVote);
+
+// Get all votes for a specific election
+router.get('/:electionId', getVotesByElection);
 
 module.exports = router;

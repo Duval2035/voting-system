@@ -1,0 +1,44 @@
+.user-dashboard {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 1rem;
+  background-color: #fefefe;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.user-dashboard h2 {
+  margin-bottom: 1rem;
+  color: #333;
+  text-align: center;
+}
+
+.user-dashboard ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.user-dashboard li {
+  margin-bottom: 1rem;
+}
+
+.user-dashboard a {
+  text-decoration: none;
+  color: #007bff;
+  font-weight: bold;
+}
+
+.user-dashboard a:hover {
+  text-decoration: underline;
+}
+
+.error {
+  color: red;
+  text-align: center;
+  margin-top: 1rem;
+}
+.success {
+  color: green;
+  text-align: center;
+  margin-top: 1rem;
+}

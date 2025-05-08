@@ -1,63 +1,43 @@
 .create-election-container {
-  max-width: 800px;
-  margin: 40px auto;
-  padding: 30px;
-  background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 2rem;
+  border: 1px solid #ddd;
+  background-color: #f9f9f9;
+  border-radius: 10px;
 }
 
 .create-election-container h2 {
-  margin-bottom: 25px;
-  font-size: 26px;
-  font-weight: 700;
-  color: #222;
-}
-
-.election-form label {
-  display: block;
-  margin-bottom: 6px;
-  font-weight: 600;
+  text-align: center;
+  margin-bottom: 1rem;
   color: #333;
 }
 
-.election-form input,
-.election-form textarea {
-  width: 100%;
-  padding: 12px;
-  margin-bottom: 18px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  background: #fafafa;
-  font-size: 16px;
-}
-
-.election-form textarea {
-  min-height: 100px;
-  resize: vertical;
-}
-
-.date-row {
+.create-election-container form {
   display: flex;
-  gap: 20px;
+  flex-direction: column;
 }
 
-.date-row > div {
-  flex: 1;
+.create-election-container input,
+.create-election-container textarea,
+.create-election-container select {
+  margin-bottom: 1rem;
+  padding: 0.8rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
 }
 
-.election-form button {
-  background-color: #1abc9c;
-  color: #fff;
-  font-weight: bold;
-  padding: 14px;
-  width: 100%;
+.create-election-container button {
+  padding: 0.8rem;
+  background-color: #28a745;
+  color: white;
   border: none;
-  border-radius: 6px;
+  font-size: 1rem;
+  border-radius: 5px;
   cursor: pointer;
-  transition: background 0.3s ease;
 }
 
-.election-form button:hover {
-  background-color: #16a085;
+.create-election-container button:hover {
+  background-color: #218838;
 }

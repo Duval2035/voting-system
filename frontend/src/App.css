@@ -40,3 +40,26 @@
 .read-the-docs {
   color: #888;
 }
+.form-container {
+  max-width: 400px;
+  margin: 50px auto;
+  padding: 20px;
+  background: #f7f7f7;
+  border-radius: 6px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.form-container input {
+  width: 100%;
+  padding: 10px;
+  margin: 8px 0;
+}
+
+.form-container button {
+  width: 100%;
+  padding: 10px;
+  background: #0044cc;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}

@@ -1,45 +1,99 @@
+// src/pages/Login.jsx
+
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import "./Login.css";
 
+const API_BASE_URL = "http://localhost:5000/api/auth";
+
 const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [step, setStep] = useState(1); // 1 = send OTP, 2 = verify OTP
+  const [error, setError] = useState("");
 
-  const handleLogin = (e) => {
+  const handleSendOtp = async (e) => {
     e.preventDefault();
-    // Dummy logic: Replace with actual authentication logic
-    const userRole = "user"; // Or "admin" based on login credentials
+    setError("");
 
-    if (userRole === "user") {
-      navigate("/user/dashboard");
-    } else if (userRole === "admin") {
-      navigate("/admin/dashboard");
+    try {
+      const res = await fetch(`${API_BASE_URL}/send-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Failed to send OTP");
+        return;
+      }
+
+      setStep(2);
+    } catch (err) {
+      setError("Could not connect to server");
+    }
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/verify-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, otp }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Could not verify OTP");
+        return;
+      }
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("organizationName", data.user.organizationName);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      navigate(data.user.role === "admin" ? "/admin/dashboard" : "/user/dashboard");
+    } catch (err) {
+      setError("Could not connect to server");
     }
   };
 
   return (
-    <div className="auth-container">
+    <div className="login-container">
       <h2>Login</h2>
-      <form onSubmit={handleLogin}>
+      <form onSubmit={step === 1 ? handleSendOtp : handleVerifyOtp} className="login-form">
+        <label>Email</label>
         <input
           type="email"
-          placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          required
         />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <button type="submit">Login</button>
-        <p>
-          Don't have an account? <span className="login"> <a href="/register">Register here</a> </span>
-        </p>
+
+        {step === 2 && (
+          <>
+            <label>OTP</label>
+            <input
+              type="text"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              required
+            />
+          </>
+        )}
+
+        <button type="submit">{step === 1 ? "Send OTP" : "Verify OTP"}</button>
       </form>
+
+      {error && <p className="error-msg">{error}</p>}
+
+      <p className="footer-link">
+        Don’t have an account? <Link to="/register">Register</Link>
+      </p>
     </div>
   );
 };

@@ -1,56 +1,107 @@
+// src/pages/Register.jsx
+
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import "./Register.css";
 
-const Register = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
-  const [role, setRole] = useState("user");
-  const navigate = useNavigate();
+const API_BASE_URL = "http://localhost:5000/api/auth";
 
-  const handleRegister = (e) => {
+const Register = () => {
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: "",
+    organizationName: "",
+    role: "user",
+  });
+
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+
+  const handleChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Dummy logic: Replace with actual registration logic
-    if (role === "user") {
-      navigate("/user/dashboard");
-    } else if (role === "admin") {
-      navigate("/admin/dashboard");
+    setError("");
+    setMessage("");
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Registration failed");
+        return;
+      }
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      navigate(data.user.role === "admin" ? "/admin/dashboard" : "/user/dashboard");
+    } catch (err) {
+      setError("Could not connect to server");
     }
   };
 
   return (
     <div className="auth-container">
-      <h2>Register</h2>
-      <form onSubmit={handleRegister}>
-           <input
-
-          type="text"
-          placeholder="Full Name"
-          value={name}
-            onChange={(e) => setName(e.target.value)}
-        />
+      <h2>Create an Account</h2>
+      <form onSubmit={handleSubmit} className="auth-form">
+        <label>Username</label>
         <input
+          name="username"
+          value={formData.username}
+          onChange={handleChange}
+          required
+        />
+        <label>Email</label>
+        <input
+          name="email"
           type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          value={formData.email}
+          onChange={handleChange}
+          required
         />
+        <label>Password</label>
         <input
+          name="password"
           type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          value={formData.password}
+          onChange={handleChange}
+          required
         />
-        <select value={role} onChange={(e) => setRole(e.target.value)}>
-          <option value="user">User</option>
-          <option value="admin">Admin</option>
+        <label>Organization Name</label>
+        <input
+          name="organizationName"
+          value={formData.organizationName}
+          onChange={handleChange}
+          required
+        />
+        <label>Role</label>
+        <select name="role" value={formData.role} onChange={handleChange}>
+          <option value="user">Regular User</option>
+          <option value="admin">Administrator</option>
         </select>
         <button type="submit">Register</button>
-        <p>
-          Already have an account? <span className="login"><a href="/login">Login here</a> </span>
-        </p>
       </form>
+
+      {error && <p className="error-msg">{error}</p>}
+      {message && <p className="success-msg">{message}</p>}
+
+      <p className="footer-link">
+        Already have an account? <Link to="/login">Login</Link>
+      </p>
     </div>
   );
 };

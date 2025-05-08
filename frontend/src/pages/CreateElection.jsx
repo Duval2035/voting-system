@@ -1,92 +1,56 @@
-import React, { useState } from 'react';
-import './CreateElection.css';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
+// src/pages/CreateElection.jsx
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import API_BASE_URL from "../config";
+import "./CreateElection.css";
 
 const CreateElection = () => {
+  const navigate = useNavigate();
+  const token = localStorage.getItem("token");
+  const organizationName = JSON.parse(localStorage.getItem("user"))?.organizationName || "";
+
   const [formData, setFormData] = useState({
-    title: '',
-    organization: '',
-    description: '',
-    startDate: '',
-    endDate: ''
+    title: "",
+    description: "",
+    startDate: "",
+    endDate: "",
   });
 
-  const handleChange = (e) => {
+  const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: Replace this with your API POST request logic
-    console.log('Election created:', formData);
-    alert('Election created successfully!');
+
+    const res = await fetch(`${API_BASE_URL}/elections`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ ...formData, organizationName }),
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      alert("Election created successfully");
+      navigate("/admin/dashboard");
+    } else {
+      alert(`Failed to create election: ${data.message || "Unknown error"}`);
+    }
   };
 
   return (
-    <>
-    
-      <div className="create-election-container">
-        <h2>Create New Election</h2>
-        <form onSubmit={handleSubmit} className="election-form">
-          <label>Election Title</label>
-          <input
-            type="text"
-            name="title"
-            placeholder="e.g., Board Election 2025"
-            value={formData.title}
-            onChange={handleChange}
-            required
-          />
-
-          <label>Organization Name</label>
-          <input
-            type="text"
-            name="organization"
-            placeholder="e.g., Cameroon Association"
-            value={formData.organization}
-            onChange={handleChange}
-            required
-          />
-
-          <label>Description</label>
-          <textarea
-            name="description"
-            placeholder="Enter details about this election..."
-            value={formData.description}
-            onChange={handleChange}
-            required
-          ></textarea>
-
-          <div className="date-row">
-            <div>
-              <label>Start Date</label>
-              <input
-                type="date"
-                name="startDate"
-                value={formData.startDate}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div>
-              <label>End Date</label>
-              <input
-                type="date"
-                name="endDate"
-                value={formData.endDate}
-                onChange={handleChange}
-                required
-              />
-            </div>
-          </div>
-
-          <button type="submit">Create Election</button>
-        </form>
-      </div>
-     
-    </>
+    <div className="create-election-container">
+      <h2>Create Election</h2>
+      <form onSubmit={handleSubmit}>
+        <input name="title" placeholder="Election Title" value={formData.title} onChange={handleChange} required />
+        <textarea name="description" placeholder="Description" value={formData.description} onChange={handleChange} required />
+        <input type="datetime-local" name="startDate" value={formData.startDate} onChange={handleChange} required />
+        <input type="datetime-local" name="endDate" value={formData.endDate} onChange={handleChange} required />
+        <button type="submit">Create</button>
+      </form>
+    </div>
   );
 };
 
