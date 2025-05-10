@@ -1,37 +1,21 @@
 const mongoose = require('mongoose');
 
-const voteSchema = mongoose.Schema(
+const voteSchema = new mongoose.Schema(
   {
-    title: {
-      type: String,
+    pollId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Poll',
       required: true,
     },
-    description: {
-      type: String,
-    },
-    candidates: [
-      {
-        name: { type: String, required: true },
-        votes: { type: Number, default: 0 },
-      },
-    ],
-    deadline: {
-      type: Date,
-      required: true,
-    },
-    createdBy: {
+    voter: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
     },
-    voters: [
-      {
-        userId: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: 'User',
-        },
-      },
-    ],
+    option: {
+      type: String,
+      required: true,
+    },
   },
   {
     timestamps: true,
