@@ -1,0 +1,45 @@
+/* src/components/Navbar.css */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 32px;
+  background-color: #66a1dc;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.navbar-brand {
+  font-weight: bold;
+  font-size: 40px;
+  color: #090909;
+}
+
+.navbar-logo {
+  background-color: #166b3f;
+  color: #dbdede;
+  font-weight: bold;
+  font-size: 20px;
+  display: inline-block;
+  padding: 10px 15px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+.navbar-links {
+  list-style: none;
+  display: flex;
+  gap: 16px;
+}
+
+.navbar-links a {
+  text-decoration: none;
+  font-family: 'Arial', sans-serif;
+  color: #00070a;
+  font-weight: 1500;
+}
+
+.signup-btn {
+  background-color: #0ea5e9;
+  color: white !important;
+  padding: 8px 16px;
+  border-radius: 5px;
+}
