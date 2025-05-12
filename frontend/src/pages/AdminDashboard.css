@@ -1,71 +1,102 @@
 .admin-dashboard {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 40px 20px;
-  background-color: #f7f9fb;
+  padding: 2rem;
 }
 
-.admin-dashboard h2 {
-  font-size: 32px;
-  text-align: center;
-  margin-bottom: 30px;
-  color: #333;
+.admin-dashboard h1 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
 }
 
-.admin-grid {
+.dashboard-stats {
   display: flex;
   flex-wrap: wrap;
-  gap: 30px;
-  justify-content: space-between;
+  gap: 1rem;
+  margin: 1rem 0;
 }
 
-.admin-section {
-  background-color: #fff;
-  flex: 1 1 45%;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+.stat-box {
+  background: #f9f9f9;
+  border-radius: 10px;
+  padding: 1rem;
+  min-width: 150px;
+  font-weight: bold;
+  text-align: center;
+  box-shadow: 0 0 5px #ccc;
 }
 
-.admin-section h3 {
-  font-size: 20px;
-  margin-bottom: 15px;
-  color: #4e89ff;
-}
-
-.admin-section input,
-.admin-section select {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 12px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-}
-
-.admin-section button {
-  padding: 10px 15px;
-  background-color: #4e89ff;
+.create-btn {
+  margin-left: auto;
+  padding: 0.75rem 1.25rem;
+  background: #1abc9c;
   color: #fff;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
 }
 
-.admin-section button:hover {
-  background-color: #3b73d1;
+.tabs {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
 }
 
-.full-width {
-  flex: 1 1 100%;
-  margin-top: 20px;
+.tabs button {
+  padding: 0.5rem 1rem;
+  border: none;
+  background: #eee;
+  border-radius: 20px;
+  cursor: pointer;
 }
 
-.tally-row {
+.tabs .active {
+  background: #1abc9c;
+  color: white;
+}
+
+.election-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.election-card {
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 1rem;
+  background: #fff;
+  box-shadow: 0 0 6px rgba(0,0,0,0.06);
+}
+
+.election-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #eef4ff;
-  padding: 10px 15px;
-  margin-bottom: 10px;
-  border-radius: 8px;
+}
+
+.status-badge {
+  padding: 0.3rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: white;
+}
+
+.status-badge.active { background-color: #2ecc71; }
+.status-badge.upcoming { background-color: #3498db; }
+.status-badge.completed { background-color: #7f8c8d; }
+
+.election-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1rem;
+}
+
+.election-actions button {
+  padding: 0.4rem 1rem;
+  border: none;
+  background: #1abc9c;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
 }

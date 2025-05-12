@@ -31,7 +31,6 @@ const UserDashboard = () => {
 
   return (
     <div>
-      <Navbar />
       <div className="dashboard-container">
         <h2>Welcome, User!</h2>
         <div className="polls-list">
@@ -53,7 +52,6 @@ const UserDashboard = () => {
           ))}
         </div>
       </div>
-      <Footer />
     </div>
   );
 };

@@ -5,7 +5,10 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import UserDashboard from "./pages/UserDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
-import CreatePoll from "./pages/CreatePoll";
+import CreateElection from './pages/CreateElection';
+import ManageElection from './pages/ManageElection';
+
+
 
 function App() {
   return (
@@ -17,7 +20,9 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/user/dashboard" element={<UserDashboard />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/create-poll" element={<CreatePoll />} />
+          <Route path="/create-election" element={<CreateElection />} />
+          <Route path="/manage-election" element={<ManageElection />} />
+
         </Routes>
       </Layout>
     </Router>

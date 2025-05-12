@@ -5,6 +5,7 @@ import "./Register.css";
 const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
   const [role, setRole] = useState("user");
   const navigate = useNavigate();
 
@@ -23,6 +24,7 @@ const Register = () => {
       <h2>Register</h2>
       <form onSubmit={handleRegister}>
            <input
+
           type="text"
           placeholder="Full Name"
           value={name}
@@ -46,7 +48,7 @@ const Register = () => {
         </select>
         <button type="submit">Register</button>
         <p>
-          Already have an account? <a href="/login">Login here</a>
+          Already have an account? <span className="login"><a href="/login">Login here</a> </span>
         </p>
       </form>
     </div>

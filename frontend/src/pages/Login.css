@@ -38,3 +38,15 @@
 .auth-container p {
   text-align: center;
 }
+.login{ 
+    color: green;
+    text-decoration: underline;
+    text-decoration-color: green;
+    border: none;
+}
+.login:hover{
+    color: #4e89ff;
+    text-decoration: underline;
+    text-decoration-color: #4e89ff;
+    border: none;
+}

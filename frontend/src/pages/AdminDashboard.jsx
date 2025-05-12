@@ -1,100 +1,70 @@
-import React, { useState } from "react";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
-import "./AdminDashboard.css";
+import React, { useEffect, useState } from 'react';
+import './AdminDashboard.css';
+import { useNavigate } from 'react-router-dom';
 
 const AdminDashboard = () => {
-  const [electionTitle, setElectionTitle] = useState("");
-  const [electionDate, setElectionDate] = useState("");
-  const [candidateName, setCandidateName] = useState("");
-  const [candidateElectionId, setCandidateElectionId] = useState("");
-  const [elections, setElections] = useState([
-    { id: "1", title: "2025 Presidential Election" },
-    { id: "2", title: "Student Council Election" },
-  ]);
+  const [elections, setElections] = useState([]);
+  const [filter, setFilter] = useState('all');
+  const navigate = useNavigate();
 
-  const handleCreateElection = (e) => {
-    e.preventDefault();
-    alert(`Election "${electionTitle}" created for ${electionDate}`);
-    setElectionTitle("");
-    setElectionDate("");
-  };
+  // Simulated fetch from backend (replace with real API call)
+  useEffect(() => {
+    fetch('/api/elections') // replace with your actual endpoint
+      .then(res => res.json())
+      .then(data => setElections(data))
+      .catch(err => console.error(err));
+  }, []);
 
-  const handleAddCandidate = (e) => {
-    e.preventDefault();
-    alert(`Candidate "${candidateName}" added to election ID: ${candidateElectionId}`);
-    setCandidateName("");
-    setCandidateElectionId("");
-  };
+  const filteredElections = elections.filter(election => {
+    if (filter === 'all') return true;
+    return election.status.toLowerCase() === filter;
+  });
 
-  const handleViewTally = (electionId) => {
-    alert(`Viewing tally for election ID: ${electionId}`);
+  const stats = {
+    total: elections.length,
+    active: elections.filter(e => e.status === 'Active').length,
+    voters: elections.reduce((sum, e) => sum + e.totalVoters, 0),
+    votes: elections.reduce((sum, e) => sum + e.totalVotes, 0),
   };
 
   return (
-    <div>
-      <Navbar />
-      <div className="admin-dashboard">
-        <h2>Admin Dashboard</h2>
-        <div className="admin-grid">
-          <div className="admin-section">
-            <h3>Create New Election</h3>
-            <form onSubmit={handleCreateElection}>
-              <input
-                type="text"
-                placeholder="Election Title"
-                value={electionTitle}
-                onChange={(e) => setElectionTitle(e.target.value)}
-                required
-              />
-              <input
-                type="date"
-                value={electionDate}
-                onChange={(e) => setElectionDate(e.target.value)}
-                required
-              />
-              <button type="submit">Create Election</button>
-            </form>
-          </div>
+    <div className="admin-dashboard">
+      <h1>Admin Dashboard</h1>
+      <p>Manage elections and view results</p>
 
-          <div className="admin-section">
-            <h3>Add Candidate</h3>
-            <form onSubmit={handleAddCandidate}>
-              <input
-                type="text"
-                placeholder="Candidate Name"
-                value={candidateName}
-                onChange={(e) => setCandidateName(e.target.value)}
-                required
-              />
-              <select
-                value={candidateElectionId}
-                onChange={(e) => setCandidateElectionId(e.target.value)}
-                required
-              >
-                <option value="">Select Election</option>
-                {elections.map((election) => (
-                  <option key={election.id} value={election.id}>
-                    {election.title}
-                  </option>
-                ))}
-              </select>
-              <button type="submit">Add Candidate</button>
-            </form>
-          </div>
-
-          <div className="admin-section full-width">
-            <h3>Real-time Tally</h3>
-            {elections.map((election) => (
-              <div key={election.id} className="tally-row">
-                <span>{election.title}</span>
-                <button onClick={() => handleViewTally(election.id)}>View Tally</button>
-              </div>
-            ))}
-          </div>
-        </div>
+      <div className="dashboard-stats">
+        <div className="stat-box">Total Elections<br />{stats.total}</div>
+        <div className="stat-box">Active Elections<br />{stats.active}</div>
+        <div className="stat-box">Total Voters<br />{stats.voters}</div>
+        <div className="stat-box">Total Votes<br />{stats.votes}</div>
+        <button className="create-btn" onClick={() => navigate('/create-election')}>
+          + Create New Election
+        </button>
       </div>
-      <Footer />
+
+      <div className="tabs">
+        <button className={filter === 'all' ? 'active' : ''} onClick={() => setFilter('all')}>All Elections</button>
+        <button className={filter === 'active' ? 'active' : ''} onClick={() => setFilter('active')}>Active</button>
+        <button className={filter === 'upcoming' ? 'active' : ''} onClick={() => setFilter('upcoming')}>Upcoming</button>
+      </div>
+
+      <div className="election-list">
+        {filteredElections.map(election => (
+          <div key={election._id} className="election-card">
+            <div className="election-header">
+              <h3>{election.title}</h3>
+              <span className={`status-badge ${election.status.toLowerCase()}`}>{election.status}</span>
+            </div>
+            <p className="org-name">{election.organization}</p>
+            <p className="description">{election.description}</p>
+            <p className="dates">📅 {election.startDate} – {election.endDate}</p>
+            <div className="election-actions">
+              <button onClick={() => navigate(`/results/${election._id}`)}>View Results</button>
+              <button onClick={() => navigate(`/manage-election/${election._id}`)}>Manage</button>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
