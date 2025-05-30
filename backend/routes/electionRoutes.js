@@ -1,26 +1,19 @@
-// backend/routes/electionRoutes.js
-
-const express = require('express');
+// routes/electionRoutes.js
+const express = require("express");
 const router = express.Router();
+
 const {
   createElection,
-  getAllElections,
+  getElectionsByOrganization,
   getElectionById,
-  getElectionsByOrg
-} = require('../controllers/electionController');
+  updateElectionStatus,
+} = require("../controllers/electionController");
 
-const authMiddleware = require('../middleware/authMiddleware');
+const authMiddleware = require("../middleware/authMiddleware");
 
-// Create a new election (admin only)
-router.post('/', authMiddleware, createElection);
-
-// Get all elections (admin view)
-router.get('/', authMiddleware, getAllElections);
-
-// Get all elections for the logged-in user's organization (user view)
-router.get('/organization', authMiddleware, getElectionsByOrg);
-
-// Get one election by ID
-router.get('/:id', authMiddleware, getElectionById);
+router.post("/", authMiddleware, createElection);
+router.get("/", authMiddleware, getElectionsByOrganization);
+router.get("/:id", authMiddleware, getElectionById);
+router.patch("/:id/status", authMiddleware, updateElectionStatus);
 
 module.exports = router;

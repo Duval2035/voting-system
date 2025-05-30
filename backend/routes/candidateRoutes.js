@@ -1,14 +1,18 @@
 // backend/routes/candidateRoutes.js
-
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const { addCandidate, getCandidatesByElection } = require('../controllers/candidateController');
-const authMiddleware = require('../middleware/authMiddleware');
+const auth = require("../middleware/authMiddleware");
 
-// Add candidate to an election
-router.post('/:id', authMiddleware, addCandidate);
+const {
+  addCandidate,
+  getCandidatesByElection,
+  updateCandidate,
+  deleteCandidate
+} = require("../controllers/candidateController");
 
-// Get all candidates for a specific election
-router.get('/by-election/:electionId', getCandidatesByElection);
+router.post("/:id", auth, addCandidate);
+router.get("/by-election/:electionId", getCandidatesByElection);
+router.put("/:id/:candidateId", auth, updateCandidate);
+router.delete("/:candidateId", auth, deleteCandidate);
 
 module.exports = router;

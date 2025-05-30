@@ -46,7 +46,7 @@ const UserDashboard = () => {
         <ul>
           {elections.map((election) => (
             <li key={election._id}>
-              <Link to={`/vote/${election._id}`}>{election.title}</Link>
+              <Link to={`/vote/${election._id}`}>{election.title}</Link> - <strong>{election.status}</strong>
             </li>
           ))}
         </ul>

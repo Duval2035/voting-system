@@ -1,5 +1,3 @@
-// src/pages/Register.jsx
-
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import "./Register.css";
@@ -22,7 +20,9 @@ const Register = () => {
   const handleChange = (e) => {
     setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value,
+      [e.target.name]: e.target.name === "email"
+        ? e.target.value.trim().toLowerCase()
+        : e.target.value,
     }));
   };
 
@@ -41,12 +41,13 @@ const Register = () => {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Registration failed");
+        setError(data.message || "Registration failed");
         return;
       }
 
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem("organizationName", data.user.organizationName);
 
       navigate(data.user.role === "admin" ? "/admin/dashboard" : "/user/dashboard");
     } catch (err) {

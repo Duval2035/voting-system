@@ -1,25 +1,24 @@
 // backend/models/Vote.js
-
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const voteSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: "User",
     required: true,
   },
   election: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Election',
+    ref: "Election",
     required: true,
   },
   candidate: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Candidate',
+    ref: "Candidate",
     required: true,
   },
 }, {
   timestamps: true
 });
 
-module.exports = mongoose.model('Vote', voteSchema);
+module.exports = mongoose.model("Vote", voteSchema);

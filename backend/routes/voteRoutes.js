@@ -1,11 +1,9 @@
-const express = require('express');
+// backend/routes/voteRoutes.js
+const express = require("express");
 const router = express.Router();
-const { submitVote, getVotesByElection } = require('../controllers/voteController');
+const auth = require("../middleware/authMiddleware");
+const { submitVote } = require("../controllers/voteController");
 
-// Submit a vote
-router.post('/', submitVote);
-
-// Get all votes for a specific election
-router.get('/:electionId', getVotesByElection);
+router.post("/", auth, submitVote);
 
 module.exports = router;

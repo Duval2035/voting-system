@@ -1,10 +1,19 @@
-// backend/routes/authRoutes.js
+// backend/routes/electionRoutes.js
 const express = require("express");
 const router = express.Router();
-const authController = require("../controllers/authController");
 
-router.post("/register", authController.register);
-router.post("/send-otp", authController.sendOtpToEmail);
-router.post("/verify-otp", authController.verifyOtpLogin);
+const {
+  createElection,
+  getElectionsByOrganization,
+  getElectionById,
+  updateElectionStatus,
+} = require("../controllers/electionController");
+
+const authMiddleware = require("../middleware/authMiddleware");
+
+router.post("/", authMiddleware, createElection);
+router.get("/", authMiddleware, getElectionsByOrganization);
+router.get("/:id", authMiddleware, getElectionById);
+router.patch("/:id/status", authMiddleware, updateElectionStatus);
 
 module.exports = router;

@@ -1,5 +1,3 @@
-// src/pages/Login.jsx
-
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import "./Login.css";
@@ -21,12 +19,12 @@ const Login = () => {
       const res = await fetch(`${API_BASE_URL}/send-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email: email.trim().toLowerCase() }),
       });
 
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "Failed to send OTP");
+        setError(data.message || "Failed to send OTP");
         return;
       }
 
@@ -44,16 +42,18 @@ const Login = () => {
       const res = await fetch(`${API_BASE_URL}/verify-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, otp }),
+        body: JSON.stringify({ email: email.trim().toLowerCase(), otp }),
       });
 
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "Could not verify OTP");
+        setError(data.message || "Could not verify OTP");
         return;
       }
+
       localStorage.setItem("token", data.token);
       localStorage.setItem("organizationName", data.user.organizationName);
+      localStorage.setItem("organizationId", data.user.organizationId || "");
       localStorage.setItem("user", JSON.stringify(data.user));
 
       navigate(data.user.role === "admin" ? "/admin/dashboard" : "/user/dashboard");

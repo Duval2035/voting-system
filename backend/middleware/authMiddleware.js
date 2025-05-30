@@ -1,21 +1,21 @@
+// backend/middleware/authMiddleware.js
 const jwt = require("jsonwebtoken");
 
-const authMiddleware = (req, res, next) => {
+module.exports = (req, res, next) => {
   const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  if (!authHeader)
     return res.status(401).json({ message: "No token provided" });
-  }
 
   const token = authHeader.split(" ")[1];
+  if (!token)
+    return res.status(401).json({ message: "Invalid token format" });
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "your_jwt_secret");
     req.user = decoded;
     next();
   } catch (err) {
-    return res.status(401).json({ message: "Invalid token" });
+    console.error("JWT Error:", err);
+    return res.status(403).json({ message: "Invalid token" });
   }
 };
-
-module.exports = authMiddleware;

@@ -1,6 +1,5 @@
 // backend/models/Candidate.js
-
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const candidateSchema = new mongoose.Schema({
   name: { type: String, required: true },
@@ -9,11 +8,11 @@ const candidateSchema = new mongoose.Schema({
   image: { type: String },
   election: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Election',
+    ref: "Election",
     required: true,
   },
 }, {
   timestamps: true
 });
 
-module.exports = mongoose.model('Candidate', candidateSchema);
+module.exports = mongoose.model("Candidate", candidateSchema);

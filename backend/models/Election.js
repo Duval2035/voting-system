@@ -1,4 +1,4 @@
-// models/Election.js
+// backend/models/Election.js
 const mongoose = require("mongoose");
 
 const electionSchema = new mongoose.Schema({
@@ -7,6 +7,11 @@ const electionSchema = new mongoose.Schema({
   startDate: { type: Date, required: true },
   endDate: { type: Date, required: true },
   organizationName: { type: String, required: true },
+  status: {
+    type: String,
+    enum: ["upcoming", "active", "ended"],
+    default: "upcoming",
+  },
 }, { timestamps: true });
 
-module.exports = mongoose.models.Election || mongoose.model("Election", electionSchema);
+module.exports = mongoose.model("Election", electionSchema);

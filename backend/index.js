@@ -1,31 +1,32 @@
-// backend/index.js
-require("dotenv").config();
-
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 
-// Load environment variables
-dotenv.config();
+const authRoutes = require('./routes/authRoutes');
+const electionRoutes = require('./routes/electionRoutes');
+const candidateRoutes = require('./routes/candidateRoutes');
+const voteRoutes = require('./routes/voteRoutes');
 
-// Connect to MongoDB
+dotenv.config();
 connectDB();
 
 const app = express();
-app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
+
+app.use(cors({
+  origin: 'http://localhost:5173',
+  credentials: true
+}));
+
 app.use(express.json());
 
-// Routes
-app.use('/api/auth', require('./routes/authRoutes'));
-app.use('/api/users', require('./routes/userRoutes'));
-app.use('/api/elections', require('./routes/electionRoutes'));
-app.use('/api/votes', require('./routes/voteRoutes'));
-app.use('/api/candidates', require('./routes/candidateRoutes'));
-app.use('/api/tenants', require('./routes/tenantRoutes'));
-app.use('/api/notifications', require('./routes/notificationRoutes'));
+// API Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/elections', electionRoutes);
+app.use('/api/candidates', candidateRoutes);
+app.use('/api/votes', voteRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`✅ Server running on http://localhost:${PORT}`);
 });

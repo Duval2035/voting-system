@@ -26,7 +26,7 @@ function App() {
         <Route path="/user/voting" element={<UserVoting />} />
         <Route path="/create-election" element={<CreateElection />} />
         <Route path="/user/vote/:electionId" element={<VotePage />} />
-        <Route path="/admin/manage-election/:id" element={<ManageElection />} />
+        <Route path="/manage-election/:id" element={<ManageElection />} />
         <Route
           path="/admin/dashboard"
           element={
