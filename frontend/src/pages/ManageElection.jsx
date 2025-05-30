@@ -13,12 +13,13 @@ const ManageElection = () => {
     name: "",
     position: "",
     bio: "",
-    image: ""
+    image: "" // will hold base64 or URL preview
   });
 
-  const [editing, setEditing] = useState(null); // candidate._id
+  const [file, setFile] = useState(null);
+  const [editing, setEditing] = useState(null);
 
-  // Fetch all candidates
+  // Load candidates
   useEffect(() => {
     const fetchCandidates = async () => {
       const res = await fetch(`${API_BASE_URL}/candidates/by-election/${id}`);
@@ -32,12 +33,23 @@ const ManageElection = () => {
     setNewCandidate({ ...newCandidate, [e.target.name]: e.target.value });
   };
 
+  const handleFileChange = (e) => {
+    const imageFile = e.target.files[0];
+    if (imageFile) {
+      setFile(imageFile);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNewCandidate({ ...newCandidate, image: reader.result }); // base64 preview
+      };
+      reader.readAsDataURL(imageFile);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const url = editing
       ? `${API_BASE_URL}/candidates/${id}/${editing}`
       : `${API_BASE_URL}/candidates/${id}`;
-
     const method = editing ? "PUT" : "POST";
 
     const res = await fetch(url, {
@@ -60,6 +72,7 @@ const ManageElection = () => {
       }
 
       setNewCandidate({ name: "", position: "", bio: "", image: "" });
+      setFile(null);
       setEditing(null);
     } else {
       alert("Failed to save candidate.");
@@ -81,9 +94,7 @@ const ManageElection = () => {
 
     const res = await fetch(`${API_BASE_URL}/candidates/${candidateId}`, {
       method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
+      headers: { Authorization: `Bearer ${token}` }
     });
 
     if (res.ok) {
@@ -99,11 +110,11 @@ const ManageElection = () => {
 
       <form className="candidate-form" onSubmit={handleSubmit}>
         <h3>{editing ? "Edit Candidate" : "Add New Candidate"}</h3>
-
         <input name="name" placeholder="Full Name" value={newCandidate.name} onChange={handleChange} required />
         <input name="position" placeholder="Position" value={newCandidate.position} onChange={handleChange} required />
         <textarea name="bio" placeholder="Biography" value={newCandidate.bio} onChange={handleChange} required />
-        <input name="image" placeholder="Image URL" value={newCandidate.image} onChange={handleChange} />
+        <input type="file" accept="image/*" onChange={handleFileChange} />
+        {newCandidate.image && <img src={newCandidate.image} alt="Preview" style={{ width: "80px", marginTop: "10px" }} />}
         <button type="submit">{editing ? "Update" : "Add"} Candidate</button>
       </form>
 

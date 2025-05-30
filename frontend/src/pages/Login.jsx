@@ -50,10 +50,16 @@ const Login = () => {
         setError(data.message || "Could not verify OTP");
         return;
       }
+      if (!res.ok) {
+  setError(data.message || "Failed to send OTP"); // ✅ not data.error
+  return;
+}
 
       localStorage.setItem("token", data.token);
       localStorage.setItem("organizationName", data.user.organizationName);
       localStorage.setItem("organizationId", data.user.organizationId || "");
+      localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem("organizationName", data.user.organizationName);
       localStorage.setItem("user", JSON.stringify(data.user));
 
       navigate(data.user.role === "admin" ? "/admin/dashboard" : "/user/dashboard");

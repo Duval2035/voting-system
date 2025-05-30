@@ -8,8 +8,8 @@ const VotePage = () => {
   const { id } = useParams();
   const [election, setElection] = useState(null);
   const [candidates, setCandidates] = useState([]);
-  const [selectedCandidate, setSelectedCandidate] = useState("");
   const [message, setMessage] = useState("");
+  const [votedCandidateId, setVotedCandidateId] = useState(null);
   const token = localStorage.getItem("token");
 
   useEffect(() => {
@@ -38,7 +38,7 @@ const VotePage = () => {
     fetchData();
   }, [id, token]);
 
-  const handleVote = async () => {
+  const handleVote = async (candidateId) => {
     const now = new Date();
     const start = new Date(election.startDate);
     const end = new Date(election.endDate);
@@ -57,12 +57,13 @@ const VotePage = () => {
         },
         body: JSON.stringify({
           electionId: id,
-          candidateId: selectedCandidate
+          candidateId
         })
       });
 
       const result = await res.json();
       if (res.ok) {
+        setVotedCandidateId(candidateId);
         setMessage("✅ Vote submitted successfully.");
       } else {
         setMessage(result.message || "❌ Failed to submit vote.");
@@ -78,24 +79,29 @@ const VotePage = () => {
     <div className="vote-page">
       <h2>{election.title}</h2>
       <p>{election.description}</p>
-      <h3>Select a candidate:</h3>
-      <div className="candidate-list">
+      <h3>🗳️ Choose Your Candidate</h3>
+
+      <div className="candidate-grid">
         {candidates.map((candidate) => (
-          <label key={candidate._id} className="candidate-option">
-            <input
-              type="radio"
-              name="candidate"
-              value={candidate._id}
-              onChange={() => setSelectedCandidate(candidate._id)}
-            />
-            <span>{candidate.name} – {candidate.position}</span>
-          </label>
+          <div key={candidate._id} className="candidate-card">
+            <img src={candidate.image} alt={candidate.name} className="candidate-img" />
+            <div className="candidate-details">
+              <h4>{candidate.name}</h4>
+              <p><strong>Position:</strong> {candidate.position}</p>
+              <p>{candidate.bio}</p>
+              <button
+                onClick={() => handleVote(candidate._id)}
+                disabled={votedCandidateId !== null}
+                className={votedCandidateId === candidate._id ? "voted" : ""}
+              >
+                {votedCandidateId === candidate._id ? "✅ Voted" : "Vote"}
+              </button>
+            </div>
+          </div>
         ))}
       </div>
-      <button disabled={!selectedCandidate} onClick={handleVote}>
-        Submit Vote
-      </button>
-      {message && <p className="message">{message}</p>}
+
+      {message && <p className="vote-message">{message}</p>}
     </div>
   );
 };

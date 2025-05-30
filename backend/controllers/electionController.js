@@ -1,10 +1,10 @@
-// backend/controllers/electionController.js
+// controllers/electionController.js
 const Election = require("../models/Election");
 
 exports.createElection = async (req, res) => {
   try {
     const { title, description, startDate, endDate } = req.body;
-    const organizationName = req.user.organizationName;
+    const { organizationName } = req.user;
 
     const newElection = new Election({
       title,
@@ -24,10 +24,8 @@ exports.createElection = async (req, res) => {
 
 exports.getElectionsByOrganization = async (req, res) => {
   try {
-    const elections = await Election.find({
-      organizationName: req.user.organizationName,
-    });
-
+    const { organizationName } = req.user;
+    const elections = await Election.find({ organizationName });
     res.status(200).json(elections);
   } catch (error) {
     console.error("Get Elections Error:", error);
@@ -61,8 +59,7 @@ exports.updateElectionStatus = async (req, res) => {
 exports.deleteElection = async (req, res) => {
   try {
     const { id } = req.params;
-    const deleted = await Election.findByIdAndDelete(id);
-    if (!deleted) return res.status(404).json({ message: "Election not found" });
+    await Election.findByIdAndDelete(id);
     res.status(200).json({ message: "Election deleted successfully" });
   } catch (error) {
     console.error("Delete Election Error:", error);

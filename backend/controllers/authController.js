@@ -4,20 +4,19 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { generateOTP, sendOtp } = require('../utils/sendOtp');
 
-// 🔐 Registration (no OTP here)
+// 🔐 Registration
 exports.register = async (req, res) => {
   const { username, email, password, organizationName, role } = req.body;
-  const normalizedEmail = email.trim().toLowerCase();
 
   try {
-    const existing = await User.findOne({ email: normalizedEmail });
+    const existing = await User.findOne({ email });
     if (existing) return res.status(400).json({ message: 'User already exists' });
 
     const hashed = await bcrypt.hash(password, 10);
 
     const newUser = new User({
       username,
-      email: normalizedEmail,
+      email,
       password: hashed,
       organizationName,
       role,
@@ -25,11 +24,16 @@ exports.register = async (req, res) => {
 
     const saved = await newUser.save();
 
-   const token = jwt.sign({
-  userId: saved._id,
-  role: saved.role,
-  organizationName: saved.organizationName // ✅ include this!
-}, 'secret', { expiresIn: '1d' });
+const token = jwt.sign(
+  {
+    userId: saved._id,
+    role: saved.role,
+    organizationName: saved.organizationName // ✅ include this!
+  },
+  process.env.JWT_SECRET || 'secret',
+  { expiresIn: '1d' }
+);
+
 
     res.status(201).json({
       message: 'Registration successful',
@@ -48,9 +52,9 @@ exports.register = async (req, res) => {
   }
 };
 
-// 📤 Send OTP for login
+// 📤 Send OTP
 exports.sendOtpToEmail = async (req, res) => {
-  const email = req.body.email?.trim().toLowerCase();
+  const { email } = req.body;
 
   try {
     const user = await User.findOne({ email });
@@ -69,10 +73,8 @@ exports.sendOtpToEmail = async (req, res) => {
   }
 };
 
-// ✅ Verify OTP & Login
 exports.verifyOtp = async (req, res) => {
-  const email = req.body.email?.trim().toLowerCase();
-  const { otp } = req.body;
+  const { email, otp } = req.body;
 
   try {
     const record = await Otp.findOne({ email, otp });
@@ -83,11 +85,15 @@ exports.verifyOtp = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-  const token = jwt.sign({
-  userId: user._id,
-  role: user.role,
-  organizationName: user.organizationName // ✅
-}, 'secret', { expiresIn: '1d' });
+    const token = jwt.sign(
+      {
+        userId: user._id, // ✅ FIXED from `saved` to `user`
+        role: user.role,
+        organizationName: user.organizationName,
+      },
+      process.env.JWT_SECRET || 'secret',
+      { expiresIn: '1d' }
+    );
 
     res.status(200).json({
       message: 'Login successful',

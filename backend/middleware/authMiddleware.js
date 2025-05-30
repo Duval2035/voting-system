@@ -1,4 +1,4 @@
-// backend/middleware/authMiddleware.js
+// middleware/authMiddleware.js
 const jwt = require("jsonwebtoken");
 
 module.exports = (req, res, next) => {
@@ -12,7 +12,12 @@ module.exports = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || "your_jwt_secret");
-    req.user = decoded;
+    // Attach decoded fields to request
+    req.user = {
+      userId: decoded.userId,
+      role: decoded.role,
+      organizationName: decoded.organizationName // ✅ important
+    };
     next();
   } catch (err) {
     console.error("JWT Error:", err);

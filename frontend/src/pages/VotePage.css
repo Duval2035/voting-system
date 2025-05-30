@@ -1,39 +1,74 @@
 .vote-page {
-  padding: 2rem;
-  background-color: #f4f7fa;
-  min-height: 90vh;
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 1rem;
+  font-family: "Segoe UI", sans-serif;
 }
 
-.vote-form {
-  margin-top: 1.5rem;
-  background: white;
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+.vote-page h2 {
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
 }
 
-.vote-form h4 {
+.vote-page p {
   margin-bottom: 1rem;
 }
 
-.candidate-option {
-  display: block;
-  margin-bottom: 10px;
-  font-size: 1rem;
-}
-
-.already-voted {
-  color: green;
-  font-weight: bold;
-  font-size: 1.1rem;
-}
-
-.submit-btn {
-  background-color: #0066cc;
-  color: white;
-  border: none;
-  padding: 10px 20px;
+.candidate-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
   margin-top: 1rem;
+}
+
+.candidate-card {
+  background-color: #f7f7f7;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+  text-align: center;
+}
+
+.candidate-img {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin-bottom: 1rem;
+}
+
+.candidate-details h4 {
+  margin: 0.5rem 0;
+}
+
+.candidate-details p {
+  font-size: 0.95rem;
+  margin: 0.3rem 0;
+}
+
+.candidate-details button {
+  margin-top: 0.8rem;
+  background-color: #007bff;
+  color: #fff;
+  padding: 6px 14px;
+  border: none;
   border-radius: 5px;
   cursor: pointer;
+  font-weight: 500;
+}
+
+.candidate-details button:hover {
+  background-color: #0056b3;
+}
+
+.candidate-details button.voted {
+  background-color: #28a745;
+  cursor: not-allowed;
+}
+
+.vote-message {
+  margin-top: 1rem;
+  font-weight: bold;
+  color: #333;
 }

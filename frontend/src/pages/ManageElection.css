@@ -81,3 +81,9 @@
 .candidate-card button:hover {
   opacity: 0.9;
 }
+.candidate-form img {
+  display: block;
+  margin-top: 0.5rem;
+  border-radius: 8px;
+  max-height: 80px;
+}

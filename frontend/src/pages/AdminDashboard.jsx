@@ -1,3 +1,4 @@
+// src/pages/AdminDashboard.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./AdminDashboard.css";
@@ -10,29 +11,23 @@ const AdminDashboard = () => {
   const [filter, setFilter] = useState("all");
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
     const fetchElections = async () => {
       try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          setError("Unauthorized: No token");
-          return;
-        }
-
         const res = await fetch(`${API_BASE_URL}/elections`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
 
-        if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(errorData.message || "Failed to fetch elections");
-        }
-
         const data = await res.json();
-        setElections(data);
+        if (res.ok) {
+          setElections(data);
+        } else {
+          throw new Error(data.message || "Failed to fetch elections");
+        }
       } catch (err) {
         console.error("Error loading elections:", err.message);
         setError(err.message);
@@ -40,12 +35,11 @@ const AdminDashboard = () => {
     };
 
     fetchElections();
-  }, []);
+  }, [token]);
 
-
-const filteredElections = elections.filter((election) =>
-  filter === "all" ? true : election.status === filter
-);
+  const filteredElections = elections.filter((election) =>
+    filter === "all" ? true : election.status === filter
+  );
 
   const stats = {
     total: elections.length,
@@ -84,14 +78,13 @@ const filteredElections = elections.filter((election) =>
             <div key={election._id} className="election-card">
               <div className="election-header">
                 <h3>{election.title}</h3>
-                <span className={`status-badge`}>
-  {new Date(election.startDate) > new Date()
-    ? "Upcoming"
-    : new Date(election.endDate) < new Date()
-    ? "Ended"
-    : "Active"}
-</span>
- 
+                <span className="status-badge">
+                  {new Date(election.startDate) > new Date()
+                    ? "Upcoming"
+                    : new Date(election.endDate) < new Date()
+                    ? "Ended"
+                    : "Active"}
+                </span>
               </div>
               <p className="org-name">{election.organizationName || "No organization"}</p>
               <p className="description">{election.description}</p>
