@@ -81,29 +81,42 @@ const VotePage = () => {
       <p>{election.description}</p>
       <h3>🗳️ Choose Your Candidate</h3>
 
-      <div className="candidate-grid">
-        {candidates.map((candidate) => (
-          <div key={candidate._id} className="candidate-card">
-            <img src={candidate.image} alt={candidate.name} className="candidate-img" />
-            <div className="candidate-details">
-              <h4>{candidate.name}</h4>
-              <p><strong>Position:</strong> {candidate.position}</p>
-              <p>{candidate.bio}</p>
-              <button
-                onClick={() => handleVote(candidate._id)}
-                disabled={votedCandidateId !== null}
-                className={votedCandidateId === candidate._id ? "voted" : ""}
-              >
-                {votedCandidateId === candidate._id ? "✅ Voted" : "Vote"}
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {message && <p className="vote-message">{message}</p>}
+{candidates.map((candidate) => (
+  <div className="candidate-block" key={candidate._id}>
+    <img
+      src={`http://localhost:5000${candidate.image}`}
+      alt={candidate.name}
+      onError={(e) => {
+        e.target.onerror = null;
+        e.target.src = "https://via.placeholder.com/100";
+      }}
+    />
+    <div className="info">
+      <h4>{candidate.name}</h4>
+      <p><strong>Position:</strong> {candidate.position}</p>
+      <p>{candidate.bio}</p>
+      <label>
+        <input
+          type="radio"
+          name="candidate"
+          value={candidate._id}
+          checked={votedCandidateId === candidate._id}
+          onChange={() => setVotedCandidateId(candidate._id)}
+          disabled={!!votedCandidateId}
+        />
+        Vote for {candidate.name}
+      </label>
+      <button
+        onClick={() => handleVote(candidate._id)}
+        disabled={!!votedCandidateId}
+      >
+        Submit Vote
+      </button>
     </div>
+  </div>
+))}
+</div>
   );
-};
+}
 
 export default VotePage;

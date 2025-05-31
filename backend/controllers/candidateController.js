@@ -1,17 +1,19 @@
 // backend/controllers/candidateController.js
 const Candidate = require("../models/Candidate");
 
+// ✅ Add a new candidate (with image upload support)
 exports.addCandidate = async (req, res) => {
   try {
     const electionId = req.params.id;
-    const { name, position, bio, image } = req.body;
+    const { name, position, bio } = req.body;
+    const imageUrl = req.file ? `/uploads/${req.file.filename}` : req.body.image || "";
 
     const candidate = new Candidate({
       election: electionId,
       name,
       position,
       bio,
-      image,
+      image: imageUrl,
     });
 
     await candidate.save();
@@ -22,6 +24,7 @@ exports.addCandidate = async (req, res) => {
   }
 };
 
+// ✅ Get candidates by election
 exports.getCandidatesByElection = async (req, res) => {
   try {
     const candidates = await Candidate.find({ election: req.params.electionId });
@@ -32,13 +35,18 @@ exports.getCandidatesByElection = async (req, res) => {
   }
 };
 
+// ✅ Update candidate (with optional image upload)
 exports.updateCandidate = async (req, res) => {
   try {
-    const { name, position, bio, image } = req.body;
+    const { name, position, bio } = req.body;
+    const imageUrl = req.file ? `/uploads/${req.file.filename}` : req.body.image || "";
+
+    const updateData = { name, position, bio };
+    if (imageUrl) updateData.image = imageUrl;
 
     const updated = await Candidate.findByIdAndUpdate(
-      req.params.candidateId,
-      { name, position, bio, image },
+      req.params.id,
+      updateData,
       { new: true }
     );
 
@@ -49,9 +57,10 @@ exports.updateCandidate = async (req, res) => {
   }
 };
 
+// ✅ Delete candidate
 exports.deleteCandidate = async (req, res) => {
   try {
-    await Candidate.findByIdAndDelete(req.params.candidateId);
+    await Candidate.findByIdAndDelete(req.params.id);
     res.status(200).json({ message: "Candidate deleted" });
   } catch (err) {
     console.error("Delete candidate error:", err);

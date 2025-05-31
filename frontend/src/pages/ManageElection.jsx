@@ -114,7 +114,15 @@ const ManageElection = () => {
         <input name="position" placeholder="Position" value={newCandidate.position} onChange={handleChange} required />
         <textarea name="bio" placeholder="Biography" value={newCandidate.bio} onChange={handleChange} required />
         <input type="file" accept="image/*" onChange={handleFileChange} />
-        {newCandidate.image && <img src={newCandidate.image} alt="Preview" style={{ width: "80px", marginTop: "10px" }} />}
+        {newCandidate.image && <img
+  src={`http://localhost:5000${candidate.image}`}
+  alt={candidate.name}
+  onError={(e) => {
+    e.target.onerror = null;
+    e.target.src = "https://via.placeholder.com/100"; // fallback image
+  }}
+/>
+}
         <button type="submit">{editing ? "Update" : "Add"} Candidate</button>
       </form>
 
@@ -122,7 +130,8 @@ const ManageElection = () => {
         <h3>Candidate List</h3>
         {candidates.map((candidate) => (
           <div className="candidate-card" key={candidate._id}>
-            <img src={candidate.image} alt={candidate.name} />
+            <img src={`http://localhost:5000${candidate.image}`} alt={candidate.name} />
+
             <div>
               <h4>{candidate.name}</h4>
               <p><strong>Position:</strong> {candidate.position}</p>
