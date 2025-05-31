@@ -1,4 +1,5 @@
 // src/pages/ManageElection.jsx
+
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import API_BASE_URL from "../config";
@@ -13,13 +14,12 @@ const ManageElection = () => {
     name: "",
     position: "",
     bio: "",
-    image: "" // will hold base64 or URL preview
+    image: null,
   });
 
-  const [file, setFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
   const [editing, setEditing] = useState(null);
 
-  // Load candidates
   useEffect(() => {
     const fetchCandidates = async () => {
       const res = await fetch(`${API_BASE_URL}/candidates/by-election/${id}`);
@@ -30,49 +30,59 @@ const ManageElection = () => {
   }, [id]);
 
   const handleChange = (e) => {
-    setNewCandidate({ ...newCandidate, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setNewCandidate((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleFileChange = (e) => {
-    const imageFile = e.target.files[0];
-    if (imageFile) {
-      setFile(imageFile);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setNewCandidate({ ...newCandidate, image: reader.result }); // base64 preview
-      };
-      reader.readAsDataURL(imageFile);
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setNewCandidate((prev) => ({ ...prev, image: file }));
+      setImagePreview(URL.createObjectURL(file));
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const formData = new FormData();
+    formData.append("name", newCandidate.name);
+    formData.append("position", newCandidate.position);
+    formData.append("bio", newCandidate.bio);
+    if (newCandidate.image) formData.append("image", newCandidate.image);
+
     const url = editing
       ? `${API_BASE_URL}/candidates/${id}/${editing}`
       : `${API_BASE_URL}/candidates/${id}`;
+
     const method = editing ? "PUT" : "POST";
 
     const res = await fetch(url, {
       method,
       headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(newCandidate)
+      body: formData,
     });
 
+    const data = await res.json();
+
     if (res.ok) {
-      const updated = await res.json();
       if (editing) {
         setCandidates((prev) =>
-          prev.map((c) => (c._id === updated._id ? updated : c))
+          prev.map((c) => (c._id === data._id ? data : c))
         );
       } else {
-        setCandidates([...candidates, updated]);
+        setCandidates([...candidates, data]);
       }
 
-      setNewCandidate({ name: "", position: "", bio: "", image: "" });
-      setFile(null);
+      setNewCandidate({
+        name: "",
+        position: "",
+        bio: "",
+        image: null,
+      });
+      setImagePreview("");
       setEditing(null);
     } else {
       alert("Failed to save candidate.");
@@ -84,8 +94,9 @@ const ManageElection = () => {
       name: candidate.name,
       position: candidate.position,
       bio: candidate.bio,
-      image: candidate.image
+      image: null,
     });
+    setImagePreview(candidate.image || "");
     setEditing(candidate._id);
   };
 
@@ -94,7 +105,9 @@ const ManageElection = () => {
 
     const res = await fetch(`${API_BASE_URL}/candidates/${candidateId}`, {
       method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` }
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
 
     if (res.ok) {
@@ -110,19 +123,38 @@ const ManageElection = () => {
 
       <form className="candidate-form" onSubmit={handleSubmit}>
         <h3>{editing ? "Edit Candidate" : "Add New Candidate"}</h3>
-        <input name="name" placeholder="Full Name" value={newCandidate.name} onChange={handleChange} required />
-        <input name="position" placeholder="Position" value={newCandidate.position} onChange={handleChange} required />
-        <textarea name="bio" placeholder="Biography" value={newCandidate.bio} onChange={handleChange} required />
-        <input type="file" accept="image/*" onChange={handleFileChange} />
-        {newCandidate.image && <img
-  src={`http://localhost:5000${candidate.image}`}
-  alt={candidate.name}
-  onError={(e) => {
-    e.target.onerror = null;
-    e.target.src = "https://via.placeholder.com/100"; // fallback image
-  }}
-/>
-}
+
+        <input
+          name="name"
+          placeholder="Full Name"
+          value={newCandidate.name}
+          onChange={handleChange}
+          required
+        />
+        <input
+          name="position"
+          placeholder="Position"
+          value={newCandidate.position}
+          onChange={handleChange}
+          required
+        />
+        <textarea
+          name="bio"
+          placeholder="Biography"
+          value={newCandidate.bio}
+          onChange={handleChange}
+          required
+        />
+
+        <input type="file" accept="image/*" onChange={handleImageChange} />
+
+        {imagePreview && (
+          <div className="image-preview">
+            <p>Image Preview:</p>
+            <img src={imagePreview} alt="Preview" style={{ width: "120px", borderRadius: "8px" }} />
+          </div>
+        )}
+
         <button type="submit">{editing ? "Update" : "Add"} Candidate</button>
       </form>
 
@@ -130,8 +162,7 @@ const ManageElection = () => {
         <h3>Candidate List</h3>
         {candidates.map((candidate) => (
           <div className="candidate-card" key={candidate._id}>
-            <img src={`http://localhost:5000${candidate.image}`} alt={candidate.name} />
-
+            <img src={candidate.image} alt={candidate.name} />
             <div>
               <h4>{candidate.name}</h4>
               <p><strong>Position:</strong> {candidate.position}</p>
