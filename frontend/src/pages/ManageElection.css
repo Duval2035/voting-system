@@ -1,87 +1,96 @@
 /* src/pages/ManageElection.css */
 
 .manage-election-container {
-  max-width: 900px;
-  margin: 2rem auto;
-  padding: 1rem;
-  background-color: #fff;
-  border-radius: 8px;
+  max-width: 1000px;
+  margin: auto;
+  padding: 2rem;
   font-family: "Segoe UI", sans-serif;
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
 }
 
 .candidate-form {
+  background: #f9f9f9;
+  padding: 1.5rem;
+  border-radius: 8px;
   margin-bottom: 2rem;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+}
+
+.candidate-form h3 {
+  margin-bottom: 1rem;
 }
 
 .candidate-form input,
-.candidate-form textarea,
-.candidate-form button {
-  display: block;
-  width: 100%;
-  margin-top: 0.75rem;
-  padding: 0.6rem;
-  font-size: 1rem;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-}
-
 .candidate-form textarea {
-  resize: vertical;
-  min-height: 80px;
+  width: 100%;
+  padding: 0.6rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.image-preview {
+  width: 150px;
+  height: auto;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  object-fit: cover;
+  border: 1px solid #ddd;
 }
 
 .candidate-form button {
-  background-color: #007bff;
-  color: #fff;
+  padding: 0.6rem 1.2rem;
+  background-color: #0066ff;
+  color: white;
   border: none;
+  border-radius: 6px;
+  font-weight: bold;
   cursor: pointer;
 }
 
-.candidate-form button:hover {
-  background-color: #0056b3;
-}
-
 .candidate-list {
-  margin-top: 2rem;
+  display: flex;
+  flex-wrap: initial;
+  gap: 2rem;
+  justify-content: center;
 }
 
 .candidate-card {
   display: flex;
-  align-items: flex-start;
   gap: 1rem;
-  border: 1px solid #ddd;
+  background: #fff;
+  border-radius: 10px;
   padding: 1rem;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-  background-color: #f9f9f9;
+  align-items: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
-.candidate-card img {
-  width: 100px;
-  height: 100px;
+.candidate-img {
+  width: 150px;
+  height: 150px;
   object-fit: cover;
-  border-radius: 8px;
-  border: 1px solid #ccc;
+  border-radius: 10px;
+  margin-right: 1rem;
 }
 
-.candidate-card .actions {
+.actions {
   margin-top: 0.5rem;
 }
 
-.candidate-card .actions button {
+.actions button {
   margin-right: 0.5rem;
-  padding: 0.4rem 0.8rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
   border: none;
   border-radius: 5px;
   cursor: pointer;
 }
 
-.candidate-card .actions .danger {
-  background-color: #dc3545;
-  color: #fff;
+.actions .danger {
+  background-color: crimson;
+  color: white;
 }
 
-.candidate-card .actions button:hover {
-  opacity: 0.9;
+.actions button:first-child {
+  background-color: #007bff;
+  color: white;
 }

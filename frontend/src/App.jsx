@@ -12,6 +12,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import RequestOtp from "./pages/RequestOtp";
 import VerifyOtp from "./pages/VerifyOtp";
 import UserVoting from "./pages/UserVoting";
+import ResultsPage from "./pages/ResultsPage";
+
 
 function App() {
   return (
@@ -22,11 +24,9 @@ function App() {
         <Route path="/register" element={<Layout><Register /></Layout>} />
         <Route path="/request-otp" element={<RequestOtp />} />
         <Route path="/verify-otp" element={<VerifyOtp />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/user/voting" element={<UserVoting />} />
-        <Route path="/create-election" element={<CreateElection />} />
-        <Route path="/user/vote/:electionId" element={<VotePage />} />
-        <Route path="/manage-election/:id" element={<ManageElection />} />
+        <Route path="/results/:id" element={<ResultsPage />} />
+
         <Route
           path="/admin/dashboard"
           element={

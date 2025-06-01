@@ -101,7 +101,7 @@ const Register = () => {
       {message && <p className="success-msg">{message}</p>}
 
       <p className="footer-link">
-        Already have an account? <Link to="/login">Login</Link>
+        Already have an account? <Link to="/login"><span className="footer-if">Login</span></Link>
       </p>
     </div>
   );

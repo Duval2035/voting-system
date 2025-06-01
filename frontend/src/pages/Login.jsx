@@ -92,13 +92,13 @@ const Login = () => {
           </>
         )}
 
-        <button type="submit">{step === 1 ? "Send OTP" : "Verify OTP"}</button>
+        <button type="submit">{step === 1 ? "Send Password" : "Verify password"}</button>
       </form>
 
       {error && <p className="error-msg">{error}</p>}
 
       <p className="footer-link">
-        Don’t have an account? <Link to="/register">Register</Link>
+        Don’t have an account? <Link to="/register"><span className="footer-if">Register</span></Link>
       </p>
     </div>
   );

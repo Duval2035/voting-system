@@ -8,7 +8,6 @@ const VotePage = () => {
   const { id } = useParams();
   const [election, setElection] = useState(null);
   const [candidates, setCandidates] = useState([]);
-  const [selectedCandidate, setSelectedCandidate] = useState("");
   const [message, setMessage] = useState("");
   const token = localStorage.getItem("token");
 
@@ -16,14 +15,20 @@ const VotePage = () => {
     const fetchData = async () => {
       try {
         const res = await fetch(`${API_BASE_URL}/elections/${id}`, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
         const electionData = await res.json();
-        if (res.ok) setElection(electionData);
+        if (res.ok) {
+          setElection(electionData);
+        } else {
+          setMessage("Election not found or unauthorized.");
+        }
 
         const cRes = await fetch(`${API_BASE_URL}/candidates/by-election/${id}`);
         const cData = await cRes.json();
-        if (cRes.ok) setCandidates(cData);
+        if (cRes.ok) {
+          setCandidates(cData);
+        }
       } catch (err) {
         setMessage("An error occurred while loading data.");
       }
@@ -32,24 +37,28 @@ const VotePage = () => {
     fetchData();
   }, [id, token]);
 
-  const handleVote = async () => {
-    if (!selectedCandidate) return;
+  const handleVote = async (candidateId) => {
+    if (!window.confirm("Are you sure you want to vote for this candidate?")) return;
 
     try {
       const res = await fetch(`${API_BASE_URL}/votes`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           electionId: id,
-          candidateId: selectedCandidate
-        })
+          candidateId,
+        }),
       });
 
       const result = await res.json();
-      setMessage(res.ok ? "✅ Vote submitted successfully." : result.message || "❌ Failed to vote.");
+      if (res.ok) {
+        setMessage("✅ Vote submitted successfully.");
+      } else {
+        setMessage(result.message || "❌ Failed to submit vote.");
+      }
     } catch (err) {
       setMessage("Error submitting vote.");
     }
@@ -61,36 +70,28 @@ const VotePage = () => {
     <div className="vote-page">
       <h2>{election.title}</h2>
       <p>{election.description}</p>
-      <h3>Select a candidate:</h3>
+      <h3>Choose your candidate:</h3>
+
       <div className="candidate-list">
         {candidates.map((candidate) => (
-          <div className="candidate-block" key={candidate._id}>
+          <div key={candidate._id} className="candidate-card">
             <img
               src={`http://localhost:5000${candidate.image}`}
               alt={candidate.name}
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = "https://via.placeholder.com/100";
-              }}
+              className="candidate-img"
             />
-            <div className="info">
+            <div className="candidate-info">
               <h4>{candidate.name}</h4>
               <p><strong>Position:</strong> {candidate.position}</p>
               <p>{candidate.bio}</p>
-              <label>
-                <input
-                  type="radio"
-                  name="candidate"
-                  value={candidate._id}
-                  onChange={() => setSelectedCandidate(candidate._id)}
-                />
-                Vote for {candidate.name}
-              </label>
+              <button onClick={() => handleVote(candidate._id)}>
+                Vote
+              </button>
             </div>
           </div>
         ))}
       </div>
-      <button disabled={!selectedCandidate} onClick={handleVote}>Submit Vote</button>
+
       {message && <p className="message">{message}</p>}
     </div>
   );

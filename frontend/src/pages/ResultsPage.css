@@ -1,0 +1,95 @@
+/* src/pages/ResultsPage.css */
+.results-page {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.results-page h2 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  font-size: 1.8rem;
+  color: #333;
+}
+
+.result-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.result-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: #f9f9f9;
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid #007bff;
+}
+
+.result-image {
+  width: 90px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid #007bff;
+}
+
+.result-details {
+  flex-grow: 1;
+}
+
+.result-details h4 {
+  margin: 0 0 5px;
+  font-size: 1.1rem;
+}
+
+.result-details p {
+  margin: 0.3rem 0;
+}
+
+.progress-bar-wrapper {
+  background: #e0e0e0;
+  border-radius: 4px;
+  height: 12px;
+  margin-top: 0.5rem;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background: #007bff;
+  transition: width 0.4s ease;
+}
+
+.vote-count {
+  font-size: 0.9rem;
+  color: #333;
+  margin-top: 0.3rem;
+}
+
+.print-btn {
+  margin: 2rem auto 0;
+  display: block;
+  background: #28a745;
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.4rem;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.print-btn:hover {
+  background: #218838;
+}
+
+@media print {
+  .print-btn {
+    display: none;
+  }
+}

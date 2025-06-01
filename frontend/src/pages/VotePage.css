@@ -1,88 +1,63 @@
-/* src/pages/VotePage.css */
-
 .vote-page {
-  max-width: 800px;
-  margin: 2rem auto;
-  padding: 1.5rem;
-  background-color: #fff;
-  border-radius: 8px;
+  max-width: 900px;
+  margin: auto;
+  padding: 2rem;
   font-family: "Segoe UI", sans-serif;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-.vote-page h2 {
-  font-size: 1.8rem;
-  margin-bottom: 0.5rem;
-}
-
-.vote-page p {
-  margin-bottom: 1.5rem;
+  background: #fdfdfd;
 }
 
 .candidate-list {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.5rem;
+  margin-top: 1rem;
 }
 
-.candidate-block {
+.candidate-card {
   display: flex;
-  gap: 1.2rem;
+  background: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
   padding: 1rem;
-  background-color: #f5f5f5;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  align-items: flex-start;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.05);
+  align-items: center;
 }
 
-.candidate-block img {
-  width: 100px;
-  height: 100px;
+.candidate-img {
+  width: 120px;
+  height: 120px;
   object-fit: cover;
   border-radius: 8px;
-  border: 1px solid #999;
+  margin-right: 1rem;
 }
 
-.candidate-block .info {
-  flex: 1;
-}
-
-.candidate-block .info h4 {
+.candidate-info h4 {
   margin: 0;
   font-size: 1.2rem;
-  font-weight: 600;
+  color: #333;
 }
 
-.candidate-block .info p {
-  margin: 0.3rem 0;
+.candidate-info p {
+  margin: 0.2rem 0;
+  color: #555;
 }
 
-.candidate-block label {
+.candidate-info button {
   margin-top: 0.8rem;
-  display: inline-block;
-  cursor: pointer;
-}
-
-.vote-page button {
-  margin-top: 2rem;
-  padding: 0.6rem 1.2rem;
-  font-size: 1rem;
-  border: none;
-  background-color: #007bff;
+  padding: 0.5rem 1rem;
+  background-color: #0077cc;
   color: white;
+  border: none;
   border-radius: 6px;
   cursor: pointer;
 }
 
-.vote-page button:disabled {
-  background-color: #999;
-  cursor: not-allowed;
+.candidate-info button:hover {
+  background-color: #005fa3;
 }
 
 .message {
   margin-top: 1rem;
-  font-weight: 500;
-}
-.message.success {
   color: green;
+  font-weight: bold;
 }

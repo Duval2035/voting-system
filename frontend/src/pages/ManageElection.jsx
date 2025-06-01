@@ -1,5 +1,4 @@
 // src/pages/ManageElection.jsx
-
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import API_BASE_URL from "../config";
@@ -17,9 +16,10 @@ const ManageElection = () => {
     image: null,
   });
 
-  const [imagePreview, setImagePreview] = useState("");
+  const [preview, setPreview] = useState(null);
   const [editing, setEditing] = useState(null);
 
+  // Fetch candidates
   useEffect(() => {
     const fetchCandidates = async () => {
       const res = await fetch(`${API_BASE_URL}/candidates/by-election/${id}`);
@@ -29,17 +29,21 @@ const ManageElection = () => {
     fetchCandidates();
   }, [id]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setNewCandidate((prev) => ({ ...prev, [name]: value }));
-  };
-
+  // Handle image preview
   const handleImageChange = (e) => {
     const file = e.target.files[0];
+    setNewCandidate((prev) => ({ ...prev, image: file }));
     if (file) {
-      setNewCandidate((prev) => ({ ...prev, image: file }));
-      setImagePreview(URL.createObjectURL(file));
+      const reader = new FileReader();
+      reader.onloadend = () => setPreview(reader.result);
+      reader.readAsDataURL(file);
+    } else {
+      setPreview(null);
     }
+  };
+
+  const handleChange = (e) => {
+    setNewCandidate({ ...newCandidate, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
@@ -54,7 +58,6 @@ const ManageElection = () => {
     const url = editing
       ? `${API_BASE_URL}/candidates/${id}/${editing}`
       : `${API_BASE_URL}/candidates/${id}`;
-
     const method = editing ? "PUT" : "POST";
 
     const res = await fetch(url, {
@@ -65,25 +68,19 @@ const ManageElection = () => {
       body: formData,
     });
 
-    const data = await res.json();
-
+    const updated = await res.json();
     if (res.ok) {
       if (editing) {
         setCandidates((prev) =>
-          prev.map((c) => (c._id === data._id ? data : c))
+          prev.map((c) => (c._id === updated._id ? updated : c))
         );
       } else {
-        setCandidates([...candidates, data]);
+        setCandidates([...candidates, updated]);
       }
 
-      setNewCandidate({
-        name: "",
-        position: "",
-        bio: "",
-        image: null,
-      });
-      setImagePreview("");
+      setNewCandidate({ name: "", position: "", bio: "", image: null });
       setEditing(null);
+      setPreview(null);
     } else {
       alert("Failed to save candidate.");
     }
@@ -96,8 +93,8 @@ const ManageElection = () => {
       bio: candidate.bio,
       image: null,
     });
-    setImagePreview(candidate.image || "");
     setEditing(candidate._id);
+    setPreview(`${API_BASE_URL}${candidate.image}`);
   };
 
   const handleDelete = async (candidateId) => {
@@ -105,9 +102,7 @@ const ManageElection = () => {
 
     const res = await fetch(`${API_BASE_URL}/candidates/${candidateId}`, {
       method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { Authorization: `Bearer ${token}` },
     });
 
     if (res.ok) {
@@ -146,13 +141,10 @@ const ManageElection = () => {
           required
         />
 
+        <label>Candidate Image:</label>
         <input type="file" accept="image/*" onChange={handleImageChange} />
-
-        {imagePreview && (
-          <div className="image-preview">
-            <p>Image Preview:</p>
-            <img src={imagePreview} alt="Preview" style={{ width: "120px", borderRadius: "8px" }} />
-          </div>
+        {preview && (
+          <img src={preview} alt="preview" className="image-preview" />
         )}
 
         <button type="submit">{editing ? "Update" : "Add"} Candidate</button>
@@ -162,7 +154,12 @@ const ManageElection = () => {
         <h3>Candidate List</h3>
         {candidates.map((candidate) => (
           <div className="candidate-card" key={candidate._id}>
-            <img src={candidate.image} alt={candidate.name} />
+           <img
+  src={`http://localhost:5000${candidate.image}`}
+  alt={candidate.name}
+  className="candidate-img"
+/>
+
             <div>
               <h4>{candidate.name}</h4>
               <p><strong>Position:</strong> {candidate.position}</p>

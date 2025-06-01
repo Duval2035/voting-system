@@ -1,69 +1,53 @@
-// backend/controllers/candidateController.js
-const Candidate = require("../models/Candidate");
+const Candidate = require('../models/Candidate');
+const path = require('path');
 
-// ✅ Add a new candidate (with image upload support)
-exports.addCandidate = async (req, res) => {
+// Add or Update Candidate
+exports.addOrUpdateCandidate = async (req, res) => {
   try {
     const electionId = req.params.id;
-    const { name, position, bio } = req.body;
-    const imageUrl = req.file ? `/uploads/${req.file.filename}` : req.body.image || "";
+    const candidateId = req.params.candidateId;
 
-    const candidate = new Candidate({
-      election: electionId,
-      name,
-      position,
-      bio,
+    const imageUrl = req.file ? `/uploads/${req.file.filename}` : req.body.existingImage || "";
+
+    const data = {
+      name: req.body.name,
+      position: req.body.position,
+      bio: req.body.bio,
       image: imageUrl,
-    });
+      election: electionId,
+    };
 
-    await candidate.save();
-    res.status(201).json(candidate);
+    let candidate;
+    if (candidateId) {
+      candidate = await Candidate.findByIdAndUpdate(candidateId, data, { new: true });
+    } else {
+      candidate = new Candidate(data);
+      await candidate.save();
+    }
+
+    res.status(200).json(candidate);
   } catch (err) {
-    console.error("Add candidate error:", err);
-    res.status(500).json({ message: "Failed to add candidate" });
+    console.error("Error saving candidate:", err);
+    res.status(500).json({ message: "Failed to save candidate." });
   }
 };
 
-// ✅ Get candidates by election
 exports.getCandidatesByElection = async (req, res) => {
   try {
     const candidates = await Candidate.find({ election: req.params.electionId });
     res.status(200).json(candidates);
   } catch (err) {
-    console.error("Get candidates error:", err);
+    console.error("Error loading candidates:", err);
     res.status(500).json({ message: "Failed to fetch candidates" });
   }
 };
 
-// ✅ Update candidate (with optional image upload)
-exports.updateCandidate = async (req, res) => {
-  try {
-    const { name, position, bio } = req.body;
-    const imageUrl = req.file ? `/uploads/${req.file.filename}` : req.body.image || "";
-
-    const updateData = { name, position, bio };
-    if (imageUrl) updateData.image = imageUrl;
-
-    const updated = await Candidate.findByIdAndUpdate(
-      req.params.id,
-      updateData,
-      { new: true }
-    );
-
-    res.status(200).json(updated);
-  } catch (err) {
-    console.error("Update candidate error:", err);
-    res.status(500).json({ message: "Failed to update candidate" });
-  }
-};
-
-// ✅ Delete candidate
 exports.deleteCandidate = async (req, res) => {
   try {
     await Candidate.findByIdAndDelete(req.params.id);
     res.status(200).json({ message: "Candidate deleted" });
   } catch (err) {
-    console.error("Delete candidate error:", err);
+    console.error("Error deleting candidate:", err);
     res.status(500).json({ message: "Failed to delete candidate" });
   }
 };
