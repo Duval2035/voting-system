@@ -49,7 +49,6 @@ const CreateElection = () => {
 
   return (
     <>
-      <Navbar />
       <div className="create-election-container">
         <h2>Create Election</h2>
         <form onSubmit={handleSubmit}>
@@ -60,7 +59,6 @@ const CreateElection = () => {
           <button type="submit">Create</button>
         </form>
       </div>
-      <Footer />
     </>
   );
 };

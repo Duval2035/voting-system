@@ -19,18 +19,20 @@ app.use(cors({
   credentials: true
 }));
 
-
-app.use(express.json());
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // API Routes
+app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 
-
+app.use(express.urlencoded({ extended: true }));
+app.use('/api', (req, res, next) => {
+  console.log(`API Request: ${req.method} ${req.originalUrl}`);
+  next();
+});
 app.use('/api/auth', authRoutes);
 app.use('/api/elections', electionRoutes);
 app.use('/api/candidates', candidateRoutes);
 app.use('/api/votes', voteRoutes);
-
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`✅ Server running on http://localhost:${PORT}`);

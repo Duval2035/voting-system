@@ -50,7 +50,7 @@ const AdminDashboard = () => {
 
   return (
     <>
-      <Navbar />
+  
       <div className="admin-dashboard">
         <h1>Admin Dashboard</h1>
         <p>Manage elections and view results</p>
@@ -97,7 +97,7 @@ const AdminDashboard = () => {
           ))}
         </div>
       </div>
-      <Footer />
+
     </>
   );
 };

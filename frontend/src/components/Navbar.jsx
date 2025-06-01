@@ -1,17 +1,53 @@
-// src/components/Navbar.jsx
-import React from 'react';
-import './Navbar.css';
-import { Link } from 'react-router-dom';
+import React from "react";
+import { Link, useNavigate } from "react-router-dom";
+import "./Navbar.css";
 
 const Navbar = () => {
+  const navigate = useNavigate();
+  const token = localStorage.getItem("token");
+  const user = JSON.parse(localStorage.getItem("user"));
+
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate("/login");
+  };
+
   return (
     <nav className="navbar">
-        <div className="navbar-logo">Z</div>
-      <div className="navbar-brand">ZeroFraud vote</div>
+      <div className="navbar-logo">Z</div>
+      <div className="navbar-brand">ZeroFraud Vote</div>
+
       <ul className="navbar-links">
         <li><Link to="/">Home</Link></li>
-        <li><Link to="/login">Log In</Link></li>
-        <li><Link to="/register" className="signup-btn">Sign Up</Link></li>
+
+        {!token && (
+          <>
+            <li><Link to="/login">Log In</Link></li>
+            <li><Link to="/register" className="signup-btn">Sign Up</Link></li>
+          </>
+        )}
+
+        {token && user?.role === "admin" && (
+          <>
+            <li><Link to="/admin/dashboard">Admin</Link></li>
+            <li><Link to="/create-election">Create Election</Link></li>
+            <li><button className="logout-btn" onClick={handleLogout}>Logout</button></li>
+          </>
+        )}
+
+        {token && user?.role === "user" && (
+          <>
+            <li><Link to="/user/dashboard">User</Link></li>
+            <li><button className="logout-btn" onClick={handleLogout}>Logout</button></li>
+          </>
+        )}
+
+        {token && user?.role === "auditor" && (
+          <>
+            <li><Link to="/auditor">Auditor</Link></li>
+            <li><button className="logout-btn" onClick={handleLogout}>Logout</button></li>
+          </>
+        )}
       </ul>
     </nav>
   );

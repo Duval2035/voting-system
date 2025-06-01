@@ -1,4 +1,3 @@
-/* src/components/Navbar.css */
 .navbar {
   display: flex;
   justify-content: space-between;
@@ -24,17 +23,25 @@
   border-radius: 8px;
   margin-bottom: 10px;
 }
+
 .navbar-links {
   list-style: none;
   display: flex;
+  align-items: center;
   gap: 16px;
+  margin: 0;
+  padding: 0;
 }
 
-.navbar-links a {
+.navbar-links a,
+.logout-btn {
   text-decoration: none;
   font-family: 'Arial', sans-serif;
   color: #00070a;
-  font-weight: 1500;
+  font-weight: bold;
+  background: none;
+  border: none;
+  cursor: pointer;
 }
 
 .signup-btn {
@@ -42,4 +49,15 @@
   color: white !important;
   padding: 8px 16px;
   border-radius: 5px;
+}
+
+.logout-btn {
+  padding: 6px 12px;
+  border-radius: 5px;
+  background-color: #dc2626;
+  color: white;
+}
+.navbar-links a:hover,
+.navbar-links .logout-btn:hover {
+  opacity: 0.8;
 }
