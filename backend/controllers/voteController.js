@@ -2,6 +2,7 @@
 const Vote = require("../models/Vote");
 const Candidate = require("../models/Candidate");
 const Election = require("../models/Election");
+const VoteLog = require("../models/VoteLog"); 
 
 exports.submitVote = async (req, res) => {
   const { electionId, candidateId } = req.body;
@@ -21,13 +22,24 @@ exports.submitVote = async (req, res) => {
     });
 
     await vote.save();
+const timestamp = new Date();
+const hashString = `${userId}-${electionId}-${candidateId}-${timestamp.toISOString()}`;
+const hash = crypto.createHash("sha256").update(hashString).digest("hex");
 
+const log = new VoteLog({
+  user: userId,
+  election: electionId,
+  timestamp,
+  hash
+});
+await log.save();
     res.status(200).json({ message: "Vote submitted successfully." });
   } catch (error) {
     console.error("Vote submission error:", error);
     res.status(500).json({ message: "Failed to submit vote." });
   }
 };
+
 
 exports.getVotesByElection = async (req, res) => {
   try {

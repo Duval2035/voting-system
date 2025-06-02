@@ -1,5 +1,4 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -17,8 +16,7 @@ import ResultsPage from "./pages/ResultsPage";
 import AuditorDashboard from "./pages/AuditorDashboard";
 import UnauthorizedPage from "./pages/UnauthorizedPage";
 import CandidateDashboard from "./pages/CandidateDashboard";
-import CandidateResults from "./pages/CandidateResults"; // ✅ You forgot to import this
-import AuditorResults from "./pages/AuditorResults";
+import CandidateResults from "./pages/CandidateResults";
 
 function App() {
   return (
@@ -42,15 +40,6 @@ function App() {
         />
 
         <Route
-          path="/user/dashboard"
-          element={
-            <ProtectedRoute allowedRoles={["user"]}>
-              <Layout><UserDashboard /></Layout>
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
           path="/create-election"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
@@ -64,6 +53,15 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <Layout><ManageElection /></Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/user/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={["user"]}>
+              <Layout><UserDashboard /></Layout>
             </ProtectedRoute>
           }
         />
@@ -87,13 +85,6 @@ function App() {
         />
 
         <Route
-          path="/unauthorized"
-          element={
-            <Layout><UnauthorizedPage /></Layout>
-          }
-        />
-
-        <Route
           path="/candidate/dashboard"
           element={
             <ProtectedRoute allowedRoles={["candidate"]}>
@@ -110,15 +101,8 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-  path="/auditor/results/:id"
-  element={
-    <ProtectedRoute allowedRoles={["auditor"]}>
-      <Layout><AuditorResults /></Layout>
-    </ProtectedRoute>
-  }
-/>
 
+        <Route path="/unauthorized" element={<Layout><UnauthorizedPage /></Layout>} />
         <Route path="*" element={<Layout><Home /></Layout>} />
       </Routes>
     </Router>

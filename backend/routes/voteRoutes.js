@@ -1,17 +1,20 @@
-
-// routes/voteRoutes.js
 const express = require("express");
 const router = express.Router();
-const {
-  submitVote,
-  getResults,
-  getCandidateResults // ✅ add this here
-} = require("../controllers/voteController");
-
 const authMiddleware = require("../middleware/authMiddleware");
+const VoteLog = require("../models/VoteLog");
 
-router.post("/", authMiddleware, submitVote);
-router.get("/results/:id", getResults);
-router.get("/candidate/:id", authMiddleware, getCandidateResults); // ✅ this is now safe
+// GET all logs for an election (auditor only)
+router.get("/:electionId", authMiddleware, async (req, res) => {
+  try {
+    const logs = await VoteLog.find({ election: req.params.electionId })
+      .populate("user", "username email")
+      .sort({ timestamp: -1 });
+
+    res.status(200).json(logs);
+  } catch (err) {
+    console.error("Vote log fetch error:", err);
+    res.status(500).json({ message: "Error fetching vote logs" });
+  }
+});
 
 module.exports = router;

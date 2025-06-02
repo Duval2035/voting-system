@@ -9,6 +9,7 @@ const candidateRoutes = require('./routes/candidateRoutes');
 const voteRoutes = require('./routes/voteRoutes');
 const path = require("path");
 const auditorRoutes = require("./routes/auditorRoutes");
+const voteLogRoutes = require('./routes/voteLogRoutes');
 
 
 dotenv.config();
@@ -22,6 +23,7 @@ app.use(cors({
 }));
 
 // API Routes
+app.use("/api/logs", voteLogRoutes);
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 app.use("/api/auditor", auditorRoutes);
