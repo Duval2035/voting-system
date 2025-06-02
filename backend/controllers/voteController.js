@@ -1,4 +1,5 @@
 // controllers/voteController.js
+const crypto = require("crypto");
 const Vote = require("../models/Vote");
 const Candidate = require("../models/Candidate");
 const Election = require("../models/Election");
@@ -54,7 +55,6 @@ exports.getVotesByElection = async (req, res) => {
 exports.getResults = async (req, res) => {
   try {
     const electionId = req.params.id;
-
     const votes = await Vote.find({ election: electionId }).populate("candidate");
 
     const tally = {};
@@ -80,6 +80,7 @@ exports.getResults = async (req, res) => {
     res.status(500).json({ message: "Error fetching results" });
   }
 };
+
 exports.getCandidateResults = async (req, res) => {
   const userId = req.params.id;
 
@@ -105,28 +106,16 @@ exports.getCandidateResults = async (req, res) => {
   }
 };
 
-
-exports.getCandidateResults = async (req, res) => {
-  const userId = req.params.id;
-
+exports.getVoteLogs = async (req, res) => {
   try {
-    const candidate = await Candidate.findOne({ userId });
+    const { electionId } = req.params;
+    const logs = await VoteLog.find({ election: electionId })
+      .populate("user", "username email")
+      .sort({ timestamp: -1 });
 
-    if (!candidate) {
-      return res.status(404).json({ message: "Candidate not found" });
-    }
-
-    const votes = await Vote.find({ candidate: candidate._id });
-
-    res.json({
-      _id: candidate._id,
-      name: candidate.name,
-      position: candidate.position,
-      image: candidate.image,
-      votes: votes.length,
-    });
-  } catch (err) {
-    console.error("Candidate result error:", err);
-    res.status(500).json({ message: "Error fetching candidate results" });
+    res.status(200).json(logs);
+  } catch (error) {
+    console.error("Vote log fetch error:", error);
+    res.status(500).json({ message: "Error fetching vote logs" });
   }
 };

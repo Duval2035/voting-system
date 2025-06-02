@@ -1,19 +1,20 @@
 const Candidate = require('../models/Candidate');
 const path = require('path');
 
-// Add or Update Candidate
+// Create or update a candidate
 exports.addOrUpdateCandidate = async (req, res) => {
   try {
+    const { name, position, bio } = req.body;
     const electionId = req.params.id;
     const candidateId = req.params.candidateId;
 
-    const imageUrl = req.file ? `/uploads/${req.file.filename}` : req.body.existingImage || "";
+    const imagePath = req.file ? `/uploads/${req.file.filename}` : req.body.existingImage || "";
 
     const data = {
-      name: req.body.name,
-      position: req.body.position,
-      bio: req.body.bio,
-      image: imageUrl,
+      name,
+      position,
+      bio,
+      image: imagePath,
       election: electionId,
     };
 
@@ -32,36 +33,13 @@ exports.addOrUpdateCandidate = async (req, res) => {
   }
 };
 
-exports.addCandidate = async (req, res) => {
-  try {
-    const { name, position, bio } = req.body;
-    const imageUrl = req.file ? `/uploads/${req.file.filename}` : "";
-    const electionId = req.params.id;
-    const userId = req.user.userId; // 👈 get logged-in user
-
-    const candidate = new Candidate({
-      name,
-      position,
-      bio,
-      image: imageUrl,
-      election: electionId,
-      userId, // 👈 attach the user to this candidate
-    });
-
-    await candidate.save();
-    res.status(201).json(candidate);
-  } catch (err) {
-    console.error("Add candidate error:", err);
-    res.status(500).json({ message: "Failed to add candidate" });
-  }
-};
 exports.getCandidatesByElection = async (req, res) => {
   try {
     const candidates = await Candidate.find({ election: req.params.electionId });
     res.status(200).json(candidates);
   } catch (err) {
-    console.error("Error loading candidates:", err);
-    res.status(500).json({ message: "Failed to fetch candidates" });
+    console.error("Fetch candidates error:", err);
+    res.status(500).json({ message: "Failed to fetch candidates." });
   }
 };
 
@@ -73,4 +51,8 @@ exports.deleteCandidate = async (req, res) => {
     console.error("Error deleting candidate:", err);
     res.status(500).json({ message: "Failed to delete candidate" });
   }
+};
+exports.getCandidateImage = (req, res) => {
+  const imagePath = path.join(__dirname, '../uploads', req.params.filename);
+  res.sendFile(imagePath);
 };
