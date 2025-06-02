@@ -8,6 +8,8 @@ const electionRoutes = require('./routes/electionRoutes');
 const candidateRoutes = require('./routes/candidateRoutes');
 const voteRoutes = require('./routes/voteRoutes');
 const path = require("path");
+const auditorRoutes = require("./routes/auditorRoutes");
+
 
 dotenv.config();
 connectDB();
@@ -22,7 +24,7 @@ app.use(cors({
 // API Routes
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
-
+app.use("/api/auditor", auditorRoutes);
 app.use(express.urlencoded({ extended: true }));
 app.use('/api', (req, res, next) => {
   console.log(`API Request: ${req.method} ${req.originalUrl}`);

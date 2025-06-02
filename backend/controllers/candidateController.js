@@ -32,6 +32,29 @@ exports.addOrUpdateCandidate = async (req, res) => {
   }
 };
 
+exports.addCandidate = async (req, res) => {
+  try {
+    const { name, position, bio } = req.body;
+    const imageUrl = req.file ? `/uploads/${req.file.filename}` : "";
+    const electionId = req.params.id;
+    const userId = req.user.userId; // 👈 get logged-in user
+
+    const candidate = new Candidate({
+      name,
+      position,
+      bio,
+      image: imageUrl,
+      election: electionId,
+      userId, // 👈 attach the user to this candidate
+    });
+
+    await candidate.save();
+    res.status(201).json(candidate);
+  } catch (err) {
+    console.error("Add candidate error:", err);
+    res.status(500).json({ message: "Failed to add candidate" });
+  }
+};
 exports.getCandidatesByElection = async (req, res) => {
   try {
     const candidates = await Candidate.find({ election: req.params.electionId });

@@ -1,24 +1,12 @@
-const Vote = require("../models/Vote");
+// backend/controllers/auditorController.js
 const Election = require("../models/Election");
-const Candidate = require("../models/Candidate");
-const User = require("../models/User");
 
-exports.getAuditData = async (req, res) => {
+exports.getAllElections = async (req, res) => {
   try {
-    const elections = await Election.find();
-    const votes = await Vote.find().populate("user candidate election");
-
-    const logs = votes.map(vote => ({
-      user: vote.user?.email,
-      candidate: vote.candidate?.name,
-      position: vote.candidate?.position,
-      election: vote.election?.title,
-      votedAt: vote.createdAt,
-    }));
-
-    res.json({ elections, logs });
-  } catch (err) {
-    console.error("Audit fetch error:", err);
-    res.status(500).json({ message: "Failed to load audit data" });
+    const elections = await Election.find().sort({ createdAt: -1 });
+    res.status(200).json(elections);
+  } catch (error) {
+    console.error("Auditor Fetch Error:", error);
+    res.status(500).json({ message: "Failed to load elections." });
   }
 };

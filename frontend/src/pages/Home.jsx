@@ -11,8 +11,8 @@ const Home = () => {
         <div className="hero-text">
           <h1>Secure Voting Platform for All Organizations</h1>
           <p>
-            ZeroFraud Chain ensures transparent, accessible, and fraud-proof elections for
-            organizations across all industries in Cameroon.
+            ZeroFraud Vote ensures transparent, accessible, and fraud-proof elections for
+            organizations across all industries and Enterprices in Cameroon.
           </p>
           <div className="hero-buttons">
             <button className="get-started" onClick={() => navigate("/register")}>Get Started</button>

@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -15,6 +16,10 @@ import UserVoting from "./pages/UserVoting";
 import ResultsPage from "./pages/ResultsPage";
 import AuditorDashboard from "./pages/AuditorDashboard";
 import UnauthorizedPage from "./pages/UnauthorizedPage";
+import CandidateDashboard from "./pages/CandidateDashboard";
+import CandidateResults from "./pages/CandidateResults"; // ✅ You forgot to import this
+import AuditorResults from "./pages/AuditorResults";
+
 function App() {
   return (
     <Router>
@@ -26,8 +31,6 @@ function App() {
         <Route path="/verify-otp" element={<VerifyOtp />} />
         <Route path="/user/voting" element={<UserVoting />} />
         <Route path="/results/:id" element={<ResultsPage />} />
-        <Route path="/auditor" element={<AuditorDashboard />} />
-        <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
         <Route
           path="/admin/dashboard"
@@ -73,19 +76,49 @@ function App() {
             </ProtectedRoute>
           }
         />
+
         <Route
-  path="/auditor"
+          path="/auditor"
+          element={
+            <ProtectedRoute allowedRoles={["auditor"]}>
+              <Layout><AuditorDashboard /></Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/unauthorized"
+          element={
+            <Layout><UnauthorizedPage /></Layout>
+          }
+        />
+
+        <Route
+          path="/candidate/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={["candidate"]}>
+              <Layout><CandidateDashboard /></Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/candidate/results"
+          element={
+            <ProtectedRoute allowedRoles={["candidate"]}>
+              <Layout><CandidateResults /></Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+  path="/auditor/results/:id"
   element={
     <ProtectedRoute allowedRoles={["auditor"]}>
-      <Layout><AuditorDashboard /></Layout>
+      <Layout><AuditorResults /></Layout>
     </ProtectedRoute>
   }
 />
-        <Route
-          path="/unauthorized"
-          element={<Layout><UnauthorizedPage /></Layout>}
-        />
-        
+
         <Route path="*" element={<Layout><Home /></Layout>} />
       </Routes>
     </Router>

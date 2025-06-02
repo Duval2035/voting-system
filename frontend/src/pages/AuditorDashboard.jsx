@@ -1,62 +1,63 @@
-// src/pages/AuditorDashboard.jsx
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import API_BASE_URL from "../config";
 import "./AuditorDashboard.css";
 
 const AuditorDashboard = () => {
-  const [audits, setAudits] = useState([]);
-  const token = localStorage.getItem("token");
+  const [elections, setElections] = useState([]);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchElections = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/votes`, {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${API_BASE_URL}/elections`, {
           headers: {
-            Authorization: `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         });
-        const data = await res.json();
-        if (res.ok) {
-          setAudits(data);
-        } else {
-          console.error("Failed to fetch votes");
+
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.message || "Failed to fetch elections");
         }
+
+        const data = await res.json();
+        setElections(data);
       } catch (err) {
-        console.error("Auditor fetch error:", err);
+        console.error("Failed to fetch elections:", err);
+        setError(err.message);
       }
     };
 
-    fetchData();
-  }, [token]);
+    fetchElections();
+  }, []);
 
   return (
     <div className="auditor-dashboard">
-      <h2>Auditor Dashboard</h2>
-      <p>Review all votes cast in the system</p>
+      <h2>🧾 Elections Overview</h2>
 
-      {audits.length === 0 ? (
-        <p>No votes found.</p>
+      {error && <div className="error-message">{error}</div>}
+
+      {elections.length === 0 ? (
+        <p>No elections available</p>
       ) : (
-        <table className="audit-table">
-          <thead>
-            <tr>
-              <th>Voter</th>
-              <th>Candidate</th>
-              <th>Election</th>
-              <th>Timestamp</th>
-            </tr>
-          </thead>
-          <tbody>
-            {audits.map((vote) => (
-              <tr key={vote._id}>
-                <td>{vote.user?.username || "Unknown"}</td>
-                <td>{vote.candidate?.name}</td>
-                <td>{vote.election?.title || "N/A"}</td>
-                <td>{new Date(vote.createdAt).toLocaleString()}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="election-list">
+          {elections.map((election) => (
+            <div key={election._id} className="election-card">
+              <h3>{election.title}</h3>
+              <p><strong>Organization:</strong> {election.organizationName}</p>
+              <p><strong>Start:</strong> {new Date(election.startDate).toLocaleString()}</p>
+              <p><strong>End:</strong> {new Date(election.endDate).toLocaleString()}</p>
+              <Link
+                to={`/auditor/results/${election._id}`}
+                className="view-results-btn"
+              >
+                View Results
+              </Link>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );

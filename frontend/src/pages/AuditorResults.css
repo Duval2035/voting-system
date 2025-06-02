@@ -1,0 +1,42 @@
+.auditor-results {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 20px;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.08);
+}
+
+.auditor-results h2 {
+  text-align: center;
+  color: #0f172a;
+  margin-bottom: 30px;
+}
+
+.chart-wrapper {
+  margin-bottom: 20px;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.actions button {
+  padding: 10px 20px;
+  border: none;
+  background-color: #2563eb;
+  color: white;
+  font-weight: bold;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.actions button:hover {
+  background-color: #1d4ed8;
+}
+.actions button:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}

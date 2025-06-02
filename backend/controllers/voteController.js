@@ -1,6 +1,7 @@
 // controllers/voteController.js
 const Vote = require("../models/Vote");
 const Candidate = require("../models/Candidate");
+const Election = require("../models/Election");
 
 exports.submitVote = async (req, res) => {
   const { electionId, candidateId } = req.body;
@@ -65,5 +66,55 @@ exports.getResults = async (req, res) => {
   } catch (err) {
     console.error("Failed to fetch results:", err);
     res.status(500).json({ message: "Error fetching results" });
+  }
+};
+exports.getCandidateResults = async (req, res) => {
+  const userId = req.params.id;
+
+  try {
+    const candidate = await Candidate.findOne({ userId });
+
+    if (!candidate) {
+      return res.status(404).json({ message: "Candidate not found" });
+    }
+
+    const votes = await Vote.find({ candidate: candidate._id });
+
+    res.json({
+      _id: candidate._id,
+      name: candidate.name,
+      position: candidate.position,
+      image: candidate.image,
+      votes: votes.length,
+    });
+  } catch (err) {
+    console.error("Candidate result error:", err);
+    res.status(500).json({ message: "Error fetching candidate results" });
+  }
+};
+
+
+exports.getCandidateResults = async (req, res) => {
+  const userId = req.params.id;
+
+  try {
+    const candidate = await Candidate.findOne({ userId });
+
+    if (!candidate) {
+      return res.status(404).json({ message: "Candidate not found" });
+    }
+
+    const votes = await Vote.find({ candidate: candidate._id });
+
+    res.json({
+      _id: candidate._id,
+      name: candidate.name,
+      position: candidate.position,
+      image: candidate.image,
+      votes: votes.length,
+    });
+  } catch (err) {
+    console.error("Candidate result error:", err);
+    res.status(500).json({ message: "Error fetching candidate results" });
   }
 };

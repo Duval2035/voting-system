@@ -1,0 +1,24 @@
+/* src/pages/CandidateResults.css */
+.candidate-results {
+  max-width: 600px;
+  margin: auto;
+  padding: 20px;
+}
+
+.result-card {
+  background-color: #f5faff;
+  border: 1px solid #cce0ff;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: left;
+  margin-top: 20px;
+}
+
+.error-message {
+  color: red;
+  margin-top: 10px;
+}
+.success-message {
+  color: green;
+  margin-top: 10px;
+}

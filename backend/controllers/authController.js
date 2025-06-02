@@ -23,6 +23,10 @@ exports.register = async (req, res) => {
     });
 
     const saved = await newUser.save();
+const allowedRoles = ["user", "admin", "auditor", "candidate"];
+if (!allowedRoles.includes(role)) {
+  return res.status(400).json({ message: "Invalid role selected" });
+}
 
 const token = jwt.sign(
   {
