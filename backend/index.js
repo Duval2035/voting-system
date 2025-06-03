@@ -24,6 +24,7 @@ app.use(cors({
 }));
 
 // API Routes
+
 app.use("/api/logs", voteLogRoutes);
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
@@ -37,6 +38,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/elections', electionRoutes);
 app.use('/api/candidates', candidateRoutes);
 app.use('/api/votes', voteRoutes);
+app.use("/uploads", express.static("uploads"));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

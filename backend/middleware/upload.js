@@ -12,12 +12,11 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = function (req, file, cb) {
-  // Allow all image types
-  const ext = path.extname(file.originalname).toLowerCase();
-  if (['.png', '.jpg', '.jpeg', '.webp', '.gif'].includes(ext)) {
+  // Allow all image MIME typestypes
+  if (file.mimetype && file.mimetype.startsWith('image/')) {
     cb(null, true);
   } else {
-    cb(new Error('Only images are allowed'));
+    cb(new Error('Only image files are allowed'));
   }
 };
 

@@ -52,6 +52,7 @@ exports.getVotesByElection = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch votes." });
   }
 };
+// controllers/voteController.js
 exports.getResults = async (req, res) => {
   try {
     const electionId = req.params.id;
@@ -60,9 +61,9 @@ exports.getResults = async (req, res) => {
     const tally = {};
 
     for (const vote of votes) {
-      const candidateId = vote.candidate._id.toString();
-      if (!tally[candidateId]) {
-        tally[candidateId] = {
+      const cid = vote.candidate._id.toString();
+      if (!tally[cid]) {
+        tally[cid] = {
           _id: vote.candidate._id,
           name: vote.candidate.name,
           position: vote.candidate.position,
@@ -70,7 +71,7 @@ exports.getResults = async (req, res) => {
           votes: 1,
         };
       } else {
-        tally[candidateId].votes++;
+        tally[cid].votes++;
       }
     }
 
@@ -80,6 +81,7 @@ exports.getResults = async (req, res) => {
     res.status(500).json({ message: "Error fetching results" });
   }
 };
+
 
 exports.getCandidateResults = async (req, res) => {
   const userId = req.params.id;

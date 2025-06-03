@@ -2,19 +2,20 @@ const Candidate = require('../models/Candidate');
 const path = require('path');
 
 // Create or update a candidate
+
 exports.addOrUpdateCandidate = async (req, res) => {
   try {
-    const { name, position, bio } = req.body;
     const electionId = req.params.id;
     const candidateId = req.params.candidateId;
 
-    const imagePath = req.file ? `/uploads/${req.file.filename}` : req.body.existingImage || "";
+    // ✅ Fix: Check if req.file exists and get the image
+    const imageUrl = req.file ? `/uploads/${req.file.filename}` : "";
 
     const data = {
-      name,
-      position,
-      bio,
-      image: imagePath,
+      name: req.body.name,
+      position: req.body.position,
+      bio: req.body.bio,
+      image: imageUrl,
       election: electionId,
     };
 
@@ -28,11 +29,10 @@ exports.addOrUpdateCandidate = async (req, res) => {
 
     res.status(200).json(candidate);
   } catch (err) {
-    console.error("Error saving candidate:", err);
+    console.error("❌ Error saving candidate:", err); // <-- look at this in your terminal
     res.status(500).json({ message: "Failed to save candidate." });
   }
 };
-
 exports.getCandidatesByElection = async (req, res) => {
   try {
     const candidates = await Candidate.find({ election: req.params.electionId });
@@ -51,8 +51,4 @@ exports.deleteCandidate = async (req, res) => {
     console.error("Error deleting candidate:", err);
     res.status(500).json({ message: "Failed to delete candidate" });
   }
-};
-exports.getCandidateImage = (req, res) => {
-  const imagePath = path.join(__dirname, '../uploads', req.params.filename);
-  res.sendFile(imagePath);
 };

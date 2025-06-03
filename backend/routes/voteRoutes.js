@@ -1,9 +1,12 @@
 const express = require("express");
 const router = express.Router();
+const { submitVote, getResults } = require("../controllers/voteController");
 const authMiddleware = require("../middleware/authMiddleware");
 const VoteLog = require("../models/VoteLog");
 
 // GET all logs for an election (auditor only)
+router.post("/", authMiddleware, submitVote);
+router.get("/results/:id", getResults);
 router.get("/:electionId", authMiddleware, async (req, res) => {
   try {
     const logs = await VoteLog.find({ election: req.params.electionId })

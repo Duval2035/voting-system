@@ -62,3 +62,7 @@
 .footer-if {
   color: #218838;
 }
+.footer-if:hover {
+  color: #6ff9bb;
+}
+
