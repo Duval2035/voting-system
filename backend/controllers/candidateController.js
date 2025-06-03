@@ -8,28 +8,27 @@ exports.addOrUpdateCandidate = async (req, res) => {
     const electionId = req.params.id;
     const candidateId = req.params.candidateId;
 
-    // ✅ Fix: Check if req.file exists and get the image
-    const imageUrl = req.file ? `/uploads/${req.file.filename}` : "";
+    const imageUrl = req.file ? `/uploads/${req.file.filename}` : req.body.existingImage || "";
 
-    const data = {
+    const candidateData = {
       name: req.body.name,
       position: req.body.position,
       bio: req.body.bio,
       image: imageUrl,
-      election: electionId,
+      election: electionId
     };
 
     let candidate;
     if (candidateId) {
-      candidate = await Candidate.findByIdAndUpdate(candidateId, data, { new: true });
+      candidate = await Candidate.findByIdAndUpdate(candidateId, candidateData, { new: true });
     } else {
-      candidate = new Candidate(data);
+      candidate = new Candidate(candidateData);
       await candidate.save();
     }
 
     res.status(200).json(candidate);
   } catch (err) {
-    console.error("❌ Error saving candidate:", err); // <-- look at this in your terminal
+    console.error("Error saving candidate:", err);
     res.status(500).json({ message: "Failed to save candidate." });
   }
 };

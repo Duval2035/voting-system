@@ -62,18 +62,18 @@ exports.sendOtpToEmail = async (req, res) => {
 
   try {
     const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    const otpCode = generateOTP();
+    const otpCode = generateOTP(); // ✅ generates a code like "123456"
 
-    await Otp.findOneAndDelete({ email });
-    await Otp.create({ email, otp: otpCode });
-    await sendOtp(email, otpCode);
+    await Otp.findOneAndDelete({ email }); // delete previous OTP if any
+    await Otp.create({ email, otp: otpCode }); // ✅ save to DB
 
-    res.status(200).json({ message: 'OTP sent to email' });
+    await sendOtp(email, otpCode); // logs or sends email
+    res.status(200).json({ message: "OTP sent to email" });
   } catch (error) {
-    console.error('Send OTP Error:', error);
-    res.status(500).json({ message: 'Failed to send OTP' });
+    console.error("Send OTP Error:", error);
+    res.status(500).json({ message: "Failed to send OTP" });
   }
 };
 
