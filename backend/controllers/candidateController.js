@@ -2,34 +2,34 @@ const Candidate = require('../models/Candidate');
 const path = require('path');
 
 // Create or update a candidate
-
 exports.addOrUpdateCandidate = async (req, res) => {
   try {
+    const { name, position, bio } = req.body;
     const electionId = req.params.id;
     const candidateId = req.params.candidateId;
 
-    const imageUrl = req.file ? `/uploads/${req.file.filename}` : req.body.existingImage || "";
+    const image = req.file ? `/uploads/${req.file.filename}` : "";
 
-    const candidateData = {
-      name: req.body.name,
-      position: req.body.position,
-      bio: req.body.bio,
-      image: imageUrl,
+    const data = {
+      name,
+      position,
+      bio,
+      image: image,
       election: electionId,
     };
 
     let candidate;
     if (candidateId) {
-      candidate = await Candidate.findByIdAndUpdate(candidateId, candidateData, { new: true });
+      candidate = await Candidate.findByIdAndUpdate(candidateId, data, { new: true });
     } else {
-      candidate = new Candidate(candidateData);
+      candidate = new Candidate(data);
       await candidate.save();
     }
 
-    return res.status(200).json(candidate);
+    res.status(200).json(candidate);
   } catch (error) {
-    console.error("❌ Error saving candidate:", error);
-    return res.status(500).json({ message: "Failed to save candidate." });
+    console.error("Error saving candidate:", error);
+    res.status(500).json({ message: "Failed to save candidate." });
   }
 };
 
@@ -38,6 +38,7 @@ exports.getCandidatesByElection = async (req, res) => {
     const candidates = await Candidate.find({ election: req.params.electionId });
     res.status(200).json(candidates);
   } catch (error) {
+    console.error("Error fetching candidates:", error);
     res.status(500).json({ message: "Failed to fetch candidates." });
   }
 };
@@ -47,6 +48,7 @@ exports.deleteCandidate = async (req, res) => {
     await Candidate.findByIdAndDelete(req.params.id);
     res.status(200).json({ message: "Candidate deleted." });
   } catch (error) {
+    console.error("Error deleting candidate:", error);
     res.status(500).json({ message: "Failed to delete candidate." });
   }
 };

@@ -1,25 +1,29 @@
+// backend/routes/candidateRoutes.js
 const express = require("express");
+const router = express.Router();
 const multer = require("multer");
 const path = require("path");
-const router = express.Router();
 const authMiddleware = require("../middleware/authMiddleware");
 const {
   addOrUpdateCandidate,
   getCandidatesByElection,
-  deleteCandidate,
+  deleteCandidate
 } = require("../controllers/candidateController");
 
+// Multer config
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
+  destination: function (req, file, cb) {
     cb(null, "uploads/");
   },
-  filename: (req, file, cb) => {
+  filename: function (req, file, cb) {
     const ext = path.extname(file.originalname);
-    cb(null, `${Date.now()}-${file.originalname}`);
-  },
+    const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1E9)}${ext}`;
+    cb(null, uniqueName);
+  }
 });
 const upload = multer({ storage });
 
+// Routes
 router.get("/by-election/:electionId", getCandidatesByElection);
 router.post("/:id", authMiddleware, upload.single("image"), addOrUpdateCandidate);
 router.put("/:id/:candidateId", authMiddleware, upload.single("image"), addOrUpdateCandidate);
