@@ -1,8 +1,7 @@
 const express = require("express");
-const router = express.Router();
 const multer = require("multer");
 const path = require("path");
-
+const router = express.Router();
 const authMiddleware = require("../middleware/authMiddleware");
 const {
   addOrUpdateCandidate,
@@ -16,10 +15,9 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
-    cb(null, `${Date.now()}-${file.fieldname}${ext}`);
-  }
+    cb(null, `${Date.now()}-${file.originalname}`);
+  },
 });
-
 const upload = multer({ storage });
 
 router.get("/by-election/:electionId", getCandidatesByElection);

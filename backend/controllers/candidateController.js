@@ -15,7 +15,7 @@ exports.addOrUpdateCandidate = async (req, res) => {
       position: req.body.position,
       bio: req.body.bio,
       image: imageUrl,
-      election: electionId
+      election: electionId,
     };
 
     let candidate;
@@ -26,18 +26,18 @@ exports.addOrUpdateCandidate = async (req, res) => {
       await candidate.save();
     }
 
-    res.status(200).json(candidate);
-  } catch (err) {
-    console.error("Error saving candidate:", err);
-    res.status(500).json({ message: "Failed to save candidate." });
+    return res.status(200).json(candidate);
+  } catch (error) {
+    console.error("❌ Error saving candidate:", error);
+    return res.status(500).json({ message: "Failed to save candidate." });
   }
 };
+
 exports.getCandidatesByElection = async (req, res) => {
   try {
     const candidates = await Candidate.find({ election: req.params.electionId });
     res.status(200).json(candidates);
-  } catch (err) {
-    console.error("Fetch candidates error:", err);
+  } catch (error) {
     res.status(500).json({ message: "Failed to fetch candidates." });
   }
 };
@@ -45,9 +45,8 @@ exports.getCandidatesByElection = async (req, res) => {
 exports.deleteCandidate = async (req, res) => {
   try {
     await Candidate.findByIdAndDelete(req.params.id);
-    res.status(200).json({ message: "Candidate deleted" });
-  } catch (err) {
-    console.error("Error deleting candidate:", err);
-    res.status(500).json({ message: "Failed to delete candidate" });
+    res.status(200).json({ message: "Candidate deleted." });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to delete candidate." });
   }
 };

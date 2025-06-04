@@ -28,6 +28,7 @@ app.use(cors({
 app.use("/api/logs", voteLogRoutes);
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
+
 app.use("/api/auditor", auditorRoutes);
 app.use(express.urlencoded({ extended: true }));
 app.use('/api', (req, res, next) => {

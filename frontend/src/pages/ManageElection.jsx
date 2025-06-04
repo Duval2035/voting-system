@@ -47,45 +47,46 @@ const ManageElection = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
+  const formData = new FormData();
+  formData.append("name", newCandidate.name);
+  formData.append("position", newCandidate.position);
+  formData.append("bio", newCandidate.bio);
+  if (newCandidate.image) {
+    formData.append("image", newCandidate.image);
+  }
 
- const formData = new FormData();
-formData.append("name", newCandidate.name);
-formData.append("position", newCandidate.position);
-formData.append("bio", newCandidate.bio);
-formData.append("image", newCandidate.image); 
+  const url = editing
+    ? `${API_BASE_URL}/candidates/${id}/${editing}`
+    : `${API_BASE_URL}/candidates/${id}`;
+  const method = editing ? "PUT" : "POST";
 
+  const res = await fetch(url, {
+    method,
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
 
-    const url = editing
-      ? `${API_BASE_URL}/candidates/${id}/${editing}`
-      : `${API_BASE_URL}/candidates/${id}`;
-    const method = editing ? "PUT" : "POST";
+  const updated = await res.json();
 
-    const res = await fetch(url, {
-      method,
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    });
-
-    const updated = await res.json();
-    if (res.ok) {
-      if (editing) {
-        setCandidates((prev) =>
-          prev.map((c) => (c._id === updated._id ? updated : c))
-        );
-      } else {
-        setCandidates([...candidates, updated]);
-      }
-
-      setNewCandidate({ name: "", position: "", bio: "", image: null });
-      setEditing(null);
-      setPreview(null);
+  if (res.ok) {
+    if (editing) {
+      setCandidates((prev) =>
+        prev.map((c) => (c._id === updated._id ? updated : c))
+      );
     } else {
-      alert("Failed to save candidate.");
+      setCandidates([...candidates, updated]);
     }
-  };
+
+    setNewCandidate({ name: "", position: "", bio: "", image: null });
+    setEditing(null);
+    setPreview(null);
+  } else {
+    alert("Failed to save candidate.");
+  }
+};
 
   const handleEdit = (candidate) => {
     setNewCandidate({
