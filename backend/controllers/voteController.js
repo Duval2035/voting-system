@@ -8,7 +8,20 @@ const VoteLog = require("../models/VoteLog");
 exports.submitVote = async (req, res) => {
   const { electionId, candidateId } = req.body;
   const userId = req.user.userId;
+const timestamp = new Date();
+const hashString = `${userId}-${electionId}-${candidateId}-${timestamp.toISOString()}`;
+const hash = crypto.createHash("sha256").update(hashString).digest("hex");
 
+const log = new VoteLog({
+  user: userId,
+  election: electionId,
+  timestamp,
+  hash,
+});
+await log.save();
+  if (!electionId || !candidateId) {
+    return res.status(400).json({ message: "Election ID and Candidate ID are required." });
+  }
   try {
     // Check for duplicate vote
     const alreadyVoted = await Vote.findOne({ election: electionId, user: userId });

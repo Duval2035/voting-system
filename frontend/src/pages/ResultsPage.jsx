@@ -52,7 +52,7 @@ const ResultsPage = () => {
         data: results.map((c) => c.votes),
         backgroundColor: "#007bff",
         borderColor: "#0056b3",
-        borderWidth: 1,
+        borderWidth: 2,
       },
     ],
   };

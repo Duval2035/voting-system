@@ -17,6 +17,7 @@ import AuditorDashboard from "./pages/AuditorDashboard";
 import UnauthorizedPage from "./pages/UnauthorizedPage";
 import CandidateDashboard from "./pages/CandidateDashboard";
 import CandidateResults from "./pages/CandidateResults";
+import AuditorIntegrity from "./pages/AuditorIntegrity";
 
 function App() {
   return (
@@ -101,7 +102,14 @@ function App() {
             </ProtectedRoute>
           }
         />
-
+<Route
+  path="/auditor/integrity"
+  element={
+    <ProtectedRoute allowedRoles={["auditor"]}>
+      <Layout><AuditorIntegrity /></Layout>
+    </ProtectedRoute>
+  }
+/>
         <Route path="/unauthorized" element={<Layout><UnauthorizedPage /></Layout>} />
         <Route path="*" element={<Layout><Home /></Layout>} />
       </Routes>

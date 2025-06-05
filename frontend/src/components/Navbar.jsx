@@ -44,12 +44,14 @@ const Navbar = () => {
           </>
         )}
 
-        {token && user?.role === "auditor" && (
-          <>
-            <li><Link to="/auditor">Auditor</Link></li>
-            <li><button className="logout-btn" onClick={handleLogout}>Logout</button></li>
-          </>
-        )}
+       {token && user?.role === "auditor" && (
+  <>
+    <li><Link to="/auditor">Dashboard</Link></li>
+    <li><Link to="/auditor/integrity">Integrity</Link></li>
+    <li><button className="logout-btn" onClick={handleLogout}>Logout</button></li>
+  </>
+)}
+
 
         {token && user?.role === "candidate" && (
           <>

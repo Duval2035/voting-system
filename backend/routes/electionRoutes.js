@@ -8,13 +8,14 @@ const {
   updateElectionStatus,
 } = require("../controllers/electionController");
 const authMiddleware = require("../middleware/authMiddleware");
-
+const { getElectionsForAuditor } = require('../controllers/electionController');
+const Election = require('../models/Election');
 router.post("/", authMiddleware, createElection);
 router.get("/", authMiddleware, getElectionsByOrganization);
 router.get("/:id", authMiddleware, getElectionById);
 router.patch("/:id/status", authMiddleware, updateElectionStatus);
+router.get('/auditor', authMiddleware, getElectionsForAuditor);
 
-module.exports = router;
 router.delete("/:id", authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
@@ -26,3 +27,6 @@ router.delete("/:id", authMiddleware, async (req, res) => {
     res.status(500).json({ message: "Failed to delete election" });
   }
 });
+
+
+module.exports = router;

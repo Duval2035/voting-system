@@ -1,178 +1,137 @@
+// src/pages/AuditorDashboard.jsx
 import React, { useEffect, useState } from "react";
 import API_BASE_URL from "../config";
-import "./AuditorDashboard.css";
 import { Bar } from "react-chartjs-2";
-import {
-  Chart as ChartJS,
-  BarElement,
-  CategoryScale,
-  LinearScale,
-  Tooltip,
-  Legend,
-} from "chart.js";
+import { Chart as ChartJS, BarElement, CategoryScale, LinearScale } from "chart.js";
+import "./AuditorDashboard.css";
 
-ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
+ChartJS.register(BarElement, CategoryScale, LinearScale);
 
 const AuditorDashboard = () => {
-  const token = localStorage.getItem("token");
   const [elections, setElections] = useState([]);
   const [selectedElection, setSelectedElection] = useState(null);
   const [results, setResults] = useState([]);
   const [logs, setLogs] = useState([]);
+  const token = localStorage.getItem("token");
 
-  // Load elections
-  useEffect(() => {
+  // Fetch elections
+ useEffect(() => {
     const fetchElections = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/auditor/elections`, {
-          headers: { Authorization: `Bearer ${token}` },
+        const response = await fetch(`${API_BASE_URL}/elections/auditor`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         });
-        const data = await res.json();
-        if (res.ok) {
+        const data = await response.json();
+        if (response.ok) {
           setElections(data);
         } else {
-          throw new Error(data.message);
+          console.error('Failed to fetch elections:', data.message);
         }
-      } catch (err) {
-        console.error("Fetch elections error:", err.message);
-        alert("⚠️ Failed to fetch elections.");
+      } catch (error) {
+        console.error('Error fetching elections:', error);
       }
     };
-
     fetchElections();
   }, [token]);
 
-  // Fetch results when election is selected
+  // Fetch results and logs for selected election
   useEffect(() => {
     if (!selectedElection) return;
 
     const fetchResults = async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/votes/results/${selectedElection._id}`);
-        const data = await res.json();
-        if (res.ok) {
-          setResults(data);
-        } else {
-          throw new Error(data.message);
-        }
-      } catch (err) {
-        console.error("Failed to load results", err);
-      }
+      const res = await fetch(`${API_BASE_URL}/votes/results/${selectedElection._id}`);
+      const data = await res.json();
+      if (res.ok) setResults(data);
     };
 
-    fetchResults();
-  }, [selectedElection]);
-
-  // Fetch logs
-  const fetchLogs = async () => {
-    if (!selectedElection) return;
-    try {
+    const fetchLogs = async () => {
       const res = await fetch(`${API_BASE_URL}/vote-logs/${selectedElection._id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      if (res.ok) {
-        setLogs(Array.isArray(data) ? data : []);
-      } else {
-        throw new Error(data.message);
-      }
-    } catch (err) {
-      console.error("Failed to load logs:", err);
-      alert("⚠️ Failed to load logs.");
-    }
-  };
+      if (res.ok) setLogs(data);
+    };
 
-  // Export CSV
+    fetchResults();
+    fetchLogs();
+  }, [selectedElection, token]);
+
   const downloadCSV = async () => {
-    if (!selectedElection) return;
     try {
       const res = await fetch(`${API_BASE_URL}/vote-logs/export/${selectedElection._id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      if (!res.ok) throw new Error("Failed to export CSV");
-
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `vote_logs_${selectedElection._id}.csv`;
-      link.click();
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "vote_logs.csv";
+      a.click();
+      window.URL.revokeObjectURL(url);
     } catch (err) {
-      console.error("CSV export failed:", err);
       alert("❌ CSV export failed.");
+      console.error("CSV export failed:", err);
     }
+  };
+
+  const chartData = {
+    labels: results.map(r => r.name),
+    datasets: [{
+      label: "Votes",
+      data: results.map(r => r.votes),
+      backgroundColor: "#3b82f6",
+    }]
   };
 
   return (
     <div className="auditor-dashboard">
       <h2>📊 Auditor Dashboard</h2>
-      <p>Overview of all voting activities</p>
 
-      <div className="section">
-        <h3>📥 Elections List</h3>
+      <section className="election-list">
+        <h3>📥 Elections</h3>
         {elections.length === 0 ? (
-          <p>🧾 No elections available</p>
+          <p>No elections available</p>
         ) : (
-          <ul className="election-list">
+          <ul>
             {elections.map((election) => (
-              <li
-                key={election._id}
-                onClick={() => setSelectedElection(election)}
-                className={
-                  selectedElection && selectedElection._id === election._id
-                    ? "selected"
-                    : ""
-                }
-              >
-                {election.title}
+              <li key={election._id}>
+                <button onClick={() => setSelectedElection(election)}>
+                  {election.title}
+                </button>
               </li>
             ))}
           </ul>
         )}
-      </div>
+      </section>
 
       {selectedElection && (
         <>
-          <div className="section">
-            <h3>📈 Real-Time Vote Tally</h3>
+          <section className="chart-section">
+            <h3>📈 {selectedElection.title} Results</h3>
             {results.length === 0 ? (
               <p>No results yet.</p>
             ) : (
-              <Bar
-                data={{
-                  labels: results.map((r) => r.name),
-                  datasets: [
-                    {
-                      label: "Votes",
-                      data: results.map((r) => r.votes),
-                      backgroundColor: "rgba(53, 162, 235, 0.6)",
-                    },
-                  ],
-                }}
-              />
+              <Bar data={chartData} />
             )}
-          </div>
+            <button onClick={downloadCSV} className="csv-button">📥 Export Logs to CSV</button>
+          </section>
 
-          <div className="section">
+          <section className="log-section">
             <h3>📜 Vote Logs</h3>
-            <button onClick={fetchLogs}>🔄 Refresh Logs</button>
-            <button onClick={downloadCSV}>📥 Export CSV</button>
-
             {logs.length === 0 ? (
-              <p>🧾 No vote logs found yet.</p>
+              <p>No vote logs found yet.</p>
             ) : (
-              <ul className="log-list">
-                {logs.map((log) => (
-                  <li key={log._id}>
-                    {new Date(log.timestamp).toLocaleString()} —{" "}
-                    {log.user?.username || "Unknown"} —{" "}
-                    {log.hash.slice(0, 12)}...
+              <ul>
+                {logs.map((log, index) => (
+                  <li key={index}>
+                    🗳️ {log.user?.username || "Unknown"} voted on {new Date(log.timestamp).toLocaleString()}
                   </li>
                 ))}
               </ul>
             )}
-          </div>
+          </section>
         </>
       )}
     </div>

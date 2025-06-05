@@ -1,54 +1,63 @@
-.auditor-dashboard {
+ .auditor-dashboard {
   padding: 20px;
-  font-family: 'Arial', sans-serif;
+  max-width: 1000px;
+  margin: auto;
 }
 
-.section {
-  margin-top: 30px;
-  border-top: 1px solid #ddd;
-  padding-top: 20px;
+h2, h3 {
+  color: #1e3a8a;
+  margin-bottom: 10px;
 }
 
-.election-list {
+.election-list ul {
   list-style: none;
   padding: 0;
 }
 
 .election-list li {
-  padding: 10px;
-  cursor: pointer;
-  border: 1px solid #ccc;
-  margin-bottom: 8px;
-  border-radius: 5px;
-  transition: background-color 0.2s ease;
+ display:inline-flex;
+  flex-direction: column;
+  padding-right: 20px;
+  margin-bottom: 15px;
+  margin: 5px 0;
 }
 
-.election-list li:hover {
-  background-color: #f0f0f0;
-}
-
-.election-list .selected {
-  background-color: #b3d4fc;
-  font-weight: bold;
-}
-
-.log-list {
-  margin-top: 10px;
-  padding-left: 20px;
-  font-family: monospace;
-  color: #444;
-}
-
-button {
-  margin-right: 10px;
-  margin-top: 10px;
+.election-list button {
   padding: 8px 12px;
-  background-color: #0ea5e9;
-  color: white;
   border: none;
+  color: rgb(15, 14, 14);
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s ease;
+  background-color: #8b9fe2;
+  display: flex;
+}
+.election-list button:hover{
+  background-color: #7b96e0;
+}
+
+.chart-section {
+  margin-top: 20px;
+}
+
+.csv-button {
+  margin-top: 10px;
+  background-color: #10b981;
+  padding: 8px 12px;
+  border: none;
+  color: white;
   border-radius: 4px;
   cursor: pointer;
 }
-button:hover {
-  background-color: #0284c7;
+
+.log-section ul {
+  padding-left: 20px;
 }
+.log-section li {
+  margin: 5px 0;
+  background-color: #f3f4f6;
+  padding: 8px;
+  border-radius: 4px;
+}
+ 

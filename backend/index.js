@@ -22,6 +22,7 @@ app.use(cors({
 }));
 
 // API Routes
+
 app.use("/api/vote-logs", voteLogRoutes);
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));

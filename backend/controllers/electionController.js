@@ -66,3 +66,15 @@ exports.deleteElection = async (req, res) => {
     res.status(500).json({ message: "Failed to delete election" });
   }
 };
+
+// controllers/electionController.js
+exports.getElectionsForAuditor = async (req, res) => {
+  try {
+    // Assuming you have a model Election and a way to determine auditor's organization
+    const elections = await Election.find({ organization: req.user.organization });
+    res.status(200).json(elections);
+  } catch (error) {
+    console.error('Error fetching elections for auditor:', error);
+    res.status(500).json({ message: 'Failed to fetch elections' });
+  }
+};

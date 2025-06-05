@@ -1,11 +1,11 @@
 // backend/routes/voteLogRoutes.js
 const express = require("express");
 const router = express.Router();
-const VoteLog = require("../models/VoteLog");
 const authMiddleware = require("../middleware/authMiddleware");
+const VoteLog = require("../models/VoteLog");
 const { Parser } = require("json2csv");
 
-// ✅ GET vote logs for specific election
+// 📜 GET all logs for an election
 router.get("/:electionId", authMiddleware, async (req, res) => {
   try {
     const logs = await VoteLog.find({ election: req.params.electionId })
@@ -19,28 +19,31 @@ router.get("/:electionId", authMiddleware, async (req, res) => {
   }
 });
 
-// ✅ CSV Export route
+// 📁 Export logs to CSV
 router.get("/export/:electionId", authMiddleware, async (req, res) => {
   try {
-    const logs = await VoteLog.find({ election: req.params.electionId })
-      .populate("user", "username email");
+    const logs = await VoteLog.find({ election: req.params.electionId }).populate("user", "username email");
 
-    const formatted = logs.map((log) => ({
-      username: log.user?.username || "N/A",
-      email: log.user?.email || "N/A",
+    if (!logs.length) {
+      return res.status(404).json({ message: "No logs found" });
+    }
+
+    const formattedLogs = logs.map(log => ({
+      username: log.user?.username || "Unknown",
+      email: log.user?.email || "Unknown",
       timestamp: log.timestamp,
-      hash: log.hash,
+      hash: log.hash
     }));
 
-    const parser = new Parser();
-    const csv = parser.parse(formatted);
+    const parser = new Parser({ fields: ["username", "email", "timestamp", "hash"] });
+    const csv = parser.parse(formattedLogs);
 
     res.header("Content-Type", "text/csv");
-    res.attachment(`vote_logs_${req.params.electionId}.csv`);
-    res.send(csv);
+    res.attachment("vote_logs.csv");
+    return res.send(csv);
   } catch (err) {
     console.error("CSV export error:", err);
-    res.status(500).json({ message: "Failed to export CSV" });
+    res.status(500).send("Failed to export CSV");
   }
 });
 
