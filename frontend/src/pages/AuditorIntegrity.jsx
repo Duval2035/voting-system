@@ -4,103 +4,88 @@ import API_BASE_URL from "../config";
 import "./AuditorIntegrity.css";
 
 const AuditorIntegrity = () => {
-  const token = localStorage.getItem("token");
   const [elections, setElections] = useState([]);
-  const [selectedElection, setSelectedElection] = useState("");
+  const [selectedElection, setSelectedElection] = useState(null);
   const [integrityData, setIntegrityData] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const token = localStorage.getItem("token");
 
-  // Fetch elections
+  // 🟦 Fetch Elections
   useEffect(() => {
     const fetchElections = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/elections`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+        const res = await fetch(`${API_BASE_URL}/auditor/elections`, {
+          headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
-        if (res.ok) {
-          setElections(data);
-        } else {
-          console.error("Failed to fetch elections:", data.message);
-        }
+        if (res.ok) setElections(data);
+        else console.error("Failed to fetch elections:", data.message);
       } catch (err) {
-        console.error("Election fetch error:", err);
+        console.error("Fetch elections error:", err);
       }
     };
 
     fetchElections();
-  }, [token]);
+  }, []);
 
-  const fetchIntegrity = async () => {
-    if (!selectedElection) return;
-    setLoading(true);
-
+  // 🟦 Fetch Integrity Result
+  const verifyIntegrity = async (electionId) => {
+    setSelectedElection(electionId);
     try {
-      const res = await fetch(`${API_BASE_URL}/auditor/integrity/${selectedElection}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+      const res = await fetch(`${API_BASE_URL}/auditor/integrity/${electionId}`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
       if (res.ok) {
         setIntegrityData(data);
       } else {
-        console.error("Integrity fetch failed:", data.message);
+        console.error("Integrity check failed:", data.message);
         setIntegrityData(null);
       }
     } catch (err) {
-      console.error("Fetch integrity error:", err);
+      console.error("Integrity request failed:", err);
       setIntegrityData(null);
-    } finally {
-      setLoading(false);
     }
   };
 
   return (
-    <div className="auditor-integrity">
-      <h2>Election Integrity Checker</h2>
-      <p>Check if votes have been tampered with.</p>
+    <div className="integrity-dashboard">
+      <h2>🔐 Election Integrity Check</h2>
 
-      <div className="integrity-form">
-        <label>Select Election:</label>
-        <select
-          value={selectedElection}
-          onChange={(e) => setSelectedElection(e.target.value)}
-        >
-          <option value="">-- Select an Election --</option>
-          {elections.map((e) => (
-            <option key={e._id} value={e._id}>
-              {e.title}
-            </option>
-          ))}
-        </select>
-        <button onClick={fetchIntegrity} disabled={!selectedElection || loading}>
-          {loading ? "Checking..." : "Verify Integrity"}
-        </button>
+      <div className="integrity-section">
+        <h3>📋 Select an Election</h3>
+        {elections.length === 0 ? (
+          <p>❌ No elections available</p>
+        ) : (
+          <ul className="election-list">
+            {elections.map((e) => (
+              <li key={e._id}>
+                <button onClick={() => verifyIntegrity(e._id)}>
+                  {e.title}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       {integrityData && (
-        <div className="integrity-result">
-          <h3>🔒 Integrity Status</h3>
+        <div className="result-section">
+          <h3>📊 Integrity Result</h3>
           <p>
-            <strong>Status:</strong>{" "}
-            <span
-              className={
-                integrityData.isValid ? "valid" : "tampered"
-              }
-            >
+            Status:{" "}
+            <strong className={integrityData.isValid ? "valid" : "tampered"}>
               {integrityData.isValid ? "Valid ✅" : "Tampered ❌"}
-            </span>
+            </strong>
           </p>
-          <h4>🧾 First 10 Vote Hashes:</h4>
+
+          <p><strong>Merkle Root (simulated):</strong> <code>{integrityData.rootHash}</code></p>
+
+          <h4>🔍 Preview Vote Hashes</h4>
           <ul>
-            {integrityData.sampleHashes?.slice(0, 10).map((hash, index) => (
-              <li key={index}>{hash}</li>
+            {integrityData.hashes.slice(0, 5).map((hash, index) => (
+              <li key={index}><code>{hash}</code></li>
             ))}
           </ul>
-          <p><strong>Merkle Root:</strong> {integrityData.merkleRoot}</p>
         </div>
       )}
     </div>

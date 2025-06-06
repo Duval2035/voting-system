@@ -3,31 +3,53 @@
   font-family: Arial, sans-serif;
 }
 
+h2, h3 {
+  margin-top: 24px;
+  color: #1e3a8a;
+}
+
 .election-list {
   list-style: none;
-  padding: 0;
+  padding-left: 0;
 }
 
 .election-list li {
-  cursor: pointer;
-  padding: 8px;
-  margin: 4px 0;
-  background: #f2f2f2;
-  border-radius: 4px;
+  margin-bottom: 8px;
 }
 
-.election-list li.active {
-  background: #2196f3;
+.election-list button {
+  padding: 10px 16px;
+  background-color: #4f46e5;
   color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
 }
 
-.logs {
-  padding: 0;
-  list-style-type: none;
+.election-list button:hover {
+  background-color: #4338ca;
 }
-.logs li {
-  padding: 8px;
-  margin: 4px 0;
-  background: #e0f7fa;
-  border-radius: 4px;
+
+.csv-button {
+  background-color: #10b981;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.log-list {
+  list-style: none;
+  padding-left: 0;
+  margin-top: 10px;
+}
+
+.log-list li {
+  padding: 6px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+.log-list li:last-child {
+  border-bottom: none;
 }

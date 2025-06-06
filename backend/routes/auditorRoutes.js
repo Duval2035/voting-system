@@ -2,9 +2,15 @@
 const express = require("express");
 const router = express.Router();
 const authMiddleware = require("../middleware/authMiddleware");
-const { getElections } = require("../controllers/auditorController");
+const {
+  getAuditorElections,
+  checkIntegrity,
+} = require("../controllers/auditorController");
+const { getAuditorElections, checkElectionIntegrity } = require("../controllers/auditorController");
 
-// GET /api/auditor/elections
-router.get("/elections", authMiddleware, getElections);
+router.get("/elections", authMiddleware, getAuditorElections);
+router.get("/integrity/:electionId", authMiddleware, checkIntegrity);
 
 module.exports = router;
+
+

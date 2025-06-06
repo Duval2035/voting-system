@@ -1,25 +1,21 @@
+// src/pages/AuditorDashboard.jsx
 import React, { useEffect, useState } from "react";
 import API_BASE_URL from "../config";
 import "./AuditorDashboard.css";
 import { Bar } from "react-chartjs-2";
-import {
-  Chart as ChartJS,
-  BarElement,
-  CategoryScale,
-  LinearScale,
-  Tooltip,
-  Legend,
-} from "chart.js";
-
-ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
+import { Chart as ChartJS, BarElement, CategoryScale, LinearScale, Tooltip } from "chart.js";
+ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip);
 
 const AuditorDashboard = () => {
-  const token = localStorage.getItem("token");
   const [elections, setElections] = useState([]);
   const [selectedElection, setSelectedElection] = useState(null);
   const [results, setResults] = useState([]);
-  const [logs, setLogs] = useState([]);
+  const [voteLogs, setVoteLogs] = useState([]);
+  const [loading, setLoading] = useState(false);
 
+  const token = localStorage.getItem("token");
+
+  // ✅ Fetch Elections
   const fetchElections = async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/auditor/elections`, {
@@ -28,24 +24,34 @@ const AuditorDashboard = () => {
         },
       });
       const data = await res.json();
-      if (res.ok) setElections(data);
-      else console.error("Failed to fetch elections:", data.message);
+      if (res.ok) {
+        setElections(data);
+      } else {
+        console.error("Failed to fetch elections:", data.message);
+      }
     } catch (err) {
       console.error("Fetch elections error:", err);
     }
   };
 
+  // ✅ Fetch Results
   const fetchResults = async (electionId) => {
+    setLoading(true);
     try {
       const res = await fetch(`${API_BASE_URL}/votes/results/${electionId}`);
       const data = await res.json();
-      if (res.ok) setResults(data);
-      else setResults([]);
+      if (res.ok) {
+        setResults(data);
+      } else {
+        console.error("Result fetch failed:", data.message);
+      }
     } catch (err) {
-      console.error("Fetch results error:", err);
+      console.error("Error loading results:", err);
     }
+    setLoading(false);
   };
 
+  // ✅ Fetch Vote Logs
   const fetchLogs = async (electionId) => {
     try {
       const res = await fetch(`${API_BASE_URL}/vote-logs/${electionId}`, {
@@ -54,24 +60,33 @@ const AuditorDashboard = () => {
         },
       });
       const data = await res.json();
-      if (res.ok) setLogs(data);
-      else setLogs([]);
+      if (res.ok) {
+        setVoteLogs(data);
+      } else {
+        console.error("Vote log error:", data.message);
+      }
     } catch (err) {
-      console.error("Fetch logs error:", err);
+      console.error("Failed to load logs:", err);
     }
   };
 
+  // ✅ CSV Export
   const downloadCSV = async () => {
+    if (!selectedElection) return alert("Select an election first.");
     try {
-      const res = await fetch(`${API_BASE_URL}/vote-logs/export`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const res = await fetch(`${API_BASE_URL}/vote-logs/export/${selectedElection}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
+      if (!res.ok) throw new Error("Failed to export CSV");
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "vote-logs.csv";
+      a.download = "vote_logs.csv";
       a.click();
+      window.URL.revokeObjectURL(url);
     } catch (err) {
       console.error("CSV export failed:", err);
       alert("❌ CSV export failed.");
@@ -82,20 +97,19 @@ const AuditorDashboard = () => {
     fetchElections();
   }, []);
 
-  useEffect(() => {
-    if (selectedElection) {
-      fetchResults(selectedElection);
-      fetchLogs(selectedElection);
-    }
-  }, [selectedElection]);
+  const handleSelectElection = (electionId) => {
+    setSelectedElection(electionId);
+    fetchResults(electionId);
+    fetchLogs(electionId);
+  };
 
   const chartData = {
-    labels: results.map((r) => r.name),
+    labels: results.map((c) => c.name),
     datasets: [
       {
         label: "Votes",
-        data: results.map((r) => r.votes),
-        backgroundColor: "#36A2EB",
+        data: results.map((c) => c.votes),
+        backgroundColor: "#3b82f6",
       },
     ],
   };
@@ -107,16 +121,14 @@ const AuditorDashboard = () => {
       <section>
         <h3>📥 Elections</h3>
         {elections.length === 0 ? (
-          <p>🧾 No elections available</p>
+          <p>No elections available</p>
         ) : (
           <ul className="election-list">
             {elections.map((e) => (
-              <li
-                key={e._id}
-                onClick={() => setSelectedElection(e._id)}
-                className={selectedElection === e._id ? "active" : ""}
-              >
-                🗳 {e.title}
+              <li key={e._id}>
+                <button onClick={() => handleSelectElection(e._id)}>
+                  {e.title}
+                </button>
               </li>
             ))}
           </ul>
@@ -125,7 +137,9 @@ const AuditorDashboard = () => {
 
       <section>
         <h3>📈 Real-Time Vote Tally</h3>
-        {results.length === 0 ? (
+        {loading ? (
+          <p>Loading chart...</p>
+        ) : results.length === 0 ? (
           <p>No results yet.</p>
         ) : (
           <Bar data={chartData} />
@@ -134,17 +148,14 @@ const AuditorDashboard = () => {
 
       <section>
         <h3>📜 Vote Logs</h3>
-        <button onClick={fetchLogs}>🔄 Refresh Logs</button>
-        <button onClick={downloadCSV}>📥 Export CSV</button>
-
-        {logs.length === 0 ? (
+        <button onClick={downloadCSV} className="csv-button">⬇ Export CSV</button>
+        {voteLogs.length === 0 ? (
           <p>🧾 No vote logs found yet.</p>
         ) : (
-          <ul className="logs">
-            {logs.map((log) => (
+          <ul className="log-list">
+            {voteLogs.map((log) => (
               <li key={log._id}>
-                🧾 {log.user?.username} voted at{" "}
-                {new Date(log.timestamp).toLocaleString()}
+                🧾 {log.user?.email || "Unknown"} — {new Date(log.timestamp).toLocaleString()}
               </li>
             ))}
           </ul>
