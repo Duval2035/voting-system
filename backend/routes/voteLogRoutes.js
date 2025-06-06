@@ -1,49 +1,38 @@
-// backend/routes/voteLogRoutes.js
 const express = require("express");
 const router = express.Router();
 const authMiddleware = require("../middleware/authMiddleware");
 const VoteLog = require("../models/VoteLog");
 const { Parser } = require("json2csv");
 
-// 📜 GET all logs for an election
-router.get("/:electionId", authMiddleware, async (req, res) => {
+// CSV Export Endpoint
+router.get("/export", authMiddleware, async (req, res) => {
   try {
-    const logs = await VoteLog.find({ election: req.params.electionId })
+    const logs = await VoteLog.find({})
       .populate("user", "username email")
+      .populate("election", "title")
       .sort({ timestamp: -1 });
 
-    res.status(200).json(logs);
-  } catch (err) {
-    console.error("Vote log fetch error:", err);
-    res.status(500).json({ message: "Error fetching vote logs" });
-  }
-});
-
-// 📁 Export logs to CSV
-router.get("/export/:electionId", authMiddleware, async (req, res) => {
-  try {
-    const logs = await VoteLog.find({ election: req.params.electionId }).populate("user", "username email");
-
-    if (!logs.length) {
-      return res.status(404).json({ message: "No logs found" });
+    if (logs.length === 0) {
+      return res.status(404).json({ message: "No vote logs to export" });
     }
 
-    const formattedLogs = logs.map(log => ({
-      username: log.user?.username || "Unknown",
-      email: log.user?.email || "Unknown",
-      timestamp: log.timestamp,
-      hash: log.hash
+    const exportData = logs.map((log) => ({
+      Username: log.user?.username || "N/A",
+      Email: log.user?.email || "N/A",
+      Election: log.election?.title || "N/A",
+      Timestamp: new Date(log.timestamp).toLocaleString(),
+      Hash: log.hash,
     }));
 
-    const parser = new Parser({ fields: ["username", "email", "timestamp", "hash"] });
-    const csv = parser.parse(formattedLogs);
+    const parser = new Parser();
+    const csv = parser.parse(exportData);
 
     res.header("Content-Type", "text/csv");
-    res.attachment("vote_logs.csv");
+    res.attachment("vote-logs.csv");
     return res.send(csv);
   } catch (err) {
     console.error("CSV export error:", err);
-    res.status(500).send("Failed to export CSV");
+    return res.status(500).json({ message: "Failed to export CSV" });
   }
 });
 

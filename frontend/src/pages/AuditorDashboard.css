@@ -1,63 +1,33 @@
- .auditor-dashboard {
-  padding: 20px;
-  max-width: 1000px;
-  margin: auto;
+.auditor-dashboard {
+  padding: 24px;
+  font-family: Arial, sans-serif;
 }
 
-h2, h3 {
-  color: #1e3a8a;
-  margin-bottom: 10px;
-}
-
-.election-list ul {
+.election-list {
   list-style: none;
   padding: 0;
 }
 
 .election-list li {
- display:inline-flex;
-  flex-direction: column;
-  padding-right: 20px;
-  margin-bottom: 15px;
-  margin: 5px 0;
-}
-
-.election-list button {
-  padding: 8px 12px;
-  border: none;
-  color: rgb(15, 14, 14);
-  border-radius: 4px;
   cursor: pointer;
-  font-weight: bold;
-  transition: background-color 0.2s ease;
-  background-color: #8b9fe2;
-  display: flex;
-}
-.election-list button:hover{
-  background-color: #7b96e0;
-}
-
-.chart-section {
-  margin-top: 20px;
-}
-
-.csv-button {
-  margin-top: 10px;
-  background-color: #10b981;
-  padding: 8px 12px;
-  border: none;
-  color: white;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.log-section ul {
-  padding-left: 20px;
-}
-.log-section li {
-  margin: 5px 0;
-  background-color: #f3f4f6;
   padding: 8px;
+  margin: 4px 0;
+  background: #f2f2f2;
   border-radius: 4px;
 }
- 
+
+.election-list li.active {
+  background: #2196f3;
+  color: white;
+}
+
+.logs {
+  padding: 0;
+  list-style-type: none;
+}
+.logs li {
+  padding: 8px;
+  margin: 4px 0;
+  background: #e0f7fa;
+  border-radius: 4px;
+}
