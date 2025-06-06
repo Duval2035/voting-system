@@ -1,3 +1,4 @@
+// frontend/src/pages/Login.jsx
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import "./Login.css";
@@ -8,7 +9,7 @@ const Login = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
-  const [step, setStep] = useState(1); // 1 = send OTP, 2 = verify OTP
+  const [step, setStep] = useState(1);
   const [error, setError] = useState("");
 
   const handleSendOtp = async (e) => {
@@ -29,7 +30,7 @@ const Login = () => {
       }
 
       setStep(2);
-    } catch (err) {
+    } catch {
       setError("Could not connect to server");
     }
   };
@@ -50,19 +51,27 @@ const Login = () => {
         setError(data.message || "Could not verify OTP");
         return;
       }
-      if (!res.ok) {
-  setError(data.message || "Failed to send OTP"); // ✅ not data.error
-  return;
-}
 
       localStorage.setItem("token", data.token);
-      localStorage.setItem("organizationName", data.user.organizationName);
-      localStorage.setItem("organizationId", data.user.organizationId || "");
       localStorage.setItem("user", JSON.stringify(data.user));
       localStorage.setItem("organizationName", data.user.organizationName);
-      localStorage.setItem("user", JSON.stringify(data.user));
 
-      navigate(data.user.role === "admin" ? "/admin/dashboard" : "/user/dashboard");
+      switch (data.user.role) {
+        case "admin":
+          navigate("/admin/dashboard");
+          break;
+        case "user":
+          navigate("/user/dashboard");
+          break;
+        case "auditor":
+          navigate("/auditor");
+          break;
+        case "candidate":
+          navigate("/candidate/dashboard");
+          break;
+        default:
+          navigate("/unauthorized");
+      }
     } catch (err) {
       setError("Could not connect to server");
     }
@@ -92,13 +101,14 @@ const Login = () => {
           </>
         )}
 
-        <button type="submit">{step === 1 ? "Send Password" : "Verify password"}</button>
+        <button type="submit">{step === 1 ? "Send OTP" : "Verify OTP"}</button>
       </form>
 
       {error && <p className="error-msg">{error}</p>}
 
       <p className="footer-link">
-        Don’t have an account? <Link to="/register"><span className="footer-if">Register</span></Link>
+        Don’t have an account?{" "}
+        <Link to="/register"><span className="footer-if">Register</span></Link>
       </p>
     </div>
   );

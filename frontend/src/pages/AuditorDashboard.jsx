@@ -3,164 +3,163 @@ import React, { useEffect, useState } from "react";
 import API_BASE_URL from "../config";
 import "./AuditorDashboard.css";
 import { Bar } from "react-chartjs-2";
-import { Chart as ChartJS, BarElement, CategoryScale, LinearScale, Tooltip } from "chart.js";
-ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip);
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Tooltip,
+  Legend,
+} from "chart.js";
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
 const AuditorDashboard = () => {
   const [elections, setElections] = useState([]);
-  const [selectedElection, setSelectedElection] = useState(null);
-  const [results, setResults] = useState([]);
+  const [selectedElection, setSelectedElection] = useState("");
+  const [chartData, setChartData] = useState(null);
   const [voteLogs, setVoteLogs] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [csvError, setCsvError] = useState("");
 
   const token = localStorage.getItem("token");
 
-  // ✅ Fetch Elections
-  const fetchElections = async () => {
-    try {
-      const res = await fetch(`${API_BASE_URL}/auditor/elections`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const data = await res.json();
-      if (res.ok) {
+  useEffect(() => {
+    const fetchElections = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/auditor/elections`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message);
         setElections(data);
-      } else {
-        console.error("Failed to fetch elections:", data.message);
+      } catch (err) {
+        console.error("Error fetching elections:", err);
+        setError("❌ Failed to fetch elections.");
       }
-    } catch (err) {
-      console.error("Fetch elections error:", err);
-    }
-  };
+    };
 
-  // ✅ Fetch Results
-  const fetchResults = async (electionId) => {
-    setLoading(true);
+    fetchElections();
+  }, [token]);
+
+  const fetchResultsAndLogs = async (electionId) => {
+    setError("");
+    setCsvError("");
     try {
-      const res = await fetch(`${API_BASE_URL}/votes/results/${electionId}`);
-      const data = await res.json();
-      if (res.ok) {
-        setResults(data);
+      const [resultsRes, logsRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/votes/results/${electionId}`),
+        fetch(`${API_BASE_URL}/vote-logs/${electionId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
+
+      const results = await resultsRes.json();
+      const logs = await logsRes.json();
+
+      if (resultsRes.ok) {
+        setChartData({
+          labels: results.map((c) => c.name),
+          datasets: [
+            {
+              label: "Votes",
+              data: results.map((c) => c.votes),
+              backgroundColor: "#1e90ff",
+            },
+          ],
+        });
       } else {
-        console.error("Result fetch failed:", data.message);
+        setChartData(null);
+      }
+
+      if (logsRes.ok) {
+        setVoteLogs(logs);
+      } else {
+        setVoteLogs([]);
       }
     } catch (err) {
-      console.error("Error loading results:", err);
-    }
-    setLoading(false);
-  };
-
-  // ✅ Fetch Vote Logs
-  const fetchLogs = async (electionId) => {
-    try {
-      const res = await fetch(`${API_BASE_URL}/vote-logs/${electionId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setVoteLogs(data);
-      } else {
-        console.error("Vote log error:", data.message);
-      }
-    } catch (err) {
-      console.error("Failed to load logs:", err);
+      console.error("Error fetching results/logs:", err);
+      setError("❌ Failed to load results or logs.");
     }
   };
 
-  // ✅ CSV Export
+  const handleElectionSelect = (e) => {
+    const id = e.target.value;
+    setSelectedElection(id);
+    if (id) fetchResultsAndLogs(id);
+  };
+
   const downloadCSV = async () => {
-    if (!selectedElection) return alert("Select an election first.");
     try {
       const res = await fetch(`${API_BASE_URL}/vote-logs/export/${selectedElection}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error("Failed to export CSV");
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.message || "Failed to export");
+      }
+
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "vote_logs.csv";
+      a.download = `vote_logs_${selectedElection}.csv`;
       a.click();
       window.URL.revokeObjectURL(url);
+      alert("✅ CSV exported successfully!");
     } catch (err) {
       console.error("CSV export failed:", err);
-      alert("❌ CSV export failed.");
+      setCsvError("❌ CSV export failed.");
     }
-  };
-
-  useEffect(() => {
-    fetchElections();
-  }, []);
-
-  const handleSelectElection = (electionId) => {
-    setSelectedElection(electionId);
-    fetchResults(electionId);
-    fetchLogs(electionId);
-  };
-
-  const chartData = {
-    labels: results.map((c) => c.name),
-    datasets: [
-      {
-        label: "Votes",
-        data: results.map((c) => c.votes),
-        backgroundColor: "#3b82f6",
-      },
-    ],
   };
 
   return (
     <div className="auditor-dashboard">
       <h2>📊 Auditor Dashboard</h2>
 
-      <section>
-        <h3>📥 Elections</h3>
-        {elections.length === 0 ? (
-          <p>No elections available</p>
-        ) : (
-          <ul className="election-list">
+      <div className="dashboard-section">
+        <label>Select an Election</label>
+        {elections.length > 0 ? (
+          <select onChange={handleElectionSelect} value={selectedElection}>
+            <option value="">-- Choose an Election --</option>
             {elections.map((e) => (
-              <li key={e._id}>
-                <button onClick={() => handleSelectElection(e._id)}>
-                  {e.title}
-                </button>
-              </li>
+              <option key={e._id} value={e._id}>{e.title}</option>
             ))}
-          </ul>
-        )}
-      </section>
-
-      <section>
-        <h3>📈 Real-Time Vote Tally</h3>
-        {loading ? (
-          <p>Loading chart...</p>
-        ) : results.length === 0 ? (
-          <p>No results yet.</p>
+          </select>
         ) : (
+          <p>🧾 No elections available</p>
+        )}
+      </div>
+
+      <div className="dashboard-section">
+        <h3>📈 Results</h3>
+        {chartData ? (
           <Bar data={chartData} />
-        )}
-      </section>
-
-      <section>
-        <h3>📜 Vote Logs</h3>
-        <button onClick={downloadCSV} className="csv-button">⬇ Export CSV</button>
-        {voteLogs.length === 0 ? (
-          <p>🧾 No vote logs found yet.</p>
         ) : (
-          <ul className="log-list">
+          <p>No results to display.</p>
+        )}
+      </div>
+
+      <div className="dashboard-section">
+        <h3>📜 Vote Logs</h3>
+        <button onClick={downloadCSV} disabled={!selectedElection}>
+          📥 Export Logs as CSV
+        </button>
+        {csvError && <p className="error-message">{csvError}</p>}
+        {voteLogs.length > 0 ? (
+          <ul className="logs-list">
             {voteLogs.map((log) => (
               <li key={log._id}>
-                🧾 {log.user?.email || "Unknown"} — {new Date(log.timestamp).toLocaleString()}
+                🧾 {log.user?.email} — {new Date(log.timestamp).toLocaleString()} — <code>{log.hash}</code>
               </li>
             ))}
           </ul>
+        ) : (
+          <p>🧾 No vote logs found yet.</p>
         )}
-      </section>
+      </div>
+
+      {error && <p className="error-message">{error}</p>}
     </div>
   );
 };

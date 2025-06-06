@@ -5,11 +5,12 @@ import "./AuditorIntegrity.css";
 
 const AuditorIntegrity = () => {
   const [elections, setElections] = useState([]);
-  const [selectedElection, setSelectedElection] = useState(null);
+  const [selectedElection, setSelectedElection] = useState("");
   const [integrityData, setIntegrityData] = useState(null);
+  const [error, setError] = useState("");
+
   const token = localStorage.getItem("token");
 
-  // 🟦 Fetch Elections
   useEffect(() => {
     const fetchElections = async () => {
       try {
@@ -17,33 +18,36 @@ const AuditorIntegrity = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
-        if (res.ok) setElections(data);
-        else console.error("Failed to fetch elections:", data.message);
+        if (!res.ok) throw new Error(data.message);
+        setElections(data);
       } catch (err) {
-        console.error("Fetch elections error:", err);
+        console.error("Failed to fetch elections:", err);
+        setError("Failed to fetch elections");
       }
     };
 
     fetchElections();
-  }, []);
+  }, [token]);
 
-  // 🟦 Fetch Integrity Result
-  const verifyIntegrity = async (electionId) => {
+  const handleSelect = async (e) => {
+    const electionId = e.target.value;
     setSelectedElection(electionId);
+    if (!electionId) {
+      setIntegrityData(null);
+      return;
+    }
+
     try {
       const res = await fetch(`${API_BASE_URL}/auditor/integrity/${electionId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      if (res.ok) {
-        setIntegrityData(data);
-      } else {
-        console.error("Integrity check failed:", data.message);
-        setIntegrityData(null);
-      }
+      if (!res.ok) throw new Error(data.message);
+      setIntegrityData(data);
     } catch (err) {
-      console.error("Integrity request failed:", err);
+      console.error("Failed to fetch integrity data:", err);
       setIntegrityData(null);
+      setError("Failed to fetch integrity data");
     }
   };
 
@@ -51,43 +55,41 @@ const AuditorIntegrity = () => {
     <div className="integrity-dashboard">
       <h2>🔐 Election Integrity Check</h2>
 
-      <div className="integrity-section">
+      <div className="card">
         <h3>📋 Select an Election</h3>
-        {elections.length === 0 ? (
-          <p>❌ No elections available</p>
-        ) : (
-          <ul className="election-list">
+        {elections.length > 0 ? (
+          <select onChange={handleSelect} value={selectedElection}>
+            <option value="">-- Choose an Election --</option>
             {elections.map((e) => (
-              <li key={e._id}>
-                <button onClick={() => verifyIntegrity(e._id)}>
-                  {e.title}
-                </button>
-              </li>
+              <option key={e._id} value={e._id}>{e.title}</option>
             ))}
-          </ul>
+          </select>
+        ) : (
+          <p className="no-elections">❌ No elections available</p>
         )}
       </div>
 
       {integrityData && (
-        <div className="result-section">
-          <h3>📊 Integrity Result</h3>
-          <p>
-            Status:{" "}
-            <strong className={integrityData.isValid ? "valid" : "tampered"}>
-              {integrityData.isValid ? "Valid ✅" : "Tampered ❌"}
-            </strong>
-          </p>
+        <div className="card integrity-report">
+          <h3>🧾 Integrity Report</h3>
+          <p><strong>Status:</strong> {integrityData.isValid ? "✅ Valid (No tampering)" : "❌ Tampered (Log mismatch)"}</p>
+          <p><strong>Total Logs:</strong> {integrityData.totalLogs}</p>
+          <p><strong>Merkle Root:</strong> <code>{integrityData.merkleRoot}</code></p>
 
-          <p><strong>Merkle Root (simulated):</strong> <code>{integrityData.rootHash}</code></p>
-
-          <h4>🔍 Preview Vote Hashes</h4>
-          <ul>
-            {integrityData.hashes.slice(0, 5).map((hash, index) => (
-              <li key={index}><code>{hash}</code></li>
-            ))}
-          </ul>
+          {integrityData.previewHashes && (
+            <div>
+              <h4>🔍 Preview of First 5 Vote Hashes</h4>
+              <ul className="hash-list">
+                {integrityData.previewHashes.map((hash, index) => (
+                  <li key={index}><code>{hash}</code></li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
+
+      {error && <p className="error-msg">{error}</p>}
     </div>
   );
 };

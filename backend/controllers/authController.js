@@ -82,25 +82,25 @@ exports.verifyOtp = async (req, res) => {
 
   try {
     const record = await Otp.findOne({ email, otp });
-    if (!record) return res.status(400).json({ message: 'Invalid OTP' });
+    if (!record) return res.status(400).json({ message: "Invalid OTP" });
 
     await Otp.deleteOne({ _id: record._id });
 
     const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (!user) return res.status(404).json({ message: "User not found" });
 
     const token = jwt.sign(
       {
-        userId: user._id, // ✅ FIXED from `saved` to `user`
+        userId: user._id,
         role: user.role,
         organizationName: user.organizationName,
       },
-      process.env.JWT_SECRET || 'secret',
-      { expiresIn: '1d' }
+      process.env.JWT_SECRET || "secret",
+      { expiresIn: "1d" }
     );
 
     res.status(200).json({
-      message: 'Login successful',
+      message: "Login successful",
       token,
       user: {
         id: user._id,
@@ -111,7 +111,7 @@ exports.verifyOtp = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Verify OTP Error:', error);
-    res.status(500).json({ message: 'Login failed' });
+    console.error("Verify OTP Error:", error);
+    res.status(500).json({ message: "Login failed" });
   }
 };

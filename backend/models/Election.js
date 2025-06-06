@@ -7,6 +7,10 @@ const electionSchema = new mongoose.Schema({
   startDate: { type: Date, required: true },
   endDate: { type: Date, required: true },
   organizationName: { type: String, required: true },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User"
+  },
   status: {
     type: String,
     enum: ["upcoming", "active", "ended"],
