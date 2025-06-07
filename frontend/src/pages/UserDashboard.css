@@ -43,15 +43,6 @@ h2 {
   cursor: pointer;
 }
 
-.upcoming-list {
-  list-style: none;
-  padding: 0;
-}
-
-.upcoming-list li {
-  margin: 8px 0;
-}
-
 .guide-box {
   background-color: #e8f4ff;
   padding: 1rem;

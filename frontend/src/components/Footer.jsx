@@ -16,7 +16,6 @@ function Footer() {
             <h4>Platform</h4>
             <ul>
               <li><a href="#">Overview</a></li>
-              <li><a href="#">Features</a></li>
               <li><a href="#">Updates</a></li>
             </ul>
           </div>
@@ -24,7 +23,6 @@ function Footer() {
             <h4>Resources</h4>
             <ul>
               <li><a href="#">Documentation</a></li>
-              <li><a href="#">Support</a></li>
               <li><a href="#">Community</a></li>
             </ul>
           </div>
@@ -32,7 +30,6 @@ function Footer() {
             <h4>Company</h4>
             <ul>
               <li><a href="#">About Us</a></li>
-              <li><a href="#">Careers</a></li>
               <li><a href="#">Legal</a></li>
             </ul>
           </div>

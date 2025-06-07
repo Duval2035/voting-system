@@ -1,15 +1,14 @@
 // src/pages/AdminDashboard.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "./AdminDashboard.css";
 import API_BASE_URL from "../config";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
+import "./AdminDashboard.css";
 
 const AdminDashboard = () => {
   const [elections, setElections] = useState([]);
   const [filter, setFilter] = useState("all");
   const [error, setError] = useState(null);
+  const [refresh, setRefresh] = useState(false);
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
@@ -17,88 +16,107 @@ const AdminDashboard = () => {
     const fetchElections = async () => {
       try {
         const res = await fetch(`${API_BASE_URL}/elections`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
-
         const data = await res.json();
-        if (res.ok) {
-          setElections(data);
-        } else {
-          throw new Error(data.message || "Failed to fetch elections");
-        }
+        if (!res.ok) throw new Error(data.message);
+        setElections(data);
       } catch (err) {
-        console.error("Error loading elections:", err.message);
-        setError(err.message);
+        setError(err.message || "Failed to load elections.");
       }
     };
-
     fetchElections();
-  }, [token]);
+  }, [token, refresh]);
 
-  const filteredElections = elections.filter((election) =>
-    filter === "all" ? true : election.status === filter
-  );
+  const now = new Date();
+  const filteredElections = elections.filter((e) => {
+    if (filter === "active") {
+      return new Date(e.startDate) <= now && new Date(e.endDate) >= now;
+    }
+    if (filter === "upcoming") {
+      return new Date(e.startDate) > now;
+    }
+    return true;
+  });
 
   const stats = {
     total: elections.length,
-    active: elections.filter((e) => e.status === "active").length,
+    active: elections.filter((e) => new Date(e.startDate) <= now && new Date(e.endDate) >= now).length,
     voters: elections.reduce((sum, e) => sum + (e.totalVoters || 0), 0),
     votes: elections.reduce((sum, e) => sum + (e.totalVotes || 0), 0),
   };
 
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this election?")) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/elections/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to delete election");
+      setRefresh((prev) => !prev); // Re-fetch elections
+    } catch (err) {
+      alert(err.message || "Could not delete election.");
+    }
+  };
+
+  const handleEdit = (id) => {
+    navigate(`/edit-election/${id}`);
+  };
+
   return (
-    <>
-  
-      <div className="admin-dashboard">
-        <h1>Admin Dashboard</h1>
-        <p>Manage elections and view results</p>
+    <div className="admin-dashboard">
+      <h1>🛠️ Admin Dashboard</h1>
+      <p>Monitor, manage, and maintain voting integrity.</p>
 
-        {error && <div className="error-message">⚠️ {error}</div>}
+      {error && <div className="error-message">⚠️ {error}</div>}
 
-        <div className="dashboard-stats">
-          <div className="stat-box">Total Elections<br />{stats.total}</div>
-          <div className="stat-box">Active Elections<br />{stats.active}</div>
-          <div className="stat-box">Total Voters<br />{stats.voters}</div>
-          <div className="stat-box">Total Votes<br />{stats.votes}</div>
-          <button className="create-btn" onClick={() => navigate("/create-election")}>
-            + Create New Election
-          </button>
-        </div>
+      <div className="dashboard-stats">
+        <div className="stat-box">🗳️ Total Elections<br /><strong>{stats.total}</strong></div>
+        <div className="stat-box">✅ Active<br /><strong>{stats.active}</strong></div>
+        <div className="stat-box">👥 Total Voters<br /><strong>{stats.voters}</strong></div>
+        <div className="stat-box">📨 Total Votes<br /><strong>{stats.votes}</strong></div>
+        <button className="create-btn" onClick={() => navigate("/create-election")}>
+          ➕ Create Election
+        </button>
+      </div>
 
-        <div className="tabs">
-          <button className={filter === "all" ? "active" : ""} onClick={() => setFilter("all")}>All</button>
-          <button className={filter === "active" ? "active" : ""} onClick={() => setFilter("active")}>Active</button>
-          <button className={filter === "upcoming" ? "active" : ""} onClick={() => setFilter("upcoming")}>Upcoming</button>
-        </div>
+      <div className="tabs">
+        <button className={filter === "all" ? "active" : ""} onClick={() => setFilter("all")}>All</button>
+        <button className={filter === "active" ? "active" : ""} onClick={() => setFilter("active")}>Active</button>
+        <button className={filter === "upcoming" ? "active" : ""} onClick={() => setFilter("upcoming")}>Upcoming</button>
+      </div>
 
-        <div className="election-list">
-          {filteredElections.map((election) => (
-            <div key={election._id} className="election-card">
-              <div className="election-header">
-                <h3>{election.title}</h3>
-                <span className="status-badge">
-                  {new Date(election.startDate) > new Date()
+      <div className="election-list">
+        {filteredElections.length === 0 ? (
+          <p className="empty-msg">No elections match this filter.</p>
+        ) : (
+          filteredElections.map((e) => (
+            <div className="election-card" key={e._id}>
+              <div className="card-header">
+                <h3>{e.title}</h3>
+                <span className="badge">
+                  {new Date(e.startDate) > now
                     ? "Upcoming"
-                    : new Date(election.endDate) < new Date()
+                    : new Date(e.endDate) < now
                     ? "Ended"
                     : "Active"}
                 </span>
               </div>
-              <p className="org-name">{election.organizationName || "No organization"}</p>
-              <p className="description">{election.description}</p>
-              <p className="dates">📅 {election.startDate} – {election.endDate}</p>
+              <p className="org-name">{e.organizationName || "No organization"}</p>
+              <p className="description">{e.description}</p>
+              <p className="dates">🗓️ {new Date(e.startDate).toLocaleString()} → {new Date(e.endDate).toLocaleString()}</p>
               <div className="election-actions">
-                <button onClick={() => navigate(`/results/${election._id}`)}>View Results</button>
-                <button onClick={() => navigate(`/manage-election/${election._id}`)}>Manage</button>
+                <button onClick={() => navigate(`/results/${e._id}`)}>📊 View Results</button>
+                <button onClick={() => navigate(`/manage-election/${e._id}`)}>👤 Manage</button>
+                <button className="edit-btn" onClick={() => handleEdit(e._id)}>✏️ Edit</button>
+                <button className="delete-btn" onClick={() => handleDelete(e._id)}>🗑️ Delete</button>
               </div>
             </div>
-          ))}
-        </div>
+          ))
+        )}
       </div>
-
-    </>
+    </div>
   );
 };
 

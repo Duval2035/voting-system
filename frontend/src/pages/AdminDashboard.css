@@ -1,109 +1,120 @@
 .admin-dashboard {
-  padding: 20px;
-  background-color: #f9fafb;
+  padding: 2rem;
+  background: #f5f8fa;
+  min-height: 100vh;
+  font-family: "Segoe UI", sans-serif;
 }
 
 h1 {
-  color: #333;
-  text-align: center;
+  font-size: 28px;
+  margin-bottom: 0.5rem;
 }
 
 .dashboard-stats {
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
-  margin: 20px 0;
-  justify-content: center;
+  margin: 1rem 0 2rem;
+  align-items: center;
 }
 
 .stat-box {
-  background-color: #fff;
-  border: 1px solid #ddd;
-  padding: 20px;
+  background: #fff;
+  padding: 1rem;
   border-radius: 10px;
-  width: 180px;
+  min-width: 140px;
+  flex: 1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
   text-align: center;
-  font-weight: bold;
 }
 
 .create-btn {
-  background-color: #4caf50;
+  background-color: #1e90ff;
   color: white;
-  padding: 12px 20px;
-  margin-top: 20px;
+  padding: 10px 16px;
+  border-radius: 8px;
   border: none;
-  border-radius: 5px;
   cursor: pointer;
+  font-weight: bold;
 }
 
 .tabs {
   display: flex;
-  justify-content: center;
-  margin: 20px 0;
+  gap: 10px;
+  margin-bottom: 1rem;
 }
 
 .tabs button {
-  padding: 10px 15px;
-  margin: 0 10px;
+  background: #e0e0e0;
   border: none;
-  border-bottom: 2px solid transparent;
-  background: none;
+  padding: 8px 16px;
+  border-radius: 6px;
   cursor: pointer;
-  font-weight: bold;
 }
 
 .tabs button.active {
-  border-color: #4caf50;
-  color: #4caf50;
+  background: #007bff;
+  color: white;
 }
 
 .election-list {
   display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  justify-content: center;
+  flex-direction: column;
+  gap: 1.2rem;
 }
 
 .election-card {
-  background-color: #fff;
-  border: 1px solid #ddd;
-  border-left: 6px solid #4caf50;
-  padding: 20px;
+  background: #fff;
+  padding: 1.2rem;
   border-radius: 10px;
-  width: 300px;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.08);
 }
 
-.status-badge {
-  padding: 4px 8px;
-  border-radius: 4px;
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.badge {
+  background-color: #17a2b8;
   color: white;
-  font-size: 0.8rem;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 13px;
 }
 
-.status-badge.active {
-  background-color: #4caf50;
-}
-
-.status-badge.upcoming {
-  background-color: #2196f3;
-}
-
-.status-badge.closed {
-  background-color: #f44336;
+.election-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 1rem;
 }
 
 .election-actions button {
-  margin-right: 10px;
-  padding: 6px 10px;
+  padding: 6px 12px;
   border: none;
-  border-radius: 5px;
-  background-color: #eee;
+  border-radius: 6px;
   cursor: pointer;
 }
 
-.error-message {
-  color: red;
-  text-align: center;
-  font-weight: bold;
-  margin-bottom: 10px;
+.edit-btn {
+  background-color: #ffc107;
+  color: black;
+}
+
+.delete-btn {
+  background-color: #dc3545;
+  color: white;
+}
+
+.empty-msg {
+  font-style: italic;
+  color: #888;
+}
+.election-guide {
+  background-color: #e8f4ff;
+  padding: 1rem;
+  border-left: 5px solid #007bff;
+  border-radius: 6px;
+  margin-top: 1rem;
 }

@@ -30,11 +30,6 @@ const UserDashboard = () => {
     fetchElections();
   }, [token]);
 
-  const now = new Date();
-
-  const ongoing = elections.filter(e => new Date(e.startDate) <= now && new Date(e.endDate) >= now);
-  const upcoming = elections.filter(e => new Date(e.startDate) > now);
-
   return (
     <div className="user-dashboard">
       <h2>👤 User Dashboard</h2>
@@ -56,14 +51,14 @@ const UserDashboard = () => {
         )}
       </div>
 
-      {/* Ongoing Elections */}
+      {/* All Elections */}
       <div className="section">
-        <h3>🟢 Ongoing Elections</h3>
-        {ongoing.length === 0 ? (
+        <h3>🟢 All Elections</h3>
+        {elections.length === 0 ? (
           <p>No elections available for voting now.</p>
         ) : (
           <div className="election-grid">
-            {ongoing.map((e) => (
+            {elections.map((e) => (
               <div className="election-card" key={e._id}>
                 <h4>{e.title}</h4>
                 <p>
@@ -76,22 +71,6 @@ const UserDashboard = () => {
               </div>
             ))}
           </div>
-        )}
-      </div>
-
-      {/* Upcoming Elections */}
-      <div className="section">
-        <h3>📅 Upcoming Elections</h3>
-        {upcoming.length === 0 ? (
-          <p>No upcoming elections at the moment.</p>
-        ) : (
-          <ul className="upcoming-list">
-            {upcoming.map((e) => (
-              <li key={e._id}>
-                <strong>{e.title}</strong> — starts {new Date(e.startDate).toLocaleString()}
-              </li>
-            ))}
-          </ul>
         )}
       </div>
 
