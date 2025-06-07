@@ -1,3 +1,4 @@
+// controllers/voteController.js
 const crypto = require("crypto");
 const Vote = require("../models/Vote");
 const Candidate = require("../models/Candidate");
@@ -5,7 +6,7 @@ const Election = require("../models/Election");
 const VoteLog = require("../models/VoteLog");
 const { Parser } = require("json2csv");
 
-// Submit Vote & Save VoteLog
+// ✅ 1. Submit vote and generate log
 exports.submitVote = async (req, res) => {
   const { electionId, candidateId } = req.body;
   const userId = req.user.userId;
@@ -20,25 +21,14 @@ exports.submitVote = async (req, res) => {
       return res.status(400).json({ message: "You already voted in this election." });
     }
 
-    const vote = new Vote({
-      election: electionId,
-      candidate: candidateId,
-      user: userId,
-    });
+    const vote = new Vote({ election: electionId, candidate: candidateId, user: userId });
     await vote.save();
 
-    // ✅ Log the vote with Merkle hash
     const timestamp = new Date();
     const hashString = `${userId}-${electionId}-${candidateId}-${timestamp.toISOString()}`;
     const hash = crypto.createHash("sha256").update(hashString).digest("hex");
 
-    const log = new VoteLog({
-      user: userId,
-      election: electionId,
-      timestamp,
-      hash,
-    });
-
+    const log = new VoteLog({ user: userId, election: electionId, timestamp, hash });
     await log.save();
 
     res.status(200).json({ message: "✅ Vote submitted and logged successfully." });
@@ -48,7 +38,7 @@ exports.submitVote = async (req, res) => {
   }
 };
 
-// Get results for Election
+// ✅ 2. Get real-time results
 exports.getResults = async (req, res) => {
   try {
     const electionId = req.params.id;
@@ -78,11 +68,10 @@ exports.getResults = async (req, res) => {
   }
 };
 
-// Candidate-specific result
+// ✅ 3. Candidate-specific results
 exports.getCandidateResults = async (req, res) => {
-  const userId = req.params.id;
-
   try {
+    const userId = req.params.id;
     const candidate = await Candidate.findOne({ userId });
 
     if (!candidate) {
@@ -104,7 +93,7 @@ exports.getCandidateResults = async (req, res) => {
   }
 };
 
-// Fetch vote logs (Auditor)
+// ✅ 4. Get vote logs for an election
 exports.getVoteLogs = async (req, res) => {
   try {
     const { electionId } = req.params;
@@ -119,23 +108,29 @@ exports.getVoteLogs = async (req, res) => {
   }
 };
 
-// ✅ Export logs as CSV
+// ✅ 5. Export logs to CSV
 exports.exportVoteLogsCSV = async (req, res) => {
   try {
     const { electionId } = req.params;
     const logs = await VoteLog.find({ election: electionId }).populate("user", "username email");
 
     if (!logs.length) {
-      return res.status(400).json({ message: "No vote logs to export." });
+      return res.status(404).json({ message: "No vote logs to export." });
     }
 
-    const fields = ["user.username", "user.email", "election", "timestamp", "hash"];
-    const parser = new Parser({ fields });
-    const csv = parser.parse(logs);
+    const formatted = logs.map(log => ({
+      username: log.user?.username || "N/A",
+      email: log.user?.email || "N/A",
+      timestamp: log.timestamp.toISOString(),
+      hash: log.hash
+    }));
+
+    const parser = new Parser({ fields: ["username", "email", "timestamp", "hash"] });
+    const csv = parser.parse(formatted);
 
     res.header("Content-Type", "text/csv");
     res.attachment(`vote-logs-${electionId}.csv`);
-    return res.send(csv);
+    res.send(csv);
   } catch (err) {
     console.error("CSV export error:", err);
     res.status(500).json({ message: "Failed to export CSV" });
