@@ -7,7 +7,7 @@ import "./UserDashboard.css";
 const UserDashboard = () => {
   const [elections, setElections] = useState([]);
   const [error, setError] = useState("");
-  const [darkMode, setDarkMode] = useState(false);
+  const [showHelp, setShowHelp] = useState(true);
 
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
@@ -15,15 +15,11 @@ const UserDashboard = () => {
   useEffect(() => {
     const fetchElections = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/user/elections`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        const res = await fetch(`${API_BASE_URL}/elections`, {
+          headers: { Authorization: `Bearer ${token}` },
         });
-
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || "Failed to fetch elections");
-
         setElections(data);
       } catch (err) {
         console.error("❌ Error fetching elections:", err);
@@ -34,44 +30,80 @@ const UserDashboard = () => {
     fetchElections();
   }, [token]);
 
-  const toggleDarkMode = () => setDarkMode(!darkMode);
+  const now = new Date();
 
-  const handleViewResults = (id) => {
-    navigate(`/results/${id}`);
-  };
-
-  const handleVote = (id) => {
-    navigate(`/vote/${id}`);
-  };
+  const ongoing = elections.filter(e => new Date(e.startDate) <= now && new Date(e.endDate) >= now);
+  const upcoming = elections.filter(e => new Date(e.startDate) > now);
 
   return (
-    <div className={`user-dashboard ${darkMode ? "dark" : ""}`}>
-      <div className="header">
-        <h2>🗳️ My Elections</h2>
-        <button onClick={toggleDarkMode} className="mode-toggle">
-          {darkMode ? "🌞 Light Mode" : "🌙 Dark Mode"}
-        </button>
+    <div className="user-dashboard">
+      <h2>👤 User Dashboard</h2>
+
+      {/* Voting Guide */}
+      <div className="guide-box">
+        <h3 onClick={() => setShowHelp(!showHelp)} className="guide-toggle">
+          ❓ How to Vote {showHelp ? "▲" : "▼"}
+        </h3>
+        {showHelp && (
+          <div className="guide-content">
+            <ul>
+              <li>🔍 Review available elections below.</li>
+              <li>🗳️ Click the vote button to participate.</li>
+              <li>🔐 Your vote is securely hashed and logged.</li>
+              <li>📊 View results once voting ends.</li>
+            </ul>
+          </div>
+        )}
+      </div>
+
+      {/* Ongoing Elections */}
+      <div className="section">
+        <h3>🟢 Ongoing Elections</h3>
+        {ongoing.length === 0 ? (
+          <p>No elections available for voting now.</p>
+        ) : (
+          <div className="election-grid">
+            {ongoing.map((e) => (
+              <div className="election-card" key={e._id}>
+                <h4>{e.title}</h4>
+                <p>
+                  🕓 {new Date(e.startDate).toLocaleString()} – {new Date(e.endDate).toLocaleString()}
+                </p>
+                <div className="btn-row">
+                  <button onClick={() => navigate(`/vote/${e._id}`)}>🗳️ Vote</button>
+                  <button onClick={() => navigate(`/results/${e._id}`)}>📊 View Results</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Upcoming Elections */}
+      <div className="section">
+        <h3>📅 Upcoming Elections</h3>
+        {upcoming.length === 0 ? (
+          <p>No upcoming elections at the moment.</p>
+        ) : (
+          <ul className="upcoming-list">
+            {upcoming.map((e) => (
+              <li key={e._id}>
+                <strong>{e.title}</strong> — starts {new Date(e.startDate).toLocaleString()}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {/* Security Note */}
+      <div className="security-box">
+        <h4>🔒 Security Assurance</h4>
+        <p>
+          Your vote is hashed and stored with integrity. Results are transparent and auditable.
+        </p>
       </div>
 
       {error && <p className="error-msg">{error}</p>}
-
-      {elections.length === 0 ? (
-        <p>No elections available right now.</p>
-      ) : (
-        <div className="elections-grid">
-          {elections.map((election) => (
-            <div key={election._id} className="election-card">
-              <h3>{election.title}</h3>
-              <p><strong>Start:</strong> {new Date(election.startDate).toLocaleString()}</p>
-              <p><strong>End:</strong> {new Date(election.endDate).toLocaleString()}</p>
-              <div className="actions">
-                <button onClick={() => handleVote(election._id)}>🗳️ Vote Now</button>
-                <button onClick={() => handleViewResults(election._id)}>📊 View Results</button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 };
