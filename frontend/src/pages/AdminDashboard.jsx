@@ -8,9 +8,8 @@ const AdminDashboard = () => {
   const [elections, setElections] = useState([]);
   const [filter, setFilter] = useState("all");
   const [error, setError] = useState(null);
-  const [refresh, setRefresh] = useState(false);
-  const navigate = useNavigate();
   const token = localStorage.getItem("token");
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchElections = async () => {
@@ -22,100 +21,102 @@ const AdminDashboard = () => {
         if (!res.ok) throw new Error(data.message);
         setElections(data);
       } catch (err) {
-        setError(err.message || "Failed to load elections.");
+        setError(err.message || "Failed to fetch elections.");
       }
     };
     fetchElections();
-  }, [token, refresh]);
+  }, [token]);
 
   const now = new Date();
-  const filteredElections = elections.filter((e) => {
-    if (filter === "active") {
+
+  const activeElections = elections.filter(
+    (e) => new Date(e.startDate) <= now && new Date(e.endDate) >= now
+  );
+  const upcomingElections = elections.filter(
+    (e) => new Date(e.startDate) > now
+  );
+
+  const filtered = elections.filter((e) => {
+    if (filter === "active")
       return new Date(e.startDate) <= now && new Date(e.endDate) >= now;
-    }
-    if (filter === "upcoming") {
-      return new Date(e.startDate) > now;
-    }
+    if (filter === "upcoming") return new Date(e.startDate) > now;
     return true;
   });
 
-  const stats = {
-    total: elections.length,
-    active: elections.filter((e) => new Date(e.startDate) <= now && new Date(e.endDate) >= now).length,
-    voters: elections.reduce((sum, e) => sum + (e.totalVoters || 0), 0),
-    votes: elections.reduce((sum, e) => sum + (e.totalVotes || 0), 0),
-  };
-
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this election?")) return;
-    try {
-      const res = await fetch(`${API_BASE_URL}/elections/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Failed to delete election");
-      setRefresh((prev) => !prev); // Re-fetch elections
-    } catch (err) {
-      alert(err.message || "Could not delete election.");
-    }
-  };
-
-  const handleEdit = (id) => {
-    navigate(`/edit-election/${id}`);
-  };
-
   return (
-    <div className="admin-dashboard">
-      <h1>🛠️ Admin Dashboard</h1>
-      <p>Monitor, manage, and maintain voting integrity.</p>
+    <div className="admin-container">
+      <aside className="admin-sidebar">
+        <h2>🛠️ Admin Panel</h2>
+        <ul>
+          <li onClick={() => navigate("/admin/dashboard")}>📊 Dashboard</li>
+          <li onClick={() => navigate("/create-election")}>➕ Create Election</li>
+          <li onClick={() => navigate("/admin/voters")}>👥 Voter List</li>
+          <li onClick={() => navigate("/admin/messages")}>✉️ Send Messages</li>
+          <li onClick={() => navigate("/admin/eligibility")}>✔️ Voter Eligibility</li>
+          <li onClick={() => navigate("/admin/export-voters")}>📤 Export Voters</li>
+          <li onClick={() => navigate("/admin/export-logs")}>📥 Export Logs</li>
+        </ul>
+      </aside>
 
-      {error && <div className="error-message">⚠️ {error}</div>}
+      <main className="admin-main">
+        <h1>Admin Dashboard</h1>
+        <p>Manage and oversee elections with full control.</p>
 
-      <div className="dashboard-stats">
-        <div className="stat-box">🗳️ Total Elections<br /><strong>{stats.total}</strong></div>
-        <div className="stat-box">✅ Active<br /><strong>{stats.active}</strong></div>
-        <div className="stat-box">👥 Total Voters<br /><strong>{stats.voters}</strong></div>
-        <div className="stat-box">📨 Total Votes<br /><strong>{stats.votes}</strong></div>
-        <button className="create-btn" onClick={() => navigate("/create-election")}>
-          ➕ Create Election
-        </button>
-      </div>
+        {error && <div className="error">{error}</div>}
 
-      <div className="tabs">
-        <button className={filter === "all" ? "active" : ""} onClick={() => setFilter("all")}>All</button>
-        <button className={filter === "active" ? "active" : ""} onClick={() => setFilter("active")}>Active</button>
-        <button className={filter === "upcoming" ? "active" : ""} onClick={() => setFilter("upcoming")}>Upcoming</button>
-      </div>
+        {/* 🔢 Summary Stats */}
+        <div className="summary-cards">
+          <div className="summary-card total">
+            <h4>Total Elections</h4>
+            <p>{elections.length}</p>
+          </div>
+          <div className="summary-card active">
+            <h4>Active</h4>
+            <p>{activeElections.length}</p>
+          </div>
+          <div className="summary-card upcoming">
+            <h4>Upcoming</h4>
+            <p>{upcomingElections.length}</p>
+          </div>
+        </div>
 
-      <div className="election-list">
-        {filteredElections.length === 0 ? (
-          <p className="empty-msg">No elections match this filter.</p>
-        ) : (
-          filteredElections.map((e) => (
-            <div className="election-card" key={e._id}>
-              <div className="card-header">
-                <h3>{e.title}</h3>
-                <span className="badge">
-                  {new Date(e.startDate) > now
-                    ? "Upcoming"
-                    : new Date(e.endDate) < now
-                    ? "Ended"
-                    : "Active"}
-                </span>
+        {/* 🔘 Filters */}
+        <div className="admin-tabs">
+          <button onClick={() => setFilter("all")} className={filter === "all" ? "active" : ""}>All</button>
+          <button onClick={() => setFilter("active")} className={filter === "active" ? "active" : ""}>Active</button>
+          <button onClick={() => setFilter("upcoming")} className={filter === "upcoming" ? "active" : ""}>Upcoming</button>
+        </div>
+
+        {/* 🗳️ Election Cards */}
+        <div className="admin-cards">
+          {filtered.length === 0 ? (
+            <p className="empty-msg">No elections available.</p>
+          ) : (
+            filtered.map((election) => (
+              <div className="admin-card" key={election._id}>
+                <h3>{election.title}</h3>
+                <p><strong>Org:</strong> {election.organizationName}</p>
+                <p><strong>Start:</strong> {new Date(election.startDate).toLocaleString()}</p>
+                <p><strong>End:</strong> {new Date(election.endDate).toLocaleString()}</p>
+                <div className="card-actions">
+                  <button onClick={() => navigate(`/results/${election._id}`)}>📊 Results</button>
+                  <button onClick={() => navigate(`/manage-election/${election._id}`)}>👥 Manage</button>
+                  <button onClick={() => navigate(`/edit-election/${election._id}`)}>✏️ Edit</button>
+                  <span className="delete"><button onClick={async () => {
+                    if (window.confirm("Delete this election?")) {
+                      await fetch(`${API_BASE_URL}/elections/${election._id}`, {
+                        method: "DELETE",
+                        headers: { Authorization: `Bearer ${token}` }
+                      });
+                      window.location.reload();
+                    }
+                  }}>🗑️ Delete</button></span>
+                </div>
               </div>
-              <p className="org-name">{e.organizationName || "No organization"}</p>
-              <p className="description">{e.description}</p>
-              <p className="dates">🗓️ {new Date(e.startDate).toLocaleString()} → {new Date(e.endDate).toLocaleString()}</p>
-              <div className="election-actions">
-                <button onClick={() => navigate(`/results/${e._id}`)}>📊 View Results</button>
-                <button onClick={() => navigate(`/manage-election/${e._id}`)}>👤 Manage</button>
-                <button className="edit-btn" onClick={() => handleEdit(e._id)}>✏️ Edit</button>
-                <button className="delete-btn" onClick={() => handleDelete(e._id)}>🗑️ Delete</button>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
+            ))
+          )}
+        </div>
+      </main>
     </div>
   );
 };

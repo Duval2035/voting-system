@@ -1,6 +1,6 @@
 .footer {
   background-color: #dcdce1;
-  padding: 40px 0;
+  padding: 20px 0; /* Reduced padding to decrease height */
   color: #201f1f;
   font-family: 'Segoe UI', sans-serif;
   border-top: 1px solid #e0e0e0;
@@ -17,6 +17,9 @@
 .footer-brand {
   flex: 1 1 250px;
   margin-right: 40px;
+  display: flex; /* Use flexbox for vertical alignment */
+  flex-direction: column; /* Stack children vertically */
+  align-items: flex-start; /* Align items to the start (left) */
 }
 
 .footer-brand .logo {
@@ -27,11 +30,11 @@
   display: inline-block;
   padding: 10px 15px;
   border-radius: 8px;
-  margin-bottom: 10px;
+  margin-bottom: 0; /* Remove bottom margin to bring h2 closer */
 }
 
 .footer-brand h2 {
-  margin: 0;
+  margin: 5px 0 0 0; /* Add a small top margin to separate from logo, remove others */
   color: #3d69b4;
 }
 
@@ -50,13 +53,13 @@
 }
 
 .footer-column h4 {
-  margin-bottom: 10px;
+  margin-bottom: 0px;
   color: #0f0e0e;
 }
 
 .footer-column ul {
   list-style: none;
-  padding: 170;
+  padding: 0; 
 }
 
 .footer-column ul li {
@@ -76,6 +79,7 @@
 .footer-bottom {
   text-align: center;
   font-size: 13px;
-  margin-top: 40px;
+  margin-top: 5px;
+  padding: 10px 0;
   color: #000000;
 }

@@ -91,7 +91,7 @@ const Login = () => {
 
         {step === 2 && (
           <>
-            <label>OTP</label>
+            <label>Password</label>
             <input
               type="text"
               value={otp}
@@ -101,7 +101,7 @@ const Login = () => {
           </>
         )}
 
-        <button type="submit">{step === 1 ? "Send OTP" : "Verify OTP"}</button>
+        <button type="submit">{step === 1 ? "Send send password" : "Verify Password"}</button>
       </form>
 
       {error && <p className="error-msg">{error}</p>}
