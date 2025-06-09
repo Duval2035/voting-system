@@ -68,6 +68,7 @@ h1 {
   padding: 1.2rem;
   border-radius: 10px;
   box-shadow: 0 1px 5px rgba(0,0,0,0.08);
+  width: 600px;
 }
 
 .card-header {
@@ -109,7 +110,74 @@ h1 {
 
 .empty-msg {
   font-style: italic;
-  color: #888;
+  color: #888;.admin-dashboard {
+  padding: 2rem;
+  font-family: "Segoe UI", sans-serif;
+  background: #f8f9fb;
+  min-height: 100vh;
+}
+
+h2, h3 {
+  color: #1a202c;
+}
+
+.quick-actions {
+  background: #e3f2fd;
+  padding: 1rem;
+  margin-bottom: 2rem;
+  border-radius: 8px;
+}
+
+.quick-actions button {
+  margin-right: 10px;
+  margin-top: 8px;
+  padding: 8px 14px;
+  background-color: #0d6efd;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.election-list ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.election-list li {
+  margin-bottom: 1rem;
+  background: #fff;
+  padding: 1rem;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.analytics,
+.voter-management {
+  background: #ffffff;
+  padding: 1.5rem;
+  margin-top: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.voter-management table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.voter-management th, .voter-management td {
+  border: 1px solid #ccc;
+  padding: 10px;
+  text-align: left;
+}
+
+.error-message {
+  color: red;
+  margin-top: 1rem;
+}
+
 }
 .election-guide {
   background-color: #e8f4ff;
