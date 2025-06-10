@@ -4,9 +4,9 @@
   max-width: 400px;
   margin: 40px auto;
   padding: 30px;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+  background: #f5f2f2;
+  border-radius: 28px;
+  box-shadow: 0 0 12px rgba(254, 255, 255, 0.1);
 }
 
 .login-container h2 {

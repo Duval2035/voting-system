@@ -101,7 +101,7 @@ const Login = () => {
           </>
         )}
 
-        <button type="submit">{step === 1 ? "Send send password" : "Verify Password"}</button>
+        <button type="submit">{step === 1 ? "Send Password" : "Verify Password"}</button>
       </form>
 
       {error && <p className="error-msg">{error}</p>}
