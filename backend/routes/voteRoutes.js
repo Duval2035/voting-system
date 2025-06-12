@@ -7,6 +7,11 @@ const VoteLog = require("../models/VoteLog");
 // GET all logs for an election (auditor only)
 router.post("/", authMiddleware, submitVote);
 router.get("/results/:id", getResults);
+const {
+  getCandidateResults,
+  getVotesByElection,
+} = require("../controllers/voteController");
+
 router.get("/:electionId", authMiddleware, async (req, res) => {
   try {
     const logs = await VoteLog.find({ election: req.params.electionId })

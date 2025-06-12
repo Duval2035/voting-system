@@ -136,3 +136,12 @@ exports.exportVoteLogsCSV = async (req, res) => {
     res.status(500).json({ message: "Failed to export CSV" });
   }
 };
+exports.getVotesByElection = async (req, res) => {
+  try {
+    const votes = await Vote.find({ election: req.params.electionId }).populate("user", "username email");
+    res.status(200).json(votes);
+  } catch (err) {
+    console.error("Error fetching votes:", err);
+    res.status(500).json({ message: "Error fetching votes." });
+  }
+};

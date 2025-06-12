@@ -18,6 +18,7 @@ import UnauthorizedPage from "./pages/UnauthorizedPage";
 import CandidateDashboard from "./pages/CandidateDashboard";
 import CandidateResults from "./pages/CandidateResults";
 import AuditorIntegrity from "./pages/AuditorIntegrity";
+import AdminVoterList from "./pages/AdminVoterList";
 
 function App() {
   return (
@@ -110,6 +111,15 @@ function App() {
     </ProtectedRoute>
   }
 />
+<Route
+  path="/admin/voters"
+  element={
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <Layout><AdminVoterList /></Layout>
+    </ProtectedRoute>
+  }
+/>
+
         <Route path="/unauthorized" element={<Layout><UnauthorizedPage /></Layout>} />
         <Route path="*" element={<Layout><Home /></Layout>} />
       </Routes>
