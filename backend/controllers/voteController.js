@@ -1,6 +1,6 @@
 // controllers/voteController.js
 const crypto = require("crypto");
-const Vote = require("../models/Vote");
+const Vote = require("../models/Voter");
 const Candidate = require("../models/Candidate");
 const Election = require("../models/Election");
 const VoteLog = require("../models/VoteLog");

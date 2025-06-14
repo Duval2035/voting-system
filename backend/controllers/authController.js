@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { generateOTP, sendOtp } = require('../utils/sendOtp');
 
+
 // 🔐 Registration
 exports.register = async (req, res) => {
   const { username, email, password, organizationName, role } = req.body;
@@ -32,7 +33,9 @@ const token = jwt.sign(
   {
     userId: saved._id,
     role: saved.role,
-    organizationName: saved.organizationName // ✅ include this!
+    organizationName: saved.organizationName,
+    isAdmin: saved.role === "admin",
+ 
   },
   process.env.JWT_SECRET || 'secret',
   { expiresIn: '1d' }
@@ -93,6 +96,7 @@ exports.verifyOtp = async (req, res) => {
       {
         userId: user._id,
         role: user.role,
+        isAdmin: user.role === "admin",
         organizationName: user.organizationName,
       },
       process.env.JWT_SECRET || "secret",

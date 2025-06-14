@@ -16,6 +16,12 @@ const electionSchema = new mongoose.Schema({
     enum: ["upcoming", "active", "ended"],
     default: "upcoming",
   },
+
+  // ADD THIS: List of voter references assigned to this election
+  voterIds: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  }],
 }, { timestamps: true });
 
 module.exports = mongoose.model("Election", electionSchema);

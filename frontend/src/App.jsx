@@ -18,12 +18,14 @@ import UnauthorizedPage from "./pages/UnauthorizedPage";
 import CandidateDashboard from "./pages/CandidateDashboard";
 import CandidateResults from "./pages/CandidateResults";
 import AuditorIntegrity from "./pages/AuditorIntegrity";
-import AdminVoterList from "./pages/AdminVoterList";
+import VoterList from "./pages/VoterList";
+import VoterEligibility from "./pages/VoterEligibility"; // ✅ NEW
 
 function App() {
   return (
     <Router>
       <Routes>
+        {/* Public Routes */}
         <Route path="/" element={<Layout><Home /></Layout>} />
         <Route path="/login" element={<Layout><Login /></Layout>} />
         <Route path="/register" element={<Layout><Register /></Layout>} />
@@ -31,7 +33,8 @@ function App() {
         <Route path="/verify-otp" element={<VerifyOtp />} />
         <Route path="/user/voting" element={<UserVoting />} />
         <Route path="/results/:id" element={<ResultsPage />} />
-
+        
+        {/* Admin Routes */}
         <Route
           path="/admin/dashboard"
           element={
@@ -40,7 +43,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/create-election"
           element={
@@ -49,7 +51,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/manage-election/:id"
           element={
@@ -58,7 +59,24 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/admin/voters"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <Layout><VoterList /></Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/eligibility"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <Layout><VoterEligibility /></Layout>
+            </ProtectedRoute>
+          }
+        />
 
+        {/* User Routes */}
         <Route
           path="/user/dashboard"
           element={
@@ -67,7 +85,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/vote/:id"
           element={
@@ -77,6 +94,7 @@ function App() {
           }
         />
 
+        {/* Auditor Routes */}
         <Route
           path="/auditor"
           element={
@@ -85,7 +103,16 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/auditor/integrity"
+          element={
+            <ProtectedRoute allowedRoles={["auditor"]}>
+              <Layout><AuditorIntegrity /></Layout>
+            </ProtectedRoute>
+          }
+        />
 
+        {/* Candidate Routes */}
         <Route
           path="/candidate/dashboard"
           element={
@@ -94,7 +121,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/candidate/results"
           element={
@@ -103,23 +129,8 @@ function App() {
             </ProtectedRoute>
           }
         />
-<Route
-  path="/auditor/integrity"
-  element={
-    <ProtectedRoute allowedRoles={["auditor"]}>
-      <Layout><AuditorIntegrity /></Layout>
-    </ProtectedRoute>
-  }
-/>
-<Route
-  path="/admin/voters"
-  element={
-    <ProtectedRoute allowedRoles={["admin"]}>
-      <Layout><AdminVoterList /></Layout>
-    </ProtectedRoute>
-  }
-/>
 
+        {/* Fallback and Auth Error */}
         <Route path="/unauthorized" element={<Layout><UnauthorizedPage /></Layout>} />
         <Route path="*" element={<Layout><Home /></Layout>} />
       </Routes>

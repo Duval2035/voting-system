@@ -8,7 +8,7 @@ const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const electionRoutes = require("./routes/electionRoutes");
 const candidateRoutes = require("./routes/candidateRoutes");
-const voteRoutes = require("./routes/voteRoutes");
+const voteRoutes = require("./routes/voterRoutes");
 const voteLogRoutes = require("./routes/voteLogRoutes");
 const auditorRoutes = require("./routes/auditorRoutes");
 const userRoutes = require("./routes/userRoutes");
@@ -51,6 +51,8 @@ app.use("/api/vote-logs", voteLogRoutes);
 app.use("/api/auditor", auditorRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/admin", adminRoutes);
+
 
 // Catch-all 404
 app.use((req, res) => {

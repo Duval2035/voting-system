@@ -3,6 +3,8 @@ const router = express.Router();
 const { submitVote, getResults } = require("../controllers/voteController");
 const authMiddleware = require("../middleware/authMiddleware");
 const VoteLog = require("../models/VoteLog");
+const Voter = require("../models/User"); 
+const Election = require("../models/Election");
 
 // GET all logs for an election (auditor only)
 router.post("/", authMiddleware, submitVote);
@@ -12,17 +14,22 @@ const {
   getVotesByElection,
 } = require("../controllers/voteController");
 
-router.get("/:electionId", authMiddleware, async (req, res) => {
+// Get all voters associated with an election
+router.get("/by-election/:electionId", authMiddleware, async (req, res) => {
   try {
-    const logs = await VoteLog.find({ election: req.params.electionId })
+  
+const logs = await VoteLog.find({ election: req.params.electionId })
       .populate("user", "username email")
       .sort({ timestamp: -1 });
+    // You may need to change this depending on your schema
+    
 
-    res.status(200).json(logs);
+    res.status(200).json(election.voters || []);
   } catch (err) {
-    console.error("Vote log fetch error:", err);
-    res.status(500).json({ message: "Error fetching vote logs" });
+    console.error("❌ Error fetching voters:", err);
+    res.status(500).json({ message: "Failed to fetch voters" });
   }
 });
+
 
 module.exports = router;
