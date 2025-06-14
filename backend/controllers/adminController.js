@@ -21,3 +21,14 @@ exports.getVotersByElection = async (req, res) => {
     res.status(500).json({ message: "Error fetching voters for election." });
   }
 };
+
+
+exports.getAllVoters = async (req, res) => {
+  try {
+    const voters = await User.find({ role: "user" }).select("-password"); 
+    res.json(voters);
+  } catch (err) {
+    console.error("Error fetching voters:", err);
+    res.status(500).json({ message: "Failed to fetch voters." });
+  }
+};

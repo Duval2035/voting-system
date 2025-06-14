@@ -1,130 +1,167 @@
-// src/pages/AdminVoterList.jsx
 import React, { useEffect, useState } from "react";
-import API_BASE_URL from "../config";
-import "./AdminVoterList.css";
+import styles from "./AdminVoterList.module.css";
 
-const AdminVoterList = () => {
+function AdminVoterList() {
   const [elections, setElections] = useState([]);
   const [selectedElection, setSelectedElection] = useState("");
   const [voters, setVoters] = useState([]);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const token = localStorage.getItem("token");
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
 
-  useEffect(() => {
-  const fetchElections = async () => {
-  try {
-    const res = await fetch(`${API_BASE_URL}/elections/admin/elections`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    const data = await res.json();
-    console.log("✅ Elections response:", data);
-
-    if (!res.ok) {
-      throw new Error(data.message || "Failed to load elections");
+useEffect(() => {
+  async function fetchElections() {
+    if (!token) {
+      setError("No token provided. Please login.");
+      return;
     }
 
-    if (!Array.isArray(data)) {
-      throw new Error("Expected an array of elections, got something else");
-    }
+    try {
+      const res = await fetch("/api/admin/elections", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    setElections(data);
-  } catch (err) {
-    console.error("Failed to fetch elections:", err);
-    setError("❌ Could not load elections.");
+      const contentType = res.headers.get("content-type");
+
+      // SAFEGUARD: log response before parsing
+      const text = await res.text();
+      console.log("📦 Raw election response:", text);
+
+      // Try JSON parse only if content-type is correct
+      if (contentType && contentType.includes("application/json")) {
+        const data = JSON.parse(text);
+        if (!res.ok) throw new Error(data.message || "Failed to fetch elections");
+        setElections(data);
+        setError(null);
+      } else {
+        throw new Error("Response is not valid JSON.");
+      }
+    } catch (err) {
+      console.error("Election fetch error:", err.message);
+      setError(err.message);
+      setElections([]);
+    }
   }
-};
-    setLoading(false);
+
   fetchElections();
 }, [token]);
 
-  const handleElectionChange = async (e) => {
-    const electionId = e.target.value;
-    setSelectedElection(electionId);
-    setVoters([]);
-    setError("");
-
-    if (!electionId) return;
-
-    try {
-      const res = await fetch(`${API_BASE_URL}/admin/voters/by-election/${electionId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to load voters.");
-      setVoters(data.voters || []);
-    } catch (err) {
-      console.error("Failed to load voters:", err);
-      setError("❌ Failed to load voters: " + err.message);
+  useEffect(() => {
+    if (!token) {
+      setError("No token provided. Please login.");
+      return;
     }
-  };
+    if (!selectedElection) {
+      setVoters([]);
+      setError(null);
+      return;
+    }
 
-  const exportCSV = () => {
-    const csvContent = [
-      ["Username", "Email", "Voter ID"],
-      ...voters.map((v) => [v.username, v.email, v._id]),
-    ]
-      .map((e) => e.join(","))
-      .join("\n");
+    async function fetchVoters() {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(`/api/admin/voters-by-election/${selectedElection}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
+        const text = await res.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch {
+          throw new Error("Failed to parse voter data");
+        }
+
+        if (!res.ok) throw new Error(data.message || "Failed to fetch voters");
+
+        setVoters(data.voters || []);
+      } catch (err) {
+        setError(err.message);
+        setVoters([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchVoters();
+  }, [selectedElection, token]);
+
+  function exportToCSV() {
+    if (voters.length === 0) return;
+    const csvRows = [["Name", "Email"], ...voters.map(v => [v.name, v.email])];
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      csvRows.map(row => row.join(",")).join("\n");
 
     const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", `voters_${selectedElection}.csv`);
+    link.setAttribute("href", encodeURI(csvContent));
+    link.setAttribute("download", `voters-election-${selectedElection}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
-
-  if (loading) return <div className="voter-list-container"><p>⏳ Loading...</p></div>;
+  }
 
   return (
-    <div className="voter-list-container">
-      <h2>🗳️ Voter List by Election</h2>
+    <div className={styles.container}>
+      <h1>🧑‍🤝‍🧑 Registered Voters</h1>
 
-      {error && <p className="error-msg">{error}</p>}
+      {error && <p className={styles.error}>❌ Error: {error}</p>}
 
-      {!error && (
+      <label htmlFor="electionSelect" className={styles.label}>
+        Select Election:
+      </label>
+      <select
+        id="electionSelect"
+        value={selectedElection}
+        onChange={e => setSelectedElection(e.target.value)}
+        className={styles.select}
+      >
+        <option value="">-- Choose an election --</option>
+        {elections.map(election => (
+          <option key={election._id} value={election._id}>
+            {election.title}
+          </option>
+        ))}
+      </select>
+
+      {loading && <p>Loading voters...</p>}
+
+      {!loading && voters.length > 0 && (
         <>
-          <select onChange={handleElectionChange} value={selectedElection}>
-            <option value="">-- Select Election --</option>
-            {elections.map((e) => (
-              <option key={e._id} value={e._id}>
-                {e.title}
-              </option>
-            ))}
-          </select>
-
-          {selectedElection && (
-            <>
-              <div className="voter-summary">
-                <h3>Total Voters: {voters.length}</h3>
-                <button onClick={exportCSV} disabled={voters.length === 0}>
-                  📤 Export as CSV
-                </button>
-              </div>
-              {voters.length === 0 ? (
-                <p>😕 No voters found for this election.</p>
-              ) : (
-                <ul className="voter-list">
-                  {voters.map((voter) => (
-                    <li key={voter._id}>
-                      {voter.username} – {voter.email}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </>
-          )}
+          <p>Total voters: <strong>{voters.length}</strong></p>
+          <button onClick={exportToCSV} className={styles.exportBtn}>
+            Export to CSV
+          </button>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+              </tr>
+            </thead>
+            <tbody>
+              {voters.map((voter, idx) => (
+                <tr key={voter._id || idx}>
+                  <td>{voter.name}</td>
+                  <td>{voter.email}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </>
+      )}
+
+      {!loading && selectedElection && voters.length === 0 && (
+        <p>No voters found for this election.</p>
       )}
     </div>
   );
-};
+}
 
 export default AdminVoterList;

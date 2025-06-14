@@ -1,46 +1,42 @@
-// GET /admin/voters/by-election/:electionId
+// routes/adminRoutes.js
 const express = require("express");
 const router = express.Router();
-const Voter = require("../models/Voter");
 const Election = require("../models/Election");
+const Voter = require("../models/Voter");
 const authenticateAdmin = require("../middleware/authenticateAdmin");
+const authorizeRoles = require("../middleware/authorizeRoles");
 
-router.get("/voters/by-election/:electionId", authenticateAdmin, async (req, res) => {
-  const { electionId } = req.params;
-
+router.get("/elections", authenticateAdmin, authorizeRoles("admin"), async (req, res) => {
   try {
-    const election = await Election.findById(electionId);
-    if (!election) return res.status(404).json({ message: "Election not found" });
-
-    const voters = await Voter.find({ elections: electionId }).select("username email _id");
-    res.json({ voters });
-  } catch (error) {
-    console.error("Error fetching voters by election:", error);
-    res.status(500).json({ message: "Server error fetching voters" });
-  }
-});
-
-router.get("/elections", authenticateAdmin, async (req, res) => {
-  try {
-    const elections = await Election.find().select("title date _id");
-    res.json({ elections });
-  } catch (error) {
-    console.error("Error fetching elections:", error);
+    const elections = await Election.find({}, "_id title").lean();
+    res.json(elections); // ✅ Always send JSON
+  } catch (err) {
+    console.error("❌ Failed to fetch elections:", err);
     res.status(500).json({ message: "Failed to fetch elections" });
   }
 });
-router.get("/elections/:id", authenticateAdmin, async (req, res) => {
-  const { id } = req.params;
+// GET voters for a specific election
+router.get("/voters-by-election/:id", authenticateAdmin, authorizeRoles("admin"), async (req, res) => {
+  const electionId = req.params.id;
 
   try {
-    const election = await Election.findById(id);
-    if (!election) return res.status(404).json({ message: "Election not found" });
+    const voters = await Voter.find({ electionId })
+      .populate("userId", "name email")
+      .lean();
 
-    res.json(election);
-  } catch (error) {
-    console.error("Error fetching election by ID:", error);
-    res.status(500).json({ message: "Server error fetching election" });
+    const voterList = voters.map(v => ({
+      _id: v.userId._id,
+      name: v.userId.name,
+      email: v.userId.email,
+    }));
+
+    res.json({ voters: voterList });
+  } catch (err) {
+    console.error("Error fetching voters:", err);
+    res.status(500).json({ message: "Failed to fetch voters." });
+    res.status(401).json({ message: "No token provided" });
   }
 });
+
 
 module.exports = router;

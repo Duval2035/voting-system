@@ -51,7 +51,7 @@ app.use("/api/vote-logs", voteLogRoutes);
 app.use("/api/auditor", auditorRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/admin", adminRoutes);
-app.use("/admin", adminRoutes);
+
 
 
 // Catch-all 404

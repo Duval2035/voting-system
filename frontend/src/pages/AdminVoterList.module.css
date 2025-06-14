@@ -1,0 +1,56 @@
+.container {
+  padding: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.label {
+  font-weight: bold;
+  margin-top: 1rem;
+  display: block;
+}
+
+.select {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  font-size: 1rem;
+  width: 100%;
+}
+
+.error {
+  color: red;
+  margin-top: 1rem;
+}
+
+.exportBtn {
+  margin: 1rem 0;
+  padding: 0.5rem 1rem;
+  background-color: #007bff;
+  border: none;
+  color: white;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.exportBtn:hover {
+  background-color: #0056b3;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.table th, .table td {
+  border: 1px solid #ddd;
+  padding: 0.75rem;
+  text-align: left;
+}
+
+.table th {
+  background-color: #f4f4f4;
+}
+.table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
