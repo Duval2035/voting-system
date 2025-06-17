@@ -6,7 +6,13 @@ import "./Navbar.css";
 const Navbar = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
-  const user = JSON.parse(localStorage.getItem("user"));
+  let user;
+
+  try {
+    user = JSON.parse(localStorage.getItem("user"));
+  } catch {
+    user = null;
+  }
 
   const handleLogout = () => {
     localStorage.clear();
@@ -14,11 +20,12 @@ const Navbar = () => {
   };
 
   return (
-   <nav className="navbar">
-  <div className="navbar-logo-brand">
-    <div className="navbar-logo">Z</div>
-    <div className="navbar-brand">ZeroFraud Vote</div>
-  </div>
+    <nav className="navbar">
+      <div className="navbar-logo-brand">
+        <div className="navbar-logo">Z</div>
+        <div className="navbar-brand">ZeroFraud Vote</div>
+      </div>
+
       <ul className="navbar-links">
         <li><Link to="/">Home</Link></li>
 
@@ -44,14 +51,13 @@ const Navbar = () => {
           </>
         )}
 
-       {token && user?.role === "auditor" && (
-  <>
-    <li><Link to="/auditor">Dashboard</Link></li>
-    <li><Link to="/auditor/integrity">Integrity</Link></li>
-    <li><button className="logout-btn" onClick={handleLogout}>Logout</button></li>
-  </>
-)}
-
+        {token && user?.role === "auditor" && (
+          <>
+            <li><Link to="/auditor">Dashboard</Link></li>
+            <li><Link to="/auditor/integrity">Integrity</Link></li>
+            <li><button className="logout-btn" onClick={handleLogout}>Logout</button></li>
+          </>
+        )}
 
         {token && user?.role === "candidate" && (
           <>

@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import API_BASE_URL from "../config";
 import "./Login.css";
-
-const API_BASE_URL = "http://localhost:5000/api/auth";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -18,23 +17,24 @@ const Login = () => {
     setMessage("");
 
     try {
-      const res = await fetch(`${API_BASE_URL}/send-otp`, {
+      const response = await fetch(`${API_BASE_URL}/auth/send-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim().toLowerCase() }),
+        credentials: "include",
+        body: JSON.stringify({ email: email.trim() })
       });
 
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.message || "❌ Failed to send OTP.");
-        return;
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to send OTP.");
       }
 
-      setMessage("✅ OTP sent to your email.");
+      localStorage.setItem("otpEmail", email);
+      setMessage(data.message);
       setStep(2);
     } catch (err) {
-      console.error("❌ Error sending OTP:", err);
-      setError("❌ Could not connect to server.");
+      setError(err.message || "Network error.");
     }
   };
 
@@ -44,54 +44,31 @@ const Login = () => {
     setMessage("");
 
     try {
-      const res = await fetch(`${API_BASE_URL}/verify-otp`, {
+      const response = await fetch(`${API_BASE_URL}/auth/verify-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim().toLowerCase(), otp }),
+        credentials: "include",
+        body: JSON.stringify({ email, otp }),
       });
 
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.message || "❌ Could not verify OTP.");
-        return;
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "OTP verification failed.");
       }
 
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
-      if (data.user.organizationName) {
-        localStorage.setItem("organizationName", data.user.organizationName);
-      }
-
-      // ✅ Redirect based on role
-      switch (data.user.role) {
-        case "admin":
-          navigate("/admin/dashboard");
-          break;
-        case "user":
-          navigate("/user/dashboard");
-          break;
-        case "auditor":
-          navigate("/auditor");
-          break;
-        case "candidate":
-          navigate("/candidate/dashboard");
-          break;
-        default:
-          navigate("/unauthorized");
-      }
+      navigate(`/${data.user.role}/dashboard`);
     } catch (err) {
-      console.error("❌ Error verifying OTP:", err);
-      setError("❌ Could not connect to server.");
+      setError(err.message || "Login failed.");
     }
   };
 
   return (
     <div className="login-container">
       <h2>Login</h2>
-      <form
-        onSubmit={step === 1 ? handleSendOtp : handleVerifyOtp}
-        className="login-form"
-      >
+      <form onSubmit={step === 1 ? handleSendOtp : handleVerifyOtp} className="login-form">
         <label>Email</label>
         <input
           type="email"
@@ -102,7 +79,7 @@ const Login = () => {
 
         {step === 2 && (
           <>
-            <label>OTP</label>
+            <label>Password</label>
             <input
               type="text"
               value={otp}
@@ -112,7 +89,7 @@ const Login = () => {
           </>
         )}
 
-        <button type="submit">{step === 1 ? "Send OTP" : "Verify OTP"}</button>
+        <button type="submit">{step === 1 ? "Send password" : "Verify password"}</button>
       </form>
 
       {error && <p className="error-msg">{error}</p>}
@@ -120,9 +97,7 @@ const Login = () => {
 
       <p className="footer-link">
         Don’t have an account?{" "}
-        <Link to="/register">
-          <span className="footer-if">Register</span>
-        </Link>
+        <Link to="/register"><span className="footer-if">Register</span></Link>
       </p>
     </div>
   );

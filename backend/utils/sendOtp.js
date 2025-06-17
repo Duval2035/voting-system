@@ -1,32 +1,46 @@
-const nodemailer = require('nodemailer');
+const nodemailer = require("nodemailer");
 
-const generateOTP = () => {
-  return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit code
-};
+const sendOtp = async (req, res) => {
+  const { email } = req.body;
 
-const sendOtp = async (email, otp) => {
+  // Generate 6-digit OTP
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const otpExpires = Date.now() + 10 * 60 * 1000;
+
+  const user = await User.findOne({ email });
+  if (!user) return res.status(404).json({ message: "User not found" });
+
+  user.otp = otp;
+  user.otpExpires = otpExpires;
+  await user.save();
+
+  // Setup mail transporter
   const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    service: "Gmail", // or use "SendGrid", "Outlook", etc.
     auth: {
-      user:"armelduvalkenmoe@gmail.com", 
+       user:"armelduvalkenmoe@gmail.com", 
       pass:"erejhakxumucoswj",  
+
     },
   });
 
   const mailOptions = {
-    from: `"Voting System" <${process.env.EMAIL_USER}>`,
+    from: process.env.EMAIL_USER,
     to: email,
-    subject: 'Your OTP Code',
-    html: `
-      <p>Hello,</p>
-      <p>Your OTP code is: <strong>${otp}</strong></p>
-      <p>This code is valid for 10 minutes.</p>
-    `,
+    subject: "Your OTP Code",
+    text: `Your OTP code is ${otp}. It expires in 10 minutes.`,
   };
 
-  await transporter.sendMail(mailOptions);
+  transporter.sendMail(mailOptions, (err, info) => {
+    if (err) {
+      console.error("❌ Failed to send email:", err);
+      return res.status(500).json({ message: "Failed to send OTP email" });
+    } else {
+      console.log("✅ OTP email sent:", info.response);
+      res.status(200).json({ message: "OTP sent to your email" });
+    }
+  });
 };
 
-module.exports = { sendOtp, generateOTP };
-
-     
+ 
+   

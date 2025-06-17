@@ -1,69 +1,141 @@
-const express = require('express');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const Joi = require('joi');
-const User = require('../models/User');
+const express = require("express");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const Joi = require("joi");
+const User = require("../models/User");
+const nodemailer = require("nodemailer");
+require("dotenv").config();
 
 const router = express.Router();
 
-// Validation schema for registration and login
+
+const otpStore = {}; 
+
 const registerSchema = Joi.object({
-  name: Joi.string().required(),
+  username: Joi.string().required(),
   email: Joi.string().email().required(),
   password: Joi.string().min(6).required(),
+  organizationName: Joi.string().allow(""),
+  role: Joi.string().valid("admin", "user", "auditor", "candidate").default("user"),
 });
 
-const loginSchema = Joi.object({
+const otpSchema = Joi.object({
   email: Joi.string().email().required(),
-  password: Joi.string().required(),
+  otp: Joi.string().length(6).required(),
 });
 
-// User Registration Route
-router.post('/register', async (req, res) => {
+const emailSchema = Joi.object({
+  email: Joi.string().email().required(),
+});
+
+// Email transporter setup
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+// ✅ Register
+router.post("/register", async (req, res) => {
   const { error } = registerSchema.validate(req.body);
-  if (error) return res.status(400).send(error.details[0].message);
+  if (error) return res.status(400).json({ message: error.details[0].message });
 
-  const { name, email, password } = req.body;
+  const { username, email, password, organizationName, role } = req.body;
 
-  // Check if user already exists
-  const existingUser = await User.findOne({ email });
-  if (existingUser) return res.status(400).send('User already exists');
-
-  // Hash the password
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash(password, salt);
-
-  const newUser = new User({ name, email, password: hashedPassword });
   try {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) return res.status(400).json({ message: "User already exists" });
+
+    const newUser = new User({ username, email, password, organizationName, role });
     const savedUser = await newUser.save();
-    res.status(201).send({
-      message: 'User created successfully',
-      user: savedUser,
+
+    const token = jwt.sign({ _id: savedUser._id, role: savedUser.role }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
     });
+
+    res.status(201).json({ message: "User created", token, user: savedUser });
   } catch (err) {
-    res.status(500).send('Server error');
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
-// User Login Route
-router.post('/login', async (req, res) => {
-  const { error } = loginSchema.validate(req.body);
-  if (error) return res.status(400).send(error.details[0].message);
+// ✅ Send OTP (Step 1 of login)
+router.post("/send-otp", async (req, res) => {
+  const { error } = emailSchema.validate(req.body);
+  if (error) return res.status(400).json({ message: error.details[0].message });
 
-  const { email, password } = req.body;
+  const { email } = req.body;
 
-  // Check if user exists
-  const user = await User.findOne({ email });
-  if (!user) return res.status(400).send('Invalid email or password');
+  try {
+    const rawEmail = req.body.email;
+        const email = typeof rawEmail === "string" ? rawEmail.trim() : "";
+        const user = await User.findOne({ email: new RegExp(`^${email}$`, 'i') });
 
-  // Compare passwords
-  const validPassword = await bcrypt.compare(password, user.password);
-  if (!validPassword) return res.status(400).send('Invalid email or password');
+    
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-  // Generate JWT token
-  const token = jwt.sign({ _id: user._id, role: user.role }, 'your_jwt_secret', { expiresIn: '1h' });
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = Date.now() + 5 * 60 * 1000; // 5 min
 
-  res.status(200).send({ message: 'Logged in successfully', token });
+    otpStore[email] = { otp, expiresAt };
+
+    await transporter.sendMail({
+      from: `"ZeroFraud Vote" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Your Login OTP",
+      text: `Your OTP is: ${otp}. It expires in 5 minutes.`,
+    });
+
+    console.log(`📩 OTP sent to ${email}: ${otp}`); // for dev only
+    res.json({ message: "OTP sent to your email" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error sending OTP" });
+  }
+});
+
+// ✅ Verify OTP (Step 2 of login)
+router.post("/verify-otp", async (req, res) => {
+  const { error } = otpSchema.validate(req.body);
+  if (error) return res.status(400).json({ message: error.details[0].message });
+
+  const rawEmail = req.body.email;
+const email = typeof rawEmail === "string" ? rawEmail.trim() : "";
+const user = await User.findOne({ email: new RegExp(`^${email}$`, 'i') });
+
+  if (!user) return res.status(404).json({ message: "User not found" });
+  const { otp } = req.body;
+  const record = otpStore[email];
+
+  if (!record || Date.now() > record.expiresAt) {
+    return res.status(400).json({ message: "OTP expired or not found" });
+  }
+
+  if (record.otp !== otp) {
+    return res.status(400).json({ message: "Invalid OTP" });
+  }
+
+  try {
+    const user = await User.findOne({ email });
+          console.log("Looking for email:", email);
+          const allUsers = await User.find();
+          console.log("All users in DB:", allUsers);
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const token = jwt.sign({ _id: user._id, role: user.role }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+
+    delete otpStore[email]; // Clear OTP on success
+    res.json({ message: "Login successful", token, user });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Login failed" });
+  }
 });
 
 module.exports = router;

@@ -1,8 +1,8 @@
+// src/pages/Register.jsx
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import API_BASE_URL from "../config";
 import "./Register.css";
-
-const API_BASE_URL = "http://localhost:5000/api/auth";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -31,35 +31,38 @@ const Register = () => {
     setMessage("");
 
     try {
-      const res = await fetch(`${API_BASE_URL}/register`, {
+      const res = await fetch(`${API_BASE_URL}/auth/register`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify(formData),
       });
 
-      const data = await res.json();
+      const text = await res.text();
+      let data;
 
-      if (!res.ok) {
-        setError(data.message || "Registration failed");
-        return;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error("Server returned an invalid response.");
       }
+if (!res.ok) {
+  setError(data.message || "Registration failed");
+  return;
+}
 
-      // Store data if a token is returned (depends on backend implementation)
-      if (data.token && data.user) {
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.user));
-        localStorage.setItem("organizationName", data.user.organizationName);
-        navigate(data.user.role === "admin" ? "/admin/dashboard" : "/user/dashboard");
-      } else {
-        setMessage("✅ Registered successfully. You can now log in.");
-        navigate("/login");
-      }
+// ✅ SAFELY handle missing user
+if (!data.user) {
+  setError("User data missing from server response");
+  return;
+}
+
+localStorage.setItem("token", data.token);
+localStorage.setItem("user", JSON.stringify(data.user));
+navigate(`/${data.user.role}/dashboard`);
+
     } catch (err) {
-      console.error("Registration error:", err);
-      setError("❌ Could not connect to server");
+      setError(err.message || "Could not connect to server");
     }
   };
 
@@ -68,35 +71,17 @@ const Register = () => {
       <h2>Create an Account</h2>
       <form onSubmit={handleSubmit} className="auth-form">
         <label>Username</label>
-        <input
-          name="username"
-          value={formData.username}
-          onChange={handleChange}
-          required
-        />
+        <input name="username" value={formData.username} onChange={handleChange} required />
+
         <label>Email</label>
-        <input
-          name="email"
-          type="email"
-          value={formData.email}
-          onChange={handleChange}
-          required
-        />
+        <input name="email" type="email" value={formData.email} onChange={handleChange} required />
+
         <label>Password</label>
-        <input
-          name="password"
-          type="password"
-          value={formData.password}
-          onChange={handleChange}
-          required
-        />
+        <input name="password" type="password" value={formData.password} onChange={handleChange} required />
+
         <label>Organization Name</label>
-        <input
-          name="organizationName"
-          value={formData.organizationName}
-          onChange={handleChange}
-          required
-        />
+        <input name="organizationName" value={formData.organizationName} onChange={handleChange} required />
+
         <label>Role</label>
         <select name="role" value={formData.role} onChange={handleChange}>
           <option value="user">Regular User</option>
@@ -104,6 +89,7 @@ const Register = () => {
           <option value="auditor">Auditor</option>
           <option value="candidate">Candidate</option>
         </select>
+
         <button type="submit">Register</button>
       </form>
 
@@ -112,9 +98,7 @@ const Register = () => {
 
       <p className="footer-link">
         Already have an account?{" "}
-        <Link to="/login">
-          <span className="footer-if">Login</span>
-        </Link>
+        <Link to="/login"><span className="footer-if">Login</span></Link>
       </p>
     </div>
   );

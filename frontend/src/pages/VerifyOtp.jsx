@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import API_BASE_URL from "../config"; // Ensure this is exporting the base URL string
+import API_BASE_URL from "../config"; // Make sure this exports the base URL as a string
 
 const VerifyOtp = () => {
   const [code, setCode] = useState("");
@@ -16,52 +16,44 @@ const VerifyOtp = () => {
     const email = localStorage.getItem("otpEmail");
 
     if (!email) {
-      setError("No email found. Request OTP first.");
+      setError("No email found. Please request an OTP first.");
       return;
     }
 
     try {
-      const res = await fetch(`${API_BASE_URL}/auth/verify-otp`, {
+      const response = await fetch(`${API_BASE_URL}/auth/verify-otp`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({ email, otp: code }),
       });
 
-      const data = await res.json();
+      const data = await response.json();
 
-      if (!res.ok) {
-        setError(data.message || "Failed to verify OTP");
+      if (!response.ok) {
+        setError(data.message || "Failed to verify OTP.");
         return;
       }
 
+      // Save auth data
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
-
       if (data.user.organizationName) {
         localStorage.setItem("organizationName", data.user.organizationName);
       }
 
-      setMessage("OTP Verified. Redirecting...");
+      setMessage("✅ OTP Verified. Redirecting...");
+
       setTimeout(() => {
-        switch (data.user.role) {
-          case "admin":
-            navigate("/admin/dashboard");
-            break;
-          case "user":
-            navigate("/user/dashboard");
-            break;
-          case "auditor":
-            navigate("/auditor");
-            break;
-          case "candidate":
-            navigate("/candidate/dashboard");
-            break;
-          default:
-            navigate("/unauthorized");
-        }
-      }, 1000);
+        const { role } = data.user;
+        if (role === "admin") navigate("/admin/dashboard");
+        else if (role === "user") navigate("/user/dashboard");
+        else if (role === "auditor") navigate("/auditor");
+        else if (role === "candidate") navigate("/candidate/dashboard");
+        else navigate("/unauthorized");
+      }, 1500);
     } catch (err) {
       console.error("OTP Verification Error:", err);
       setError("Server error. Please try again.");
