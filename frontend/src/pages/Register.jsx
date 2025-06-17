@@ -18,11 +18,10 @@ const Register = () => {
   const [message, setMessage] = useState("");
 
   const handleChange = (e) => {
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.name === "email"
-        ? e.target.value.trim().toLowerCase()
-        : e.target.value,
+      [name]: name === "email" ? value.trim().toLowerCase() : value,
     }));
   };
 
@@ -34,7 +33,10 @@ const Register = () => {
     try {
       const res = await fetch(`${API_BASE_URL}/register`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(formData),
       });
 
@@ -45,13 +47,19 @@ const Register = () => {
         return;
       }
 
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-      localStorage.setItem("organizationName", data.user.organizationName);
-
-      navigate(data.user.role === "admin" ? "/admin/dashboard" : "/user/dashboard");
+      // Store data if a token is returned (depends on backend implementation)
+      if (data.token && data.user) {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        localStorage.setItem("organizationName", data.user.organizationName);
+        navigate(data.user.role === "admin" ? "/admin/dashboard" : "/user/dashboard");
+      } else {
+        setMessage("✅ Registered successfully. You can now log in.");
+        navigate("/login");
+      }
     } catch (err) {
-      setError("Could not connect to server");
+      console.error("Registration error:", err);
+      setError("❌ Could not connect to server");
     }
   };
 
@@ -103,7 +111,10 @@ const Register = () => {
       {message && <p className="success-msg">{message}</p>}
 
       <p className="footer-link">
-        Already have an account? <Link to="/login"><span className="footer-if">Login</span></Link>
+        Already have an account?{" "}
+        <Link to="/login">
+          <span className="footer-if">Login</span>
+        </Link>
       </p>
     </div>
   );

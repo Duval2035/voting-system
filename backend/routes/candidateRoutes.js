@@ -30,3 +30,5 @@ router.put("/:id/:candidateId", authMiddleware, upload.single("image"), addOrUpd
 router.delete("/:id", authMiddleware, deleteCandidate);
 
 module.exports = router;
+
+

@@ -1,24 +1,14 @@
-// backend/routes/electionRoutes.js
 const express = require("express");
 const router = express.Router();
-const authController = require('../controllers/authController');
-const electionController = require('../controllers/electionController');
-const {
-  createElection,
-  getElectionsByOrganization,
-  getElectionById,
-  updateElectionStatus,
-} = require("../controllers/electionController");
+const authController = require("../controllers/authController");
 
-const authMiddleware = require("../middleware/authMiddleware");
+// 📌 Register user
+router.post("/register", authController.register);
 
-router.post("/", authMiddleware, createElection);
-router.get("/", authMiddleware, getElectionsByOrganization);
-router.get("/:id", authMiddleware, getElectionById);
-router.patch("/:id/status", authMiddleware, updateElectionStatus);
+// 📤 Send OTP
+router.post("/send-otp", authController.sendOtpToEmail);
 
-router.post('/send-otp', authController.sendOtpToEmail);
-router.post('/verify-otp', authController.verifyOtp);
-router.post('/register', authController.register);
+// ✅ Verify OTP and login
+router.post("/verify-otp", authController.verifyOtp);
 
 module.exports = router;

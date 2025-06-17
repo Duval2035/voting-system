@@ -16,33 +16,33 @@ import {
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
 const ResultsPage = () => {
-  const { id } = useParams();
+  const { electionId } = useParams();
   const [results, setResults] = useState([]);
-  const [totalVotes, setTotalVotes] = useState(0);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-  const fetchResults = async () => {
-    try {
-      const res = await fetch(`${API_BASE_URL}/votes/results/${id}`);
-      const data = await res.json();
+    const fetchResults = async () => {
+      try {
+        if (!electionId) {
+          throw new Error("Election ID is missing in the URL.");
+        }
 
-      if (res.ok && Array.isArray(data)) {
+        const response = await fetch(`/api/votes/results/${electionId}`);
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.message || "Failed to fetch results.");
+        }
+
+        const data = await response.json();
         setResults(data);
-        const total = data.reduce((sum, c) => sum + c.votes, 0);
-        setTotalVotes(total);
-      } else {
-        setResults([]);
-        setTotalVotes(0);
-        const errText = await res.text();
-        console.error("❌ Failed to load results:", errText);
+      } catch (err) {
+        console.error("❌ Failed to load results:", err);
+        setError(err.message);
       }
-    } catch (err) {
-      console.error("❌ Error fetching results:", err);
-    }
-  };
+    };
 
-  fetchResults();
-}, [id]);
+    fetchResults();
+  }, [electionId]);
 
   const chartData = {
     labels: results.map((c) => c.name),

@@ -32,8 +32,10 @@ function App() {
         <Route path="/request-otp" element={<RequestOtp />} />
         <Route path="/verify-otp" element={<VerifyOtp />} />
         <Route path="/user/voting" element={<UserVoting />} />
-        <Route path="/results/:id" element={<ResultsPage />} />
-        
+        <Route path="/user/dashboard" element={<UserDashboard />} />
+        <Route path="/results/:electionId" element={<ResultsPage />} />
+        <Route path="/vote/:id" element={<VotePage />} />
+
         {/* Admin Routes */}
         <Route
           path="/admin/dashboard"
@@ -75,14 +77,6 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["user"]}>
               <Layout><UserDashboard /></Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/vote/:id"
-          element={
-            <ProtectedRoute allowedRoles={["user"]}>
-              <Layout><VotePage /></Layout>
             </ProtectedRoute>
           }
         />

@@ -1,35 +1,48 @@
 const express = require("express");
 const router = express.Router();
-const { submitVote, getResults } = require("../controllers/voteController");
-const authMiddleware = require("../middleware/authMiddleware");
-const VoteLog = require("../models/VoteLog");
-const Voter = require("../models/User"); 
-const Election = require("../models/Election");
+const Vote = require("../models/Vote");
+const authenticateUser = require("../middleware/authenticateUser");
+const voteController = require("../controllers/voteController");
 
-// GET all logs for an election (auditor only)
-router.post("/", authMiddleware, submitVote);
-router.get("/results/:id", getResults);
-const {
-  getCandidateResults,
-  getVotesByElection,
-} = require("../controllers/voteController");
+// GET /api/votes/results/:electionId – Election results
+router.get("/results/:electionId", voteController.getElectionResults);
 
-// Get all voters associated with an election
-router.get("/by-election/:electionId", authMiddleware, async (req, res) => {
+// POST /api/votes – Submit a vote
+router.post("/", authenticateUser, async (req, res) => {
   try {
-  
-const logs = await VoteLog.find({ election: req.params.electionId })
-      .populate("user", "username email")
-      .sort({ timestamp: -1 });
-    // You may need to change this depending on your schema
-    
+    const { electionId, candidateId, name, email } = req.body;
 
-    res.status(200).json(election.voters || []);
+    // Validate required fields
+    if (!electionId || !candidateId || !name || !email) {
+      return res.status(400).json({ message: "Missing required vote information." });
+    }
+
+    // Prevent double voting in the same election
+    const existingVote = await Vote.findOne({
+      user: req.user.userId,
+      election: electionId,
+    });
+
+    if (existingVote) {
+      return res.status(400).json({ message: "You have already voted in this election." });
+    }
+
+    // Save new vote
+    const vote = new Vote({
+      user: req.user.userId,
+      election: electionId,
+      candidate: candidateId,
+      name,
+      email,
+    });
+
+    await vote.save();
+
+    res.status(201).json({ message: "✅ Vote cast successfully" });
   } catch (err) {
-    console.error("❌ Error fetching voters:", err);
-    res.status(500).json({ message: "Failed to fetch voters" });
+    console.error("❌ Error casting vote:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 });
-
 
 module.exports = router;

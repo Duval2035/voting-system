@@ -13,6 +13,7 @@ const { getVotersByElection } = require("../controllers/electionController");
 const Election = require('../models/Election');
 const authenticateAdmin = require("../middleware/authenticateAdmin");
 
+
 router.get("/admin/elections", authenticateAdmin, getElectionsByOrganization);
 router.get("/admin/elections/:id", authenticateAdmin, getElectionById);
 router.post("/", authMiddleware, createElection);
@@ -30,6 +31,40 @@ router.delete("/:id", authMiddleware, async (req, res) => {
   } catch (error) {
     console.error("Delete Election Error:", error);
     res.status(500).json({ message: "Failed to delete election" });
+  }
+});
+// GET /api/elections
+router.get("/", async (req, res) => {
+  try {
+    const elections = await Election.find().sort({ startDate: -1 });
+    res.status(200).json(elections);
+  } catch (error) {
+    console.error("❌ Error fetching elections:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+// POST /api/elections
+router.post("/", authMiddleware, async (req, res) => {
+  try {
+    const { title, description, startDate, endDate } = req.body;
+
+    if (!title || !description || !startDate || !endDate) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const newElection = new Election({
+      title,
+      description,
+      startDate,
+      endDate,
+      organizationName: req.user.organizationName,
+    });
+
+    await newElection.save();
+    res.status(201).json(newElection);
+  } catch (error) {
+    console.error("❌ Error creating election:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 });
 

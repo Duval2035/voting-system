@@ -10,3 +10,5 @@ router.get("/:electionId", authMiddleware, getVoteLogs);
 router.get("/export/:electionId", authMiddleware, exportVoteLogsCSV);
 
 module.exports = router;
+
+

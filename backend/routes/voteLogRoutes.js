@@ -1,4 +1,3 @@
-// backend/routes/voteLogRoutes.js
 const express = require("express");
 const router = express.Router();
 const authMiddleware = require("../middleware/authMiddleware");
@@ -8,10 +7,10 @@ const {
   exportVoteLogsCSV
 } = require("../controllers/voteController");
 
-// ✅ Get vote logs for an election
-router.get("/:electionId", authMiddleware, getVoteLogs);
-
-// ✅ Export logs as CSV
+// ✅ Export logs as CSV (more specific route first)
 router.get("/export/:electionId", authMiddleware, exportVoteLogsCSV);
+
+// ✅ Get vote logs for a specific election
+router.get("/:electionId", authMiddleware, getVoteLogs);
 
 module.exports = router;

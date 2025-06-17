@@ -1,4 +1,3 @@
-// src/pages/UserDashboard.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API_BASE_URL from "../config";
@@ -16,10 +15,21 @@ const UserDashboard = () => {
     const fetchElections = async () => {
       try {
         const res = await fetch(`${API_BASE_URL}/elections`, {
-          headers: { Authorization: `Bearer ${token}` },
+          method: "GET",
+          credentials: "include", // ✅ Required for cross-origin cookies
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // ✅ Include JWT token if protected
+          },
         });
+
+        // Check for fetch/network issues
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.message || "Failed to fetch elections");
+        }
+
         const data = await res.json();
-        if (!res.ok) throw new Error(data.message || "Failed to fetch elections");
         setElections(data);
       } catch (err) {
         console.error("❌ Error fetching elections:", err);
@@ -62,7 +72,8 @@ const UserDashboard = () => {
               <div className="election-card" key={e._id}>
                 <h4>{e.title}</h4>
                 <p>
-                  🕓 {new Date(e.startDate).toLocaleString()} – {new Date(e.endDate).toLocaleString()}
+                  🕓 {new Date(e.startDate).toLocaleString()} –{" "}
+                  {new Date(e.endDate).toLocaleString()}
                 </p>
                 <div className="btn-row">
                   <button onClick={() => navigate(`/vote/${e._id}`)}>🗳️ Vote</button>

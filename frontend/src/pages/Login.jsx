@@ -1,4 +1,3 @@
-// frontend/src/pages/Login.jsx
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import "./Login.css";
@@ -11,10 +10,12 @@ const Login = () => {
   const [otp, setOtp] = useState("");
   const [step, setStep] = useState(1);
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
 
   const handleSendOtp = async (e) => {
     e.preventDefault();
     setError("");
+    setMessage("");
 
     try {
       const res = await fetch(`${API_BASE_URL}/send-otp`, {
@@ -25,19 +26,22 @@ const Login = () => {
 
       const data = await res.json();
       if (!res.ok) {
-        setError(data.message || "Failed to send OTP");
+        setError(data.message || "❌ Failed to send OTP.");
         return;
       }
 
+      setMessage("✅ OTP sent to your email.");
       setStep(2);
-    } catch {
-      setError("Could not connect to server");
+    } catch (err) {
+      console.error("❌ Error sending OTP:", err);
+      setError("❌ Could not connect to server.");
     }
   };
 
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
     setError("");
+    setMessage("");
 
     try {
       const res = await fetch(`${API_BASE_URL}/verify-otp`, {
@@ -48,14 +52,17 @@ const Login = () => {
 
       const data = await res.json();
       if (!res.ok) {
-        setError(data.message || "Could not verify OTP");
+        setError(data.message || "❌ Could not verify OTP.");
         return;
       }
 
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
-      localStorage.setItem("organizationName", data.user.organizationName);
+      if (data.user.organizationName) {
+        localStorage.setItem("organizationName", data.user.organizationName);
+      }
 
+      // ✅ Redirect based on role
       switch (data.user.role) {
         case "admin":
           navigate("/admin/dashboard");
@@ -73,25 +80,29 @@ const Login = () => {
           navigate("/unauthorized");
       }
     } catch (err) {
-      setError("Could not connect to server");
+      console.error("❌ Error verifying OTP:", err);
+      setError("❌ Could not connect to server.");
     }
   };
 
   return (
     <div className="login-container">
       <h2>Login</h2>
-      <form onSubmit={step === 1 ? handleSendOtp : handleVerifyOtp} className="login-form">
+      <form
+        onSubmit={step === 1 ? handleSendOtp : handleVerifyOtp}
+        className="login-form"
+      >
         <label>Email</label>
         <input
           type="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => setEmail(e.target.value.trim())}
           required
         />
 
         {step === 2 && (
           <>
-            <label>Password</label>
+            <label>OTP</label>
             <input
               type="text"
               value={otp}
@@ -101,14 +112,17 @@ const Login = () => {
           </>
         )}
 
-        <button type="submit">{step === 1 ? "Send Password" : "Verify Password"}</button>
+        <button type="submit">{step === 1 ? "Send OTP" : "Verify OTP"}</button>
       </form>
 
       {error && <p className="error-msg">{error}</p>}
+      {message && <p className="success-msg">{message}</p>}
 
       <p className="footer-link">
         Don’t have an account?{" "}
-        <Link to="/register"><span className="footer-if">Register</span></Link>
+        <Link to="/register">
+          <span className="footer-if">Register</span>
+        </Link>
       </p>
     </div>
   );

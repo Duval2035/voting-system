@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import API_BASE_URL from "../config";
 import { useNavigate } from "react-router-dom";
+import API_BASE_URL from "../config"; // Ensure this is exporting the base URL string
 
 const VerifyOtp = () => {
   const [code, setCode] = useState("");
@@ -26,20 +26,45 @@ const VerifyOtp = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, code }),
+        body: JSON.stringify({ email, otp: code }),
       });
 
       const data = await res.json();
 
-      if (res.ok) {
-        setMessage("OTP Verified. Redirecting...");
-        localStorage.setItem("user", JSON.stringify(data.user));
-        navigate(data.user.role === "admin" ? "/admin/dashboard" : "/user/dashboard");
-      } else {
-        setError(data.message);
+      if (!res.ok) {
+        setError(data.message || "Failed to verify OTP");
+        return;
       }
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      if (data.user.organizationName) {
+        localStorage.setItem("organizationName", data.user.organizationName);
+      }
+
+      setMessage("OTP Verified. Redirecting...");
+      setTimeout(() => {
+        switch (data.user.role) {
+          case "admin":
+            navigate("/admin/dashboard");
+            break;
+          case "user":
+            navigate("/user/dashboard");
+            break;
+          case "auditor":
+            navigate("/auditor");
+            break;
+          case "candidate":
+            navigate("/candidate/dashboard");
+            break;
+          default:
+            navigate("/unauthorized");
+        }
+      }, 1000);
     } catch (err) {
-      setError("Server error");
+      console.error("OTP Verification Error:", err);
+      setError("Server error. Please try again.");
     }
   };
 
