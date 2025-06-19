@@ -20,8 +20,7 @@ const Login = () => {
       const response = await fetch(`${API_BASE_URL}/auth/send-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ email: email.trim() })
+        body: JSON.stringify({ email: email.trim().toLowerCase() })
       });
 
       const data = await response.json();
@@ -30,7 +29,7 @@ const Login = () => {
         throw new Error(data.message || "Failed to send OTP.");
       }
 
-      localStorage.setItem("otpEmail", email);
+      localStorage.setItem("otpEmail", email.trim().toLowerCase());
       setMessage(data.message);
       setStep(2);
     } catch (err) {
@@ -47,8 +46,10 @@ const Login = () => {
       const response = await fetch(`${API_BASE_URL}/auth/verify-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ email, otp }),
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          otp: otp.trim()
+        })
       });
 
       const data = await response.json();
@@ -59,6 +60,7 @@ const Login = () => {
 
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
+
       navigate(`/${data.user.role}/dashboard`);
     } catch (err) {
       setError(err.message || "Login failed.");
@@ -68,6 +70,7 @@ const Login = () => {
   return (
     <div className="login-container">
       <h2>Login</h2>
+
       <form onSubmit={step === 1 ? handleSendOtp : handleVerifyOtp} className="login-form">
         <label>Email</label>
         <input
@@ -79,17 +82,18 @@ const Login = () => {
 
         {step === 2 && (
           <>
-            <label>Password</label>
+            <label>OTP</label>
             <input
               type="text"
               value={otp}
               onChange={(e) => setOtp(e.target.value)}
               required
+              maxLength={6}
             />
           </>
         )}
 
-        <button type="submit">{step === 1 ? "Send password" : "Verify password"}</button>
+        <button type="submit">{step === 1 ? "Send OTP" : "Verify OTP"}</button>
       </form>
 
       {error && <p className="error-msg">{error}</p>}

@@ -20,6 +20,11 @@ import CandidateResults from "./pages/CandidateResults";
 import AuditorIntegrity from "./pages/AuditorIntegrity";
 import VoterEligibility from "./pages/VoterEligibility"; 
 import AdminVoterList from "./pages/AdminVoterList"; 
+import EditElection from "./pages/EditElection";
+import ExportVoters from "./pages/ExportVoters";
+import ExportLogs from "./pages/ExportLogs";
+import SendMessages from "./pages/SendMessage";
+
 
 function App() {
   return (
@@ -35,7 +40,11 @@ function App() {
         <Route path="/user/dashboard" element={<UserDashboard />} />
         <Route path="/results/:electionId" element={<ResultsPage />} />
         <Route path="/vote/:id" element={<VotePage />} />
-
+        <Route path="/edit-election/:id" element={<EditElection />} />
+        <Route path="/admin/export-voters" element={<ExportVoters />} />
+        <Route path="/admin/export-logs" element={<ExportLogs />} />
+        <Route path="/admin/messages" element={<SendMessages />} /> 
+    
         {/* Admin Routes */}
         <Route
           path="/admin/dashboard"
@@ -124,14 +133,7 @@ function App() {
               </ProtectedRoute>
             }
          />
-          <Route
-          path="/admin/export-voters"
-          element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-             <Layout><AdminVoterList /></Layout>
-              </ProtectedRoute>
-            }
-         />
+       
 
 
         {/* Fallback and Auth Error */}

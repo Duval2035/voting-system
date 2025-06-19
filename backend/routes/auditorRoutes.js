@@ -10,4 +10,5 @@ const {
 router.get("/elections", authMiddleware, getAuditorElections);
 router.get("/integrity/:electionId", authMiddleware, getElectionIntegrity);
 
+
 module.exports = router;

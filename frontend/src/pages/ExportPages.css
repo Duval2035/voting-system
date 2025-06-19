@@ -1,0 +1,50 @@
+/* src/pages/ExportPages.css */
+.export-container {
+  padding: 30px;
+  margin: 2rem auto;
+  max-width: 500px;
+  background: #f9f9f9;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.export-container h1 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.export-container p {
+  margin-bottom: 1rem;
+  color: #555;
+}
+
+.export-select {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.export-button {
+  padding: 10px 20px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  font-weight: bold;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.export-button:disabled {
+  background-color: #a1d8a3;
+  cursor: not-allowed;
+}
+
+.export-error {
+  color: red;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}

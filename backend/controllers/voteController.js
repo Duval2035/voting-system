@@ -8,7 +8,7 @@ const VoteLog = require("../models/VoteLog");
 const { Parser } = require("json2csv");
 
 // 1. Submit vote and generate log
-exports.submitVote = async (req, res) => {
+const submitVote = async (req, res) => {
   const { electionId, candidateId } = req.body;
   const userId = req.user.userId || req.user.id; // accommodate both
 
@@ -40,7 +40,7 @@ exports.submitVote = async (req, res) => {
 };
 
 // 2. Get real-time results by election ID (returns tally per candidate)
-exports.getResults = async (req, res) => {
+const getResults = async (req, res) => {
   try {
     const electionId = req.params.id || req.params.electionId;
     const votes = await Vote.find({ election: electionId }).populate("candidate");
@@ -70,7 +70,7 @@ exports.getResults = async (req, res) => {
 };
 
 // 3. Get candidate-specific results by user ID
-exports.getCandidateResults = async (req, res) => {
+const getCandidateResults = async (req, res) => {
   try {
     const userId = req.params.id;
     const candidate = await Candidate.findOne({ userId });
@@ -95,7 +95,7 @@ exports.getCandidateResults = async (req, res) => {
 };
 
 // 4. Get vote logs for an election
-exports.getVoteLogs = async (req, res) => {
+const getVoteLogs = async (req, res) => {
   try {
     const { electionId } = req.params;
     const logs = await VoteLog.find({ election: electionId })
@@ -110,13 +110,19 @@ exports.getVoteLogs = async (req, res) => {
 };
 
 // 5. Export vote logs as CSV
-exports.exportVoteLogsCSV = async (req, res) => {
+const exportVoteLogsCSV = async (req, res) => {
   try {
     const { electionId } = req.params;
     const logs = await VoteLog.find({ election: electionId }).populate("user", "username email");
 
     if (!logs.length) {
-      return res.status(404).json({ message: "No vote logs to export." });
+      // Return empty CSV with headers instead of error
+      const fields = ["username", "email", "timestamp", "hash"];
+      const parser = new Parser({ fields });
+      const emptyCSV = parser.parse([]);
+      res.header("Content-Type", "text/csv");
+      res.attachment(`vote-logs-${electionId}.csv`);
+      return res.send(emptyCSV);
     }
 
     const formatted = logs.map(log => ({
@@ -139,7 +145,7 @@ exports.exportVoteLogsCSV = async (req, res) => {
 };
 
 // 6. Get votes by election with user info
-exports.getVotesByElection = async (req, res) => {
+const getVotesByElection = async (req, res) => {
   try {
     const votes = await Vote.find({ election: req.params.electionId }).populate("user", "username email");
     res.status(200).json(votes);
@@ -149,8 +155,8 @@ exports.getVotesByElection = async (req, res) => {
   }
 };
 
-// 7. Aggregated election results (recommended for large datasets)*
-exports.getElectionResults = async (req, res) => {
+// 7. Aggregated election results (recommended for large datasets)
+const getElectionResults = async (req, res) => {
   try {
     const { electionId } = req.params;
     console.log("📥 Election ID received:", electionId);
@@ -175,7 +181,7 @@ exports.getElectionResults = async (req, res) => {
       },
       {
         $lookup: {
-          from: "candidates", 
+          from: "candidates",
           localField: "_id",
           foreignField: "_id",
           as: "candidate",
@@ -199,4 +205,14 @@ exports.getElectionResults = async (req, res) => {
     console.error("🔥 Server error fetching results:", error);
     return res.status(500).json({ message: "Server error fetching results" });
   }
+};
+
+module.exports = {
+  submitVote,
+  getResults,
+  getCandidateResults,
+  getVoteLogs,
+  exportVoteLogsCSV,
+  getVotesByElection,
+  getElectionResults,
 };

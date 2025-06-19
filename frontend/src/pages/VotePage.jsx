@@ -17,18 +17,16 @@ const VotePage = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-      
-const res = await fetch(`${API_BASE_URL}/elections/${id}`, {
-  method: "GET",
-  headers: {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`,  
-  },
-});
-console.log("token is", token);
-localStorage.setItem("token", data.token);
+        const res = await fetch(`${API_BASE_URL}/elections/${id}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         const electionData = await res.json();
+
         if (res.ok) {
           setElection(electionData);
         } else {
@@ -39,6 +37,7 @@ localStorage.setItem("token", data.token);
 
         const cRes = await fetch(`${API_BASE_URL}/candidates/by-election/${id}`);
         const cData = await cRes.json();
+
         if (cRes.ok) {
           setCandidates(cData);
         } else {
@@ -78,13 +77,6 @@ localStorage.setItem("token", data.token);
 
     if (!window.confirm("Are you sure you want to vote for this candidate?")) return;
 
-    console.log("Submitting vote with:", {
-      electionId: id,
-      candidateId,
-      name: user.username,
-      email: user.email,
-    });
-
     try {
       const res = await fetch(`${API_BASE_URL}/votes`, {
         method: "POST",
@@ -115,7 +107,6 @@ localStorage.setItem("token", data.token);
   };
 
   if (loading) return <p>Loading...</p>;
-
   if (!election) return <p>{message || "❌ Could not load election."}</p>;
 
   return (
@@ -154,6 +145,5 @@ localStorage.setItem("token", data.token);
     </>
   );
 };
-
 
 export default VotePage;

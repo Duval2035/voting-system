@@ -31,7 +31,7 @@ const AuditorDashboard = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.message);
+        if (!res.ok) throw new Error(data.message || "Failed to fetch elections.");
         setElections(data);
       } catch (err) {
         console.error("Error fetching elections:", err);
@@ -41,6 +41,17 @@ const AuditorDashboard = () => {
 
     fetchElections();
   }, [token]);
+
+  const safeJsonParse = async (response) => {
+    if (response.status === 204) return null; // No Content
+    const text = await response.text();
+    if (!text) return null;
+    try {
+      return JSON.parse(text);
+    } catch {
+      throw new Error("Invalid JSON response from server.");
+    }
+  };
 
   const fetchResultsAndLogs = async (electionId) => {
     setError("");
@@ -53,10 +64,10 @@ const AuditorDashboard = () => {
         }),
       ]);
 
-      const results = await resultsRes.json();
-      const logs = await logsRes.json();
+      const results = await safeJsonParse(resultsRes);
+      const logs = await safeJsonParse(logsRes);
 
-      if (resultsRes.ok) {
+      if (resultsRes.ok && results) {
         setChartData({
           labels: results.map((c) => c.name),
           datasets: [
@@ -71,7 +82,7 @@ const AuditorDashboard = () => {
         setChartData(null);
       }
 
-      if (logsRes.ok) {
+      if (logsRes.ok && logs) {
         setVoteLogs(logs);
       } else {
         setVoteLogs([]);
@@ -79,6 +90,8 @@ const AuditorDashboard = () => {
     } catch (err) {
       console.error("Error fetching results/logs:", err);
       setError("❌ Failed to load results or logs.");
+      setChartData(null);
+      setVoteLogs([]);
     }
   };
 
@@ -86,6 +99,11 @@ const AuditorDashboard = () => {
     const id = e.target.value;
     setSelectedElection(id);
     if (id) fetchResultsAndLogs(id);
+    else {
+      setChartData(null);
+      setVoteLogs([]);
+      setError("");
+    }
   };
 
   const downloadCSV = async () => {
@@ -95,8 +113,12 @@ const AuditorDashboard = () => {
       });
 
       if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.message || "Failed to export");
+        let errMsg = "Failed to export";
+        try {
+          const errData = await safeJsonParse(res);
+          errMsg = errData?.message || errMsg;
+        } catch {}
+        throw new Error(errMsg);
       }
 
       const blob = await res.blob();
@@ -123,7 +145,9 @@ const AuditorDashboard = () => {
           <select onChange={handleElectionSelect} value={selectedElection}>
             <option value="">-- Choose an Election --</option>
             {elections.map((e) => (
-              <option key={e._id} value={e._id}>{e.title}</option>
+              <option key={e._id} value={e._id}>
+                {e.title}
+              </option>
             ))}
           </select>
         ) : (
@@ -133,11 +157,7 @@ const AuditorDashboard = () => {
 
       <div className="dashboard-section">
         <h3>📈 Results</h3>
-        {chartData ? (
-          <Bar data={chartData} />
-        ) : (
-          <p>No results to display.</p>
-        )}
+        {chartData ? <Bar data={chartData} /> : <p>No results to display.</p>}
       </div>
 
       <div className="dashboard-section">
@@ -150,7 +170,8 @@ const AuditorDashboard = () => {
           <ul className="logs-list">
             {voteLogs.map((log) => (
               <li key={log._id}>
-                🧾 {log.user?.email} — {new Date(log.timestamp).toLocaleString()} — <code>{log.hash}</code>
+                🧾 {log.user?.email} — {new Date(log.timestamp).toLocaleString()} —{" "}
+                <code>{log.hash}</code>
               </li>
             ))}
           </ul>

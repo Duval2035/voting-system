@@ -1,4 +1,5 @@
 const nodemailer = require("nodemailer");
+const User = require("../models/User");
 
 const sendOtp = async (req, res) => {
   const { email } = req.body;
@@ -31,6 +32,7 @@ const sendOtp = async (req, res) => {
     text: `Your OTP code is ${otp}. It expires in 10 minutes.`,
   };
 
+  
   transporter.sendMail(mailOptions, (err, info) => {
     if (err) {
       console.error("❌ Failed to send email:", err);
@@ -42,5 +44,7 @@ const sendOtp = async (req, res) => {
   });
 };
 
- 
+
+
+module.exports = sendOtp;
    
