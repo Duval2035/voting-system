@@ -20,18 +20,12 @@ function AdminVoterList() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      const contentType = res.headers.get("content-type");
-      const text = await res.text();
-      if (contentType && contentType.includes("application/json")) {
-        const data = JSON.parse(text);
-        if (!res.ok) throw new Error(data.message || "Failed to fetch elections");
-        setElections(data);
-        setError(null);
-      } else {
-        throw new Error("Response is not valid JSON.");
-      }
+      if (!res.ok) throw new Error("Failed to fetch elections");
+
+      const data = await res.json();
+      setElections(data);
+      setError(null);
     } catch (err) {
-      console.error("Election fetch error:", err.message);
       setError(err.message);
       setElections([]);
     }
@@ -48,10 +42,12 @@ function AdminVoterList() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      const text = await res.text();
-      const data = JSON.parse(text);
-      if (!res.ok) throw new Error(data.message || "Failed to fetch voters");
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.message || "Failed to fetch voters");
+      }
 
+      const data = await res.json();
       setVoters(data.voters || []);
     } catch (err) {
       setError(err.message);
@@ -63,7 +59,7 @@ function AdminVoterList() {
 
   useEffect(() => {
     fetchElections();
-  }, [token]);
+  }, []);
 
   useEffect(() => {
     if (selectedElection) {
@@ -73,10 +69,24 @@ function AdminVoterList() {
     }
   }, [selectedElection]);
 
+  function escapeCSV(val) {
+    if (val == null) return "";
+    const str = val.toString();
+    if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+      return `"${str.replace(/"/g, '""')}"`;
+    }
+    return str;
+  }
+
   function exportToCSV() {
     if (voters.length === 0) return;
-    const csvRows = [["Name", "Email"], ...voters.map(v => [v.name, v.email])];
-    const csvContent = "data:text/csv;charset=utf-8," + csvRows.map(row => row.join(",")).join("\n");
+    const csvRows = [
+      ["Username", "Email"],
+      ...voters.map((v) => [escapeCSV(v.username), escapeCSV(v.email)]),
+    ];
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      csvRows.map((row) => row.join(",")).join("\n");
     const link = document.createElement("a");
     link.setAttribute("href", encodeURI(csvContent));
     link.setAttribute("download", `voters-election-${selectedElection}.csv`);
@@ -96,16 +106,20 @@ function AdminVoterList() {
 
       {error && <p className={styles.error}>❌ {error}</p>}
 
-      <label htmlFor="electionSelect" className={styles.label}>Select Election:</label>
+      <label htmlFor="electionSelect" className={styles.label}>
+        Select Election:
+      </label>
       <select
         id="electionSelect"
         value={selectedElection}
-        onChange={e => setSelectedElection(e.target.value)}
+        onChange={(e) => setSelectedElection(e.target.value)}
         className={styles.select}
       >
         <option value="">-- Choose an election --</option>
-        {elections.map(e => (
-          <option key={e._id} value={e._id}>{e.title}</option>
+        {elections.map((e) => (
+          <option key={e._id} value={e._id}>
+            {e.title}
+          </option>
         ))}
       </select>
 
@@ -114,19 +128,31 @@ function AdminVoterList() {
       {!loading && selectedElection && (
         <>
           <div className={styles.summary}>
-            <p><strong>Total voters:</strong> {voters.length}</p>
-            <button onClick={exportToCSV} className={styles.exportBtn}>Export to CSV</button>
+            <p>
+              <strong>Total voters:</strong> {voters.length}
+            </p>
+            <button
+              onClick={exportToCSV}
+              className={styles.exportBtn}
+              disabled={voters.length === 0}
+              title={voters.length === 0 ? "No voters to export" : "Export to CSV"}
+            >
+              Export to CSV
+            </button>
           </div>
 
           {voters.length > 0 ? (
             <table className={styles.table}>
               <thead>
-                <tr><th>Name</th><th>Email</th></tr>
+                <tr>
+                  <th>Username</th>
+                  <th>Email</th>
+                </tr>
               </thead>
               <tbody>
                 {voters.map((v, idx) => (
                   <tr key={v._id || idx}>
-                    <td>{v.name}</td>
+                    <td>{v.username}</td>
                     <td>{v.email}</td>
                   </tr>
                 ))}
@@ -138,17 +164,25 @@ function AdminVoterList() {
         </>
       )}
 
-      <AddVoterForm elections={elections} onVoterAdded={handleVoterAdded} />
+      <AddVoterForm
+        elections={elections}
+        onVoterAdded={handleVoterAdded}
+        defaultElectionId={selectedElection}
+      />
     </div>
   );
 }
 
-function AddVoterForm({ elections, onVoterAdded }) {
+function AddVoterForm({ elections, onVoterAdded, defaultElectionId }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [electionId, setElectionId] = useState("");
+  const [electionId, setElectionId] = useState(defaultElectionId || "");
   const [message, setMessage] = useState(null);
   const token = localStorage.getItem("token");
+
+  useEffect(() => {
+    setElectionId(defaultElectionId || "");
+  }, [defaultElectionId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -208,7 +242,9 @@ function AddVoterForm({ elections, onVoterAdded }) {
             </option>
           ))}
         </select>
-        <button type="submit" className={styles.addBtn}>➕ Add Voter</button>
+        <button type="submit" className={styles.addBtn}>
+          ➕ Add Voter
+        </button>
       </form>
     </div>
   );

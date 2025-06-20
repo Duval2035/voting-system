@@ -1,8 +1,10 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const User = require("../models/User");
 const Otp = require("../models/Otp");
 const nodemailer = require("nodemailer"); 
+const User = require("../models/User");
+const Election = require("../models/Election");
+
 // ✅ Register User
 exports.register = async (req, res) => {
   const { username, email, password, organizationName, role } = req.body;
@@ -26,6 +28,23 @@ exports.register = async (req, res) => {
 
     await newUser.save();
 
+  // ✅ Automatically assign user as voter to elections for the same organization
+    const elections = await Election.find({ organizationName });
+    for (const election of elections) {
+      if (!election.voterIds.includes(newUser._id)) {
+        election.voterIds.push(newUser._id);
+        await election.save();
+      }
+    }
+    // ✅ Auto-add to all active elections as a voter
+    const activeElections = await Election.find({ status: "active" });
+    for (const election of activeElections) {
+      if (!election.voterIds.includes(newUser._id)) {
+        election.voterIds.push(newUser._id);
+        await election.save();
+      }
+    }
+
     const token = jwt.sign(
       { id: newUser._id, role: newUser.role },
       process.env.JWT_SECRET,
@@ -47,7 +66,6 @@ exports.register = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-
 
 const otpStore = {}; // In-memory OTP store
 

@@ -4,6 +4,7 @@ const authenticateAdmin = require("../middleware/authenticateAdmin");
 const User = require("../models/User");
 const Election = require("../models/Election");
 
+
 // ✅ Fetch users (to assign as voters)
 router.get("/admin/users", authenticateAdmin, async (req, res) => {
   try {
@@ -35,17 +36,19 @@ router.post("/admin/elections/:electionId/assign-voters", authenticateAdmin, asy
 });
 
 // ✅ Get voters by election
-router.get("/admin/voters/by-election/:electionId", authenticateAdmin, async (req, res) => {
-  const { electionId } = req.params;
-
+router.get("/voters-by-election/:electionId", async (req, res) => {
   try {
-    const election = await Election.findById(electionId).populate("voterIds", "username email");
-    if (!election) return res.status(404).json({ message: "Election not found" });
+    const { electionId } = req.params;
+
+    const election = await Election.findById(electionId).populate("voterIds", "name email");
+    if (!election) {
+      return res.status(404).json({ message: "Election not found" });
+    }
 
     res.json({ voters: election.voterIds });
-  } catch (err) {
-    console.error("Error loading voters:", err);
-    res.status(500).json({ message: "Failed to load voters" });
+  } catch (error) {
+    console.error("Error fetching voters:", error);
+    res.status(500).json({ message: "Server error" });
   }
 });
 

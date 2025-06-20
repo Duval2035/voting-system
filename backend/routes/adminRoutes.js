@@ -1,4 +1,3 @@
-// routes/adminRoutes.js
 const express = require("express");
 const router = express.Router();
 
@@ -6,43 +5,43 @@ const Election = require("../models/Election");
 const Voter = require("../models/Voter");
 const authenticateAdmin = require("../middleware/authenticateAdmin");
 const authorizeRoles = require("../middleware/authorizeRoles");
+const adminController = require("../controllers/adminController");
 
-// GET /api/admin/elections
-// Get all elections (only id and title)
+// ✅ Get all elections (id and title only)
 router.get("/elections", authenticateAdmin, authorizeRoles("admin"), async (req, res) => {
   try {
     const elections = await Election.find({}, "_id title").lean();
     res.json(elections);
   } catch (err) {
-    console.error("❌ Failed to fetch elections:", err);
+    console.error("Failed to fetch elections:", err);
     res.status(500).json({ message: "Failed to fetch elections" });
   }
 });
-
-// GET /api/admin/voters-by-election/:id
-// Get voters for a specific election, plus total count
-router.get("/voters-by-election/:id", authenticateAdmin, authorizeRoles("admin"), async (req, res) => {
-  const electionId = req.params.id;
-
+// ✅ Get all voters globally (role: user)
+router.get("/voters-by-election/:electionId", adminController.getVotersByElection);
+// ✅ Get voters for an election
+router.get("/voters-by-election/:electionId", async (req, res) => {
   try {
-    const voters = await Voter.find({ election: electionId }).lean();
+    const { electionId } = req.params;
 
-    const totalVoters = voters.length;
+    const election = await Election.findById(electionId).populate("voterIds", "username email");
+    if (!election) {
+      return res.status(404).json({ message: "Election not found" });
+    }
 
-    res.json({ totalVoters, voters });
-  } catch (err) {
-    console.error("❌ Error fetching voters:", err);
-    res.status(500).json({ message: "Failed to fetch voters." });
+    res.json({ voters: election.voterIds });
+  } catch (error) {
+    console.error("Error fetching voters:", error);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
-// Add a new voter to an election
+// ✅ Add new voter to election
 router.post("/add-voter", authenticateAdmin, authorizeRoles("admin"), async (req, res) => {
   try {
     const { name, email, electionId } = req.body;
-
     if (!name || !email || !electionId) {
-      return res.status(400).json({ message: "All fields (name, email, electionId) are required." });
+      return res.status(400).json({ message: "All fields required." });
     }
 
     const electionExists = await Election.findById(electionId);
@@ -52,19 +51,16 @@ router.post("/add-voter", authenticateAdmin, authorizeRoles("admin"), async (req
 
     const existingVoter = await Voter.findOne({ email, election: electionId });
     if (existingVoter) {
-      return res.status(400).json({ message: "Voter already registered for this election." });
+      return res.status(400).json({ message: "Voter already registered." });
     }
 
     const newVoter = new Voter({ name, email, election: electionId });
     await newVoter.save();
 
-    console.log("✅ Voter added:", newVoter);
     res.status(201).json({ message: "Voter added successfully", voter: newVoter });
-
   } catch (err) {
-    console.error("❌ Error adding voter:", err);
-    console.error(err.stack);
-    res.status(500).json({ message: "Server error", error: err.message });
+    console.error("Error adding voter:", err);
+    res.status(500).json({ message: "Server error" });
   }
 });
 

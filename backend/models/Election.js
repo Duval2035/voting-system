@@ -38,7 +38,7 @@ const electionSchema = new mongoose.Schema(
     voterIds: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
+        ref: "User", // Points to users eligible to vote
       },
     ],
   },

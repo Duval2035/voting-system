@@ -18,30 +18,30 @@ const VotePage = () => {
       setLoading(true);
       try {
         const res = await fetch(`${API_BASE_URL}/elections/${id}`, {
-          method: "GET",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
         });
 
-        const electionData = await res.json();
-
-        if (res.ok) {
-          setElection(electionData);
-        } else {
+        if (!res.ok) {
           setMessage("❌ Election not found or unauthorized.");
           setLoading(false);
           return;
         }
 
-        const cRes = await fetch(`${API_BASE_URL}/candidates/by-election/${id}`);
-        const cData = await cRes.json();
+        const electionData = await res.json();
+        setElection(electionData);
 
-        if (cRes.ok) {
-          setCandidates(cData);
-        } else {
+        const cRes = await fetch(`${API_BASE_URL}/candidates/by-election/${id}`, {
+          headers: { "Content-Type": "application/json" },
+        });
+
+        if (!cRes.ok) {
           setMessage("❌ Failed to load candidates.");
+        } else {
+          const cData = await cRes.json();
+          setCandidates(cData);
         }
       } catch (err) {
         console.error("Fetch error:", err);
@@ -92,10 +92,13 @@ const VotePage = () => {
         }),
       });
 
-      const result = await res.json();
+      const contentType = res.headers.get("content-type");
+      const isJSON = contentType && contentType.includes("application/json");
+
+      const result = isJSON ? await res.json() : { message: await res.text() };
 
       if (res.ok) {
-        setMessage("✅ Vote submitted successfully.");
+        setMessage(result.message || "✅ Vote submitted successfully.");
       } else {
         console.error("Vote error:", result);
         setMessage(result.message || "❌ Failed to submit vote.");
