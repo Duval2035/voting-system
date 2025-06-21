@@ -24,6 +24,7 @@ import EditElection from "./pages/EditElection";
 import ExportVoters from "./pages/ExportVoters";
 import ExportLogs from "./pages/ExportLogs";
 import SendMessages from "./pages/SendMessage";
+import MessageHistory from "./pages/MessageHistory";
 
 
 function App() {
@@ -44,7 +45,9 @@ function App() {
         <Route path="/admin/export-voters" element={<ExportVoters />} />
         <Route path="/admin/export-logs" element={<ExportLogs />} />
         <Route path="/admin/messages" element={<SendMessages />} /> 
-    
+        <Route path="/admin/message-history" element={<MessageHistory />} />
+
+
         {/* Admin Routes */}
         <Route
           path="/admin/dashboard"

@@ -7,6 +7,7 @@ const Election = require("../models/Election");
 const VoteLog = require("../models/VoteLog");
 const { Parser } = require("json2csv");
 
+
 // 🗳️ 1️⃣ Submit vote and generate log
 const submitVote = async (req, res) => {
   const { electionId, candidateId } = req.body;
@@ -207,4 +208,27 @@ module.exports = {
   exportVoteLogsCSV,
   getVotesByElection,
   getElectionResults,
+};
+
+
+const castVote = async (req, res) => {
+  try {
+    const { electionId } = req.params;
+    const userId = req.user._id; // from authentication middleware
+
+    const election = await Election.findById(electionId);
+    if (!election) return res.status(404).json({ message: "Election not found" });
+
+    // Check if user is eligible
+    if (!election.eligibleVoters.includes(userId)) {
+      return res.status(403).json({ message: "You are not eligible to vote in this election." });
+    }
+
+    // Proceed to cast vote logic here
+    // ...
+
+    res.json({ message: "Vote cast successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 };

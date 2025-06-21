@@ -52,6 +52,7 @@ const AdminDashboard = () => {
           <li onClick={() => navigate("/create-election")}>➕ Create Election</li>
           <li onClick={() => navigate("/admin/voters")}>👥 Voter List</li>
           <li onClick={() => navigate("/admin/messages")}>✉️ Send Messages</li>
+            <li onClick={() => navigate("/admin/message-history")}>🕘 Message History</li>
           <li onClick={() => navigate("/admin/eligibility")}>✔️ Voter Eligibility</li>
           <li onClick={() => navigate("/admin/export-voters")}>📤 Export Voters</li>
           <li onClick={() => navigate("/admin/export-logs")}>📥 Export Logs</li>

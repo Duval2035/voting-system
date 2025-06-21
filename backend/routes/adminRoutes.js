@@ -3,9 +3,20 @@ const router = express.Router();
 
 const Election = require("../models/Election");
 const Voter = require("../models/Voter");
+
 const authenticateAdmin = require("../middleware/authenticateAdmin");
 const authorizeRoles = require("../middleware/authorizeRoles");
-const adminController = require("../controllers/adminController");
+const authenticate = require("../middleware/authenticateUser");
+const {
+  getEligibleVoters,
+  assignVotersToElection,
+  getVotersByElection,
+  getAllVoters
+} = require("../controllers/adminController");
+
+// Debug logs
+console.log("authenticateAdmin:", typeof authenticateAdmin);
+console.log("getEligibleVoters:", typeof getEligibleVoters);
 
 // ✅ Get all elections (id and title only)
 router.get("/elections", authenticateAdmin, authorizeRoles("admin"), async (req, res) => {
@@ -17,24 +28,18 @@ router.get("/elections", authenticateAdmin, authorizeRoles("admin"), async (req,
     res.status(500).json({ message: "Failed to fetch elections" });
   }
 });
-// ✅ Get all voters globally (role: user)
-router.get("/voters-by-election/:electionId", adminController.getVotersByElection);
-// ✅ Get voters for an election
-router.get("/voters-by-election/:electionId", async (req, res) => {
-  try {
-    const { electionId } = req.params;
 
-    const election = await Election.findById(electionId).populate("voterIds", "username email");
-    if (!election) {
-      return res.status(404).json({ message: "Election not found" });
-    }
+// ✅ Get eligible voters for a specific election
+router.get("/elections/:electionId/eligible-voters", authenticateAdmin, getEligibleVoters);
 
-    res.json({ voters: election.voterIds });
-  } catch (error) {
-    console.error("Error fetching voters:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-});
+// ✅ Assign voters to an election
+router.post("/elections/:electionId/assign-voters", authenticateAdmin, assignVotersToElection);
+
+// ✅ Get all voters globally
+router.get("/voters", authenticateAdmin, getAllVoters);
+
+// ✅ Get voters assigned to an election
+router.get("/voters-by-election/:electionId", authenticateAdmin, getVotersByElection);
 
 // ✅ Add new voter to election
 router.post("/add-voter", authenticateAdmin, authorizeRoles("admin"), async (req, res) => {
@@ -65,3 +70,4 @@ router.post("/add-voter", authenticateAdmin, authorizeRoles("admin"), async (req
 });
 
 module.exports = router;
+

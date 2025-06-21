@@ -58,10 +58,15 @@ const Login = () => {
         throw new Error(data.message || "OTP verification failed.");
       }
 
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+      // ✅ Store token and user properly
+      if (data.token && data.user) {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        navigate(`/${data.user.role}/dashboard`);
+      } else {
+        throw new Error("Invalid response from server.");
+      }
 
-      navigate(`/${data.user.role}/dashboard`);
     } catch (err) {
       setError(err.message || "Login failed.");
     }

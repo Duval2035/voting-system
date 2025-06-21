@@ -132,10 +132,17 @@ exports.verifyOtp = async (req, res) => {
 
     // OTP is valid - create JWT token
     const token = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
+  {
+    id: user._id,
+    role: user.role,
+    email: user.email,
+    username: user.username,
+    organizationName: user.organizationName,
+  },
+  process.env.JWT_SECRET,
+  { expiresIn: "6h" }
+);
+
 
     // Remove OTP from store after successful login
     delete otpStore[email];

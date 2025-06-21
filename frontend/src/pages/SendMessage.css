@@ -60,3 +60,15 @@
   border-radius: 4px;
   background-color: #e0e0e0;
 }
+.select-buttons {
+  margin-bottom: 10px;
+}
+.select-buttons button {
+  margin-right: 10px;
+  padding: 6px 20px;
+  cursor: pointer;
+}
+.status-msg {
+  margin-top: 10px;
+  font-weight: bold;
+}

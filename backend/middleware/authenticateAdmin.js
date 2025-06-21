@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 
 const authenticateAdmin = (req, res, next) => {
   const authHeader = req.headers.authorization;
+
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).json({ message: "No token provided" });
   }
@@ -10,14 +11,22 @@ const authenticateAdmin = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret");
-    if (decoded.role !== "admin") {
-      return res.status(403).json({ message: "Admins only" });
+
+    // Explicit role check
+    if (!decoded.role || decoded.role !== "admin") {
+      return res.status(403).json({ message: "Access denied: Admins only" });
     }
 
-    req.user = decoded;
+    req.user = {
+      id: decoded.id,
+      role: decoded.role,
+      email: decoded.email,
+    };
+
     next();
   } catch (err) {
-    return res.status(401).json({ message: "Invalid token" });
+    console.error("Admin auth error:", err);
+    return res.status(401).json({ message: "Invalid or expired token" });
   }
 };
 

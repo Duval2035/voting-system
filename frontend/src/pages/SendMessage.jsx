@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import API_BASE_URL from "../config";
 import "./SendMessages.css";
 
-const SendMessages = ({ electionId }) => { // <-- receive electionId as prop or set it here
+const SendMessages = ({ electionId }) => {
   const [voters, setVoters] = useState([]);
   const [selected, setSelected] = useState([]);
   const [subject, setSubject] = useState("");
@@ -12,15 +12,17 @@ const SendMessages = ({ electionId }) => { // <-- receive electionId as prop or 
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!electionId) {
-      console.error("❌ No electionId provided for fetching voters.");
-      return;
-    }
+  console.log("🔑 Token:", token);
+  console.log("🗳️ Election ID:", electionId);
 
+  useEffect(() => {
     const fetchVoters = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/admin/voters/by-election/${electionId}`, {
+        const url = electionId
+          ? `/api/admin/voters-by-election/${electionId}`
+          : `/api/admin/voters`;
+
+        const response = await fetch(url, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -29,20 +31,14 @@ const SendMessages = ({ electionId }) => { // <-- receive electionId as prop or 
         if (!response.ok) {
           const errorText = await response.text();
           console.error("❌ Failed to fetch voters:", response.status, errorText);
-          setStatus("❌ Failed to load voters.");
-          return;
+          throw new Error("Failed to load voters");
         }
 
         const data = await response.json();
-        setVoters(data.voters || []);
-        if ((data.voters || []).length === 0) {
-          setStatus("No voters found for this election.");
-        } else {
-          setStatus(null);
-        }
+        const voterList = data.voters || data; // adapt to structure
+        setVoters(voterList);
       } catch (error) {
         console.error("❌ JSON parse or fetch error:", error.message);
-        setStatus("❌ Error loading voters.");
       }
     };
 
@@ -50,16 +46,32 @@ const SendMessages = ({ electionId }) => { // <-- receive electionId as prop or 
   }, [token, electionId]);
 
   const toggleSelect = (email) => {
-    setSelected((prev) =>
-      prev.includes(email) ? prev.filter((e) => e !== email) : [...prev, email]
+    setSelected((prevSelected) =>
+      prevSelected.includes(email)
+        ? prevSelected.filter((e) => e !== email)
+        : [...prevSelected, email]
     );
+  };
+
+  const handleSelectAll = () => {
+    setSelected(voters.map((voter) => voter.email));
+  };
+
+  const handleDeselectAll = () => {
+    setSelected([]);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!subject || !content || selected.length === 0) {
-      return setStatus("Please fill all fields and select at least one voter.");
+      setStatus("⚠️ Please fill all fields and select at least one voter.");
+      return;
     }
+
+    const payload = { subject, content, recipients: selected };
+    console.log("📤 Sending message payload:", payload);
+
     try {
       const res = await fetch(`${API_BASE_URL}/messages/send`, {
         method: "POST",
@@ -67,16 +79,20 @@ const SendMessages = ({ electionId }) => { // <-- receive electionId as prop or 
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ subject, content, recipients: selected }),
+        body: JSON.stringify(payload),
       });
+
       const result = await res.json();
+      console.log("✅ Server response:", result);
+
       if (!res.ok) throw new Error(result.message);
       setStatus("✅ Message sent successfully!");
       setSubject("");
       setContent("");
       setSelected([]);
     } catch (err) {
-      setStatus("❌ Failed to send message.");
+      console.error("❌ Send failed:", err.message);
+      setStatus(`❌ Failed to send message. ${err.message}`);
     }
   };
 
@@ -87,7 +103,7 @@ const SendMessages = ({ electionId }) => { // <-- receive electionId as prop or 
         <ul>
           <li onClick={() => navigate("/admin/dashboard")}>🏠 Dashboard</li>
           <li onClick={() => navigate("/admin/voters")}>👥 Voters</li>
-          <li onClick={() => navigate("/admin/export-voters")}>📤 Export</li>
+          
         </ul>
       </aside>
 
@@ -111,9 +127,19 @@ const SendMessages = ({ electionId }) => { // <-- receive electionId as prop or 
         </form>
 
         <h3>Select Recipients:</h3>
+
+        <div className="select-buttons">
+          <button type="button" onClick={handleSelectAll}>
+            ✅ Select All
+          </button>
+          <button type="button" onClick={handleDeselectAll}>
+            ❌ Deselect All
+          </button>
+        </div>
+
         <div className="voter-list">
           {voters.length === 0 ? (
-            <p>No voters found for this election.</p>
+            <p>No voters found.</p>
           ) : (
             voters.map((voter) => (
               <label key={voter._id}>
