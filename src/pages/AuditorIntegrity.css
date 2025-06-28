@@ -1,0 +1,72 @@
+.integrity-dashboard {
+  max-width: 1000px;
+  margin: auto;
+  padding: 32px;
+  font-family: "Segoe UI", sans-serif;
+  color: #222;
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 30px;
+  font-size: 26px;
+  color: #1a237e;
+}
+
+.card {
+  background-color: #fff;
+  padding: 24px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+select {
+  width: 100%;
+  padding: 12px;
+  font-size: 15px;
+  margin-top: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.no-elections {
+  color: #777;
+  margin-top: 10px;
+}
+
+.integrity-report p {
+  margin: 10px 0;
+  font-size: 15px;
+}
+
+code {
+  background: #f3f4f6;
+  padding: 4px 8px;
+  font-size: 14px;
+  border-radius: 4px;
+  display: inline-block;
+  word-break: break-word;
+}
+
+.hash-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.hash-list li {
+  background-color: #f1f8ff;
+  margin-bottom: 6px;
+  padding: 6px;
+  border-left: 4px solid #2196f3;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+.error-msg {
+  color: red;
+  font-weight: bold;
+}
+.error-msg p {
+  margin: 0;
+}

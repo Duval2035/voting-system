@@ -1,0 +1,68 @@
+
+
+.auditor-dashboard {
+  padding: 20px;
+  max-width: 900px;
+  margin: auto;
+  background-color: #f9fafa;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+h2 {
+  color: #1f2937;
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.dashboard-section {
+  margin-top: 30px;
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+}
+
+select {
+  padding: 8px 12px;
+  font-size: 16px;
+  margin-top: 10px;
+  width: 100%;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.logs-list {
+  margin-top: 15px;
+  list-style: none;
+  padding-left: 0;
+}
+
+.logs-list li {
+  background: #eef2f7;
+  margin-bottom: 8px;
+  padding: 10px;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 14px;
+}
+
+button {
+  margin-top: 10px;
+  background-color: #1e90ff;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button:disabled {
+  background-color: #aaa;
+  cursor: not-allowed;
+}
+
+.error-message {
+  color: red;
+  font-weight: bold;
+  margin-top: 10px;
+}

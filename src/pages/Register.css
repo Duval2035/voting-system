@@ -1,0 +1,68 @@
+/* src/pages/Register.css */
+
+.auth-container {
+  max-width: 400px;
+  margin: 40px auto;
+  padding: 30px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+}
+
+.auth-container h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.auth-form label {
+  margin: 10px 0 5px;
+  font-weight: bold;
+}
+
+.auth-form input,
+.auth-form select {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.auth-form button {
+  margin-top: 20px;
+  padding: 10px;
+  background-color: #0077cc;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.auth-form button:hover {
+  background-color: #005fa3;
+}
+
+.error-msg {
+  color: red;
+  margin-top: 10px;
+}
+
+.success-msg {
+  color: green;
+  margin-top: 10px;
+}
+
+.footer-link {
+  text-align: center;
+  margin-top: 15px;
+}
+.footer-if {
+  color: #218838;
+}
+.footer-if:hover {
+  color: #6ff9bb;
+}
+
