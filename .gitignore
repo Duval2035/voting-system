@@ -1,15 +1,17 @@
-# Dependencies
-/node_modules
-/backend/node_modules
-/.pnp
-.pnp.js
+# === Node Modules (ignore in both frontend and backend) ===
+/node_modules/
+/frontend/node_modules/
+/backend/node_modules/
 
-# Build outputs
-/build
-/dist
-/dist-ssr
+# === Build and Distribution Folders ===
+/build/
+/dist/
+/frontend/build/
+/frontend/dist/
+/backend/build/
+/backend/dist/
 
-# Logs
+# === Logs ===
 logs
 *.log
 npm-debug.log*
@@ -18,25 +20,34 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Testing
-/coverage
-
-# Environment files
+# === Environment Variables ===
 .env
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.development
+.env.production
+.env.*.local
 
-# System files
+# === System Files ===
 .DS_Store
+Thumbs.db
+
+# === Editor and IDE Settings ===
+.vscode/
+.idea/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
 
-# Editor settings
-.vscode/*
-!.vscode/extensions.json
-.idea
+# === Test Coverage ===
+/coverage/
+/frontend/coverage/
+/backend/coverage/
+
+# === Optional: OS Files ===
+ehthumbs.db
+Desktop.ini
+
+# === Optional: Mac system files ===
+*.DS_Store
