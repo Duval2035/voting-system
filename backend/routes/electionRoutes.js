@@ -84,6 +84,7 @@ router.get("/export/:electionId", authenticateAdmin, async (req, res) => {
 });
 
 // Get election by ID
+
 router.get("/:id", auth, getElectionById);
 
 // Update election status

@@ -1,6 +1,7 @@
 const Election = require("../models/Election");
 const Vote = require("../models/Voter");
 const User = require("../models/User");
+const Candidate = require("../models/Candidate");
 
 // Create Election
 exports.createElection = async (req, res) => {
@@ -49,7 +50,13 @@ exports.getElectionById = async (req, res) => {
     if (!election) {
       return res.status(404).json({ message: "Election not found" });
     }
-    res.status(200).json(election);
+
+    const candidates = await Candidate.find({ election: election._id });
+
+    res.status(200).json({
+      election,
+      candidates,
+    });
   } catch (error) {
     console.error("❌ Get Election By ID Error:", error);
     res.status(500).json({ message: "Error fetching election" });
