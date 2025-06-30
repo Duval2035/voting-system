@@ -17,7 +17,7 @@ const sendOtp = async (req, res) => {
 
   // Setup mail transporter
   const transporter = nodemailer.createTransport({
-    service: "Gmail", // or use "SendGrid", "Outlook", etc.
+    service: "Gmail",
     auth: {
        user:"armelduvalkenmoe@gmail.com", 
       pass:"erejhakxumucoswj",  
@@ -43,8 +43,6 @@ const sendOtp = async (req, res) => {
     }
   });
 };
-
-
 
 module.exports = sendOtp;
    

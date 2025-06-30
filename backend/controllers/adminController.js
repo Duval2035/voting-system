@@ -33,7 +33,8 @@ const getVotersByElection = async (req, res) => {
 const getAllVoters = async (req, res) => {
   try {
     const voters = await User.find({ role: "user" }).select("username email organizationName");
-    return res.json({ users: voters });
+    
+    return res.status(200).json({ voters });
   } catch (err) {
     console.error("❌ Error fetching all voters:", err);
     return res.status(500).json({ message: "Failed to fetch voters." });

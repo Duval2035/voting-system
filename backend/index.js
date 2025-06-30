@@ -1,7 +1,7 @@
-const path = require("path");
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const path = require("path");
 require("dotenv").config();
 
 const voteRoutes = require("./routes/voteRoutes");
@@ -22,18 +22,15 @@ const { contract, wallet } = require("./blockchain/contractService");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ✅ Middleware
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use(express.json());
 
-// ✅ Static file handling (for candidate images, etc.)
 app.use(
   "/uploads",
   cors({ origin: "http://localhost:5173", credentials: true }),
   express.static(path.join(__dirname, "uploads"))
 );
 
-// ✅ Connect MongoDB
 const connectMongo = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
@@ -44,13 +41,12 @@ const connectMongo = async () => {
   }
 };
 
-// ✅ Route setup
 const setupRoutes = () => {
   app.use("/api/auth", authRoutes);
   app.use("/api/elections", electionRoutes);
   app.use("/api/admin", adminRoutes);
   app.use("/api/candidates", candidateRoutes);
-  app.use("/api/votes", voteRoutes); // don't repeat
+  app.use("/api/votes", voteRoutes);
   app.use("/api/voters", voterRoutes);
   app.use("/api/auditor", auditorRoutes);
   app.use("/api/vote-logs", voteLogRoutes);
@@ -58,7 +54,6 @@ const setupRoutes = () => {
   app.use("/api/blockchain", blockchainRoutes);
   app.use("/api/blockchain-results", blockchainResultsRoutes);
 
-  // 📊 Optional legacy result route (for backup)
   app.get("/votes/results/:electionId", async (req, res) => {
     try {
       await getElectionResults(req, res);
@@ -69,7 +64,6 @@ const setupRoutes = () => {
   });
 };
 
-// ✅ Start Server
 const startServer = async () => {
   await connectMongo();
 

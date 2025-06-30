@@ -7,15 +7,33 @@ const VoteLog = require("../models/VoteLog");
 const { contract } = require("../blockchain/contractService");
 
 exports.submitVote = async (req, res) => {
-  const { electionId, candidateId, email } = req.body;
+  let { electionId, candidateId } = req.body;
   const userId = req.user?._id;
+  const email = req.user?.email;
+
+  if (!userId || !email) {
+    return res.status(401).json({ message: "Unauthorized: Missing user info" });
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(candidateId) || !mongoose.Types.ObjectId.isValid(electionId)) {
+    return res.status(400).json({ message: "Invalid candidate or election ID format" });
+  }
+
+  electionId = electionId.toString();
 
   try {
-    // ✅ Validate candidate
-    const candidate = await Candidate.findOne({ blockchainId: candidateId, election: electionId });
-    if (!candidate) return res.status(404).json({ message: "Candidate not found" });
+    console.log("🧾 Incoming vote:", { userId, email, electionId, candidateId });
 
-    // ✅ Ensure voter exists
+    const candidate = await Candidate.findById(candidateId).select("+election");
+    if (!candidate || candidate.election.toString() !== electionId) {
+      return res.status(404).json({ message: "Candidate not found or not part of this election" });
+    }
+
+    if (candidate.blockchainId === undefined || candidate.blockchainId === null) {
+      return res.status(500).json({ message: "Candidate is missing blockchain ID" });
+    }
+
+    // Check or create voter
     let voter = await Voter.findOne({ email, election: electionId });
     if (!voter) {
       voter = new Voter({
@@ -26,11 +44,13 @@ exports.submitVote = async (req, res) => {
       await voter.save();
     }
 
-    // ❌ Prevent double voting
+    // Prevent double voting
     const alreadyVoted = await Vote.findOne({ election: electionId, user: userId });
-    if (alreadyVoted) return res.status(409).json({ message: "Already voted" });
+    if (alreadyVoted) {
+      return res.status(409).json({ message: "You have already voted in this election." });
+    }
 
-    // ✅ Save MongoDB vote
+    // Save vote
     const vote = new Vote({
       election: electionId,
       candidate: candidate._id,
@@ -38,15 +58,19 @@ exports.submitVote = async (req, res) => {
     });
     await vote.save();
 
-    // ✅ Blockchain vote (stringify electionId)
-    const tx = await contract.vote(Number(candidate.blockchainId), electionId.toString());
-     await tx.wait();
+    console.log("📤 Sending vote to blockchain:", {
+      blockchainId: candidate.blockchainId,
+      electionId,
+    });
 
-    // ✅ Log for audit
+    const tx = await contract.vote(Number(candidate.blockchainId), String(electionId));
+    await tx.wait();
+
+    // Generate vote hash for logging
     const timestamp = new Date();
     const hash = crypto
       .createHash("sha256")
-      .update(`${userId}-${electionId}-${candidateId}-${timestamp.toISOString()}`)
+      .update(`${userId}-${electionId}-${candidate.blockchainId}-${timestamp.toISOString()}`)
       .digest("hex");
 
     const log = new VoteLog({
@@ -57,14 +81,14 @@ exports.submitVote = async (req, res) => {
     });
     await log.save();
 
-    res.status(200).json({ message: "✅ Vote submitted and stored on blockchain" });
+    return res.status(200).json({ message: "✅ Vote submitted and stored on blockchain" });
   } catch (error) {
     console.error("❌ submitVote error:", error);
-    res.status(500).json({ message: "Server error during vote submission" });
+    return res.status(500).json({ message: "Server error during vote submission" });
   }
 };
 
-// Placeholder implementations for other routes to avoid crashing
+// Placeholder for future implementation
 exports.getResults = async (req, res) => {
   res.status(200).json({ message: "📊 Results placeholder" });
 };
@@ -73,23 +97,28 @@ exports.getCandidateResults = async (req, res) => {
   res.status(200).json({ message: "📊 Candidate Results placeholder" });
 };
 
+// Fetch all vote logs for an election
 exports.getVoteLogs = async (req, res) => {
   try {
     const logs = await VoteLog.find({ election: req.params.electionId }).populate("user", "username");
     res.status(200).json(logs);
   } catch (err) {
+    console.error("❌ getVoteLogs error:", err);
     res.status(500).json({ message: "Failed to fetch vote logs." });
   }
 };
 
+// Placeholder: export CSV
 exports.exportVoteLogsCSV = async (req, res) => {
   res.status(200).json({ message: "📤 CSV export placeholder" });
 };
 
+// Placeholder: fetch votes by election
 exports.getVotesByElection = async (req, res) => {
   res.status(200).json({ message: "📋 Votes by election placeholder" });
 };
 
+// Tally votes for each candidate in the election
 exports.getElectionResults = async (req, res) => {
   const { electionId } = req.params;
 
@@ -98,22 +127,33 @@ exports.getElectionResults = async (req, res) => {
 
     const results = await Promise.all(
       candidates.map(async (candidate) => {
-        const count = await Vote.countDocuments({ candidate: candidate._id });
+        const voteCount = await Vote.countDocuments({ candidate: candidate._id });
         return {
           _id: candidate._id,
           name: candidate.name,
           position: candidate.position,
           image: candidate.image || "/default-user.png",
-          voteCount: count,
+          voteCount,
         };
       })
     );
 
     res.status(200).json(results);
   } catch (error) {
-    console.error("❌ DB results fetch error:", error);
+    console.error("❌ getElectionResults error:", error);
     res.status(500).json({ message: "Failed to fetch election results." });
   }
 };
 
+// Get vote logs by election
+exports.getVoteLogsByElection = async (req, res) => {
+  const { electionId } = req.params;
 
+  try {
+    const logs = await VoteLog.find({ election: electionId }).populate("user", "username");
+    res.status(200).json(logs);
+  } catch (error) {
+    console.error("❌ getVoteLogsByElection error:", error);
+    res.status(500).json({ message: "Failed to fetch vote logs." });
+  }
+};

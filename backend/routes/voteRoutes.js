@@ -33,4 +33,5 @@ router.post("/admin/election/:electionId/assign-all", adminController.assignAllU
 // 🗳️ Blockchain results by election
 router.get("/blockchain-results/:electionId", getBlockchainResultsByElection);
 
+
 module.exports = router;

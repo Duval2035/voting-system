@@ -1,34 +1,29 @@
-// backend/routes/candidateRoutes.js
 const express = require("express");
 const router = express.Router();
-const multer = require("multer");
-const path = require("path");
-const authMiddleware = require("../middleware/authMiddleware");
+const upload = require("../middleware/upload");
+
 const {
   addOrUpdateCandidate,
-  getCandidatesByElection,
-  deleteCandidate
+  getCandidatesByElectionDB,
+  getCandidatesByElectionBlockchain,
+  getCandidateById,
+  deleteCandidate,
 } = require("../controllers/candidateController");
 
-// Multer config
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/");
-  },
-  filename: function (req, file, cb) {
-    const ext = path.extname(file.originalname);
-    const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1E9)}${ext}`;
-    cb(null, uniqueName);
-  }
-});
-const upload = multer({ storage });
+// Add or update candidate (image optional)
+router.post("/:id", upload.single("image"), addOrUpdateCandidate);           // Add new candidate
+router.put("/:id/:candidateId", upload.single("image"), addOrUpdateCandidate); // Update existing candidate
 
-// Routes
-router.get("/by-election/:electionId", getCandidatesByElection);
-router.post("/:id", authMiddleware, upload.single("image"), addOrUpdateCandidate);
-router.put("/:id/:candidateId", authMiddleware, upload.single("image"), addOrUpdateCandidate);
-router.delete("/:id", authMiddleware, deleteCandidate);
+// Get candidates from MongoDB
+router.get("/election/:electionId/db", getCandidatesByElectionDB);
+
+// Get candidates from Blockchain
+router.get("/election/:electionId/blockchain", getCandidatesByElectionBlockchain);
+
+// Get single candidate by ID
+router.get("/:id", getCandidateById);
+
+// Delete candidate by ID
+router.delete("/:id", deleteCandidate);
 
 module.exports = router;
-
-

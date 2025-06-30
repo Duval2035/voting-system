@@ -1,14 +1,13 @@
+// backend/models/Candidate.js
 const mongoose = require("mongoose");
 
-const CandidateSchema = new mongoose.Schema({
+const candidateSchema = new mongoose.Schema({
   name: { type: String, required: true },
   position: { type: String },
   bio: { type: String },
-  image: { type: String },
   election: { type: mongoose.Schema.Types.ObjectId, ref: "Election", required: true },
-  blockchainId: { type: Number, required: true },
+  image: { type: String },
+  blockchainId: { type: Number },
 });
 
-module.exports = mongoose.model("Candidate", CandidateSchema);
-
-
+module.exports = mongoose.model("Candidate", candidateSchema);

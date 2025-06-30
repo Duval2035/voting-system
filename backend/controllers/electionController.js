@@ -30,11 +30,11 @@ exports.createElection = async (req, res) => {
   }
 };
 
-// Get Elections by Organization
+// Get Elections by Organization (for authenticated users)
 exports.getElectionsByOrganization = async (req, res) => {
   try {
     const { organizationName } = req.user;
-    const elections = await Election.find({ organizationName });
+    const elections = await Election.find({ organizationName }).sort({ startDate: -1 });
     res.status(200).json(elections);
   } catch (error) {
     console.error("❌ Fetch Elections Error:", error);
@@ -76,7 +76,7 @@ exports.updateElection = async (req, res) => {
   }
 };
 
-// Update Election Status (if you want partial update just for status)
+// Update Election Status (partial update)
 exports.updateElectionStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -116,11 +116,11 @@ exports.deleteElection = async (req, res) => {
   }
 };
 
-// Get Elections for Auditor
+// Get Elections for Auditor (by organization)
 exports.getElectionsForAuditor = async (req, res) => {
   try {
     const { organizationName } = req.user;
-    const elections = await Election.find({ organizationName });
+    const elections = await Election.find({ organizationName }).sort({ startDate: -1 });
     res.status(200).json(elections);
   } catch (error) {
     console.error("❌ Get Elections for Auditor Error:", error);
@@ -135,6 +135,7 @@ exports.getVotersByElection = async (req, res) => {
 
     const votes = await Vote.find({ election: electionId }).populate("user", "username email role");
 
+    // Filter unique voters
     const uniqueVoters = votes
       .map(v => v.user)
       .filter((v, i, arr) => arr.findIndex(u => u._id.toString() === v._id.toString()) === i);
@@ -146,13 +147,41 @@ exports.getVotersByElection = async (req, res) => {
   }
 };
 
-// Admin Only: Get All Elections
+// Admin Only: Get All Elections (no filters)
 exports.getAllElectionsAdmin = async (req, res) => {
   try {
     const elections = await Election.find().sort({ startDate: -1 });
     res.status(200).json(elections);
   } catch (error) {
     console.error("❌ Admin Fetch Elections Error:", error);
+    res.status(500).json({ message: "Failed to fetch elections" });
+  }
+};
+
+// Get Available Elections with Status (public)
+exports.getAvailableElections = async (req, res) => {
+  try {
+    const now = new Date();
+
+    const elections = await Election.find().sort({ startDate: -1 });
+
+    const enhanced = elections.map((e) => {
+      let status = "upcoming";
+      if (now >= e.startDate && now <= e.endDate) {
+        status = "live";
+      } else if (now > e.endDate) {
+        status = "ended";
+      }
+
+      return {
+        ...e._doc,
+        status,
+      };
+    });
+
+    res.status(200).json(enhanced);
+  } catch (error) {
+    console.error("❌ Fetch All Elections Error:", error);
     res.status(500).json({ message: "Failed to fetch elections" });
   }
 };

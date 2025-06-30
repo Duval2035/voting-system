@@ -52,6 +52,4 @@ router.get("/voters-by-election/:electionId", async (req, res) => {
   }
 });
 
-
-
 module.exports = router;
