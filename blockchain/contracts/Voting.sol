@@ -38,8 +38,11 @@ contract Voting {
     function vote(uint _candidateId, string memory _electionId) public {
         require(!hasVoted[_electionId][msg.sender], "You already voted");
         Candidate storage candidate = candidates[_candidateId];
-        require(keccak256(bytes(candidate.electionId)) == keccak256(bytes(_electionId)), "Invalid candidate");
-
+        require(candidate.id != 0, "Candidate does not exist");
+        require(
+            keccak256(bytes(candidate.electionId)) == keccak256(bytes(_electionId)),
+            "Invalid candidate"
+        );
         candidate.voteCount++;
         hasVoted[_electionId][msg.sender] = true;
         emit Voted(msg.sender, _candidateId, _electionId);
@@ -59,6 +62,7 @@ contract Voting {
         return (c.id, c.name, c.electionId, c.voteCount);
     }
 
+    // Fixed: return empty array instead of reverting when no candidates
     function getCandidatesByElection(string memory _electionId) public view returns (Candidate[] memory) {
         uint[] memory ids = electionToCandidateIds[_electionId];
         Candidate[] memory result = new Candidate[](ids.length);
