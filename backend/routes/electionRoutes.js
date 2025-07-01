@@ -83,6 +83,24 @@ router.get("/export/:electionId", authenticateAdmin, async (req, res) => {
   }
 });
 
+router.get("/public/available", async (req, res) => {
+  try {
+    const elections = await Election.find({});
+    res.json(elections);
+  } catch (err) {
+    console.error("Error fetching elections:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+router.get("/candidate/elections", async (req, res) => {
+  try {
+    const elections = await Election.find({}); 
+    res.json(elections);
+  } catch (error) {
+    console.error("Failed to fetch elections:", error);
+    res.status(500).json({ message: "Server error fetching elections" });
+  }
+});
 // Get election by ID
 
 router.get("/:id", auth, getElectionById);

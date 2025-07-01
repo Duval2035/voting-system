@@ -1,82 +1,98 @@
 const express = require("express");
 const Joi = require("joi");
-const User = require("../models/User");
+const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const {
-  register,
-  sendOtp,
-  verifyOtp,
-} = require("../controllers/authController");
+
+const User = require("../models/User");
 
 const router = express.Router();
 
-
-// ✅ Validation Middleware
-const validate = (schema) => (req, res, next) => {
-  const { error } = schema.validate(req.body);
-  if (error)
-    return res.status(400).json({ message: error.details[0].message });
-  next();
-};
-
-
-// ✅ Joi Schemas
+// Registration schema with conditional electionId validation
 const registerSchema = Joi.object({
   username: Joi.string().required(),
   email: Joi.string().email().required(),
   password: Joi.string().min(6).required(),
   organizationName: Joi.string().allow(""),
-  role: Joi.string()
-    .valid("admin", "user", "auditor", "candidate")
-    .default("user"),
+  role: Joi.string().valid("admin", "user", "auditor", "candidate").default("user"),
+  electionId: Joi.when("role", {
+    is: "candidate",
+    then: Joi.string()
+      .required()
+      .custom((value, helpers) => {
+        if (!mongoose.Types.ObjectId.isValid(value)) {
+          return helpers.message("Invalid electionId");
+        }
+        return value;
+      }, "ObjectId validation"),
+    otherwise: Joi.forbidden(),
+  }),
 });
 
-const emailSchema = Joi.object({ email: Joi.string().email().required() });
-const otpSchema = Joi.object({
-  email: Joi.string().email().required(),
-  otp: Joi.string().length(6).required(),
-});
+// Validation middleware
+const validate = (schema) => (req, res, next) => {
+  const { error } = schema.validate(req.body);
+  if (error) {
+    return res.status(400).json({ message: error.details[0].message });
+  }
+  next();
+};
 
-const loginSchema = Joi.object({
-  email: Joi.string().email().required(),
-  password: Joi.string().min(6).required(),
-});
-
-
-// ✅ Auth Routes
-router.post("/register", validate(registerSchema), register);
-router.post("/send-otp", validate(emailSchema), sendOtp);
-router.post("/verify-otp", validate(otpSchema), verifyOtp);
-
-router.post("/login", validate(loginSchema), async (req, res) => {
-  const { email, password } = req.body;
-  const normalizedEmail = email.trim().toLowerCase();
-
+// Register route
+router.post("/register", validate(registerSchema), async (req, res) => {
   try {
-    const user = await User.findOne({ email: normalizedEmail });
-    if (!user)
-      return res.status(404).json({ message: "User not found" });
+    let { username, email, password, organizationName, role, electionId } = req.body;
+    email = email.trim().toLowerCase();
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
-      return res.status(400).json({ message: "Invalid password" });
+    // Ignore electionId if role is not candidate
+    if (role !== "candidate") {
+      electionId = undefined;
+    }
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newUserData = {
+      username,
+      email,
+      password: hashedPassword,
+      organizationName,
+      role,
+    };
+
+    if (role === "candidate") {
+      newUserData.electionId = electionId;
+    }
+
+    const newUser = new User(newUserData);
+    await newUser.save();
 
     const token = jwt.sign(
-      { id: user._id, role: user.role },
+      { id: newUser._id, role: newUser.role },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
 
-    res.json({ message: "Login successful", token, user });
+    res.status(201).json({
+      message: "Registration successful",
+      token,
+      user: {
+        _id: newUser._id,
+        username: newUser.username,
+        email: newUser.email,
+        role: newUser.role,
+        organizationName: newUser.organizationName,
+        electionId: newUser.electionId || null,
+      },
+    });
   } catch (err) {
-    console.error("❌ Login error:", err);
+    console.error("Registration error:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
 
 module.exports = router;
-   
-
-
-

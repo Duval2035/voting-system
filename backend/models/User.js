@@ -29,6 +29,14 @@ const userSchema = new mongoose.Schema(
       enum: ["admin", "user", "auditor", "candidate"],
       default: "user",
     },
+    // Add electionId only for candidates (optional)
+    electionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Election",
+      required: function() {
+        return this.role === "candidate";
+      },
+    },
   },
   {
     timestamps: true,
@@ -53,5 +61,3 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
 };
 
 module.exports = mongoose.model("User", userSchema);
-
-

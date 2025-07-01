@@ -2,10 +2,10 @@ const mongoose = require("mongoose");
 const Candidate = require("../models/Candidate");
 const { addCandidate, contract } = require("../blockchain/contractService");
 
-// Add or update a candidate (with blockchain integration)
+// Add new candidate or update existing one with blockchain integration
 const addOrUpdateCandidate = async (req, res) => {
   try {
-    const { id: electionId, candidateId } = req.params;
+    const { id: electionId, candidateId } = req.params; // electionId or candidateId depending on route
     const { name, position, bio } = req.body;
 
     if (!name || !electionId) {
@@ -53,7 +53,7 @@ const addOrUpdateCandidate = async (req, res) => {
   }
 };
 
-// Fetch candidates by election from MongoDB
+// Get candidates by election from MongoDB
 const getCandidatesByElectionDB = async (req, res) => {
   try {
     const { electionId } = req.params;
@@ -63,6 +63,10 @@ const getCandidatesByElectionDB = async (req, res) => {
     }
 
     const candidates = await Candidate.find({ election: electionId });
+    if (!candidates.length) {
+      return res.status(404).json({ message: "No candidates found for this election." });
+    }
+
     res.status(200).json(candidates);
   } catch (error) {
     console.error("❌ Error fetching candidates from DB:", error);
@@ -70,11 +74,10 @@ const getCandidatesByElectionDB = async (req, res) => {
   }
 };
 
-// Fetch candidates by election from blockchain
+// Get candidates from Blockchain
 const getCandidatesByElectionBlockchain = async (req, res) => {
   try {
-    const electionId = req.params.electionId;
-
+    const { electionId } = req.params;
     const candidates = await contract.getCandidatesByElection(electionId);
 
     if (!candidates || candidates.length === 0) {
@@ -95,7 +98,7 @@ const getCandidatesByElectionBlockchain = async (req, res) => {
   }
 };
 
-// Get single candidate by DB ID
+// Get candidate by ID (MongoDB)
 const getCandidateById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -105,9 +108,7 @@ const getCandidateById = async (req, res) => {
     }
 
     const candidate = await Candidate.findById(id);
-    if (!candidate) {
-      return res.status(404).json({ message: "Candidate not found" });
-    }
+    if (!candidate) return res.status(404).json({ message: "Candidate not found" });
 
     res.status(200).json(candidate);
   } catch (error) {
@@ -116,10 +117,18 @@ const getCandidateById = async (req, res) => {
   }
 };
 
-// Delete candidate by DB ID
+// Delete candidate by ID (MongoDB)
 const deleteCandidate = async (req, res) => {
   try {
-    await Candidate.findByIdAndDelete(req.params.id);
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid candidate ID." });
+    }
+
+    const deleted = await Candidate.findByIdAndDelete(id);
+    if (!deleted) return res.status(404).json({ message: "Candidate not found" });
+
     res.status(200).json({ message: "Candidate deleted." });
   } catch (error) {
     console.error("❌ Error deleting candidate:", error);

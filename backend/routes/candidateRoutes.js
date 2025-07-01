@@ -1,29 +1,26 @@
 const express = require("express");
 const router = express.Router();
 const upload = require("../middleware/upload");
-
 const {
   addOrUpdateCandidate,
   getCandidatesByElectionDB,
-  getCandidatesByElectionBlockchain,
   getCandidateById,
   deleteCandidate,
 } = require("../controllers/candidateController");
 
-// Add or update candidate (image optional)
-router.post("/:id", upload.single("image"), addOrUpdateCandidate);           // Add new candidate
-router.put("/:id/:candidateId", upload.single("image"), addOrUpdateCandidate); // Update existing candidate
+// Get all candidates for a given election (MongoDB)
+router.get("/election/:electionId", getCandidatesByElectionDB);
 
-// Get candidates from MongoDB
-router.get("/election/:electionId/db", getCandidatesByElectionDB);
+// Add new candidate for election (POST to /candidates/:electionId)
+router.post("/:id", upload.single("image"), addOrUpdateCandidate);
 
-// Get candidates from Blockchain
-router.get("/election/:electionId/blockchain", getCandidatesByElectionBlockchain);
+// Update candidate by candidate ID (PUT to /candidates/:id)
+router.put("/:id", upload.single("image"), addOrUpdateCandidate);
 
-// Get single candidate by ID
+// Get candidate by candidate ID
 router.get("/:id", getCandidateById);
 
-// Delete candidate by ID
+// Delete candidate by candidate ID
 router.delete("/:id", deleteCandidate);
 
 module.exports = router;

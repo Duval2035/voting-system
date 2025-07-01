@@ -1,50 +1,57 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const Otp = require("../models/Otp");
-const nodemailer = require("nodemailer"); 
+const nodemailer = require("nodemailer");
+const mongoose = require("mongoose");
+
 const User = require("../models/User");
 const Election = require("../models/Election");
+const Otp = require("../models/Otp");
+
+// Setup email transporter with Gmail
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
 
 // ✅ Register User
 exports.register = async (req, res) => {
-  const { username, email, password, organizationName, role } = req.body;
-  const normalizedEmail = email.trim().toLowerCase();
+  let { username, email, password, organizationName, role, electionId } = req.body;
+  email = email.trim().toLowerCase();
 
   try {
-    const existingUser = await User.findOne({ email: normalizedEmail });
-    if (existingUser) {
-      return res.status(400).json({ message: "User already exists" });
+    if (role === "candidate") {
+      if (!electionId || !mongoose.Types.ObjectId.isValid(electionId)) {
+        return res.status(400).json({ message: "Invalid electionId" });
+      }
+    } else {
+      // Remove electionId if role is not candidate to avoid validation errors
+      electionId = undefined;
     }
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) return res.status(400).json({ message: "User already exists" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = new User({
+    const newUserData = {
       username,
-      email: normalizedEmail,
+      email,
       password: hashedPassword,
       organizationName,
       role,
-    });
+    };
 
+    if (role === "candidate") {
+      newUserData.electionId = electionId;
+    }
+
+    const newUser = new User(newUserData);
     await newUser.save();
 
-  // ✅ Automatically assign user as voter to elections for the same organization
-    const elections = await Election.find({ organizationName });
-    for (const election of elections) {
-      if (!election.voterIds.includes(newUser._id)) {
-        election.voterIds.push(newUser._id);
-        await election.save();
-      }
-    }
-    // ✅ Auto-add to all active elections as a voter
-    const activeElections = await Election.find({ status: "active" });
-    for (const election of activeElections) {
-      if (!election.voterIds.includes(newUser._id)) {
-        election.voterIds.push(newUser._id);
-        await election.save();
-      }
-    }
-
+    // Generate JWT token
     const token = jwt.sign(
       { id: newUser._id, role: newUser.role },
       process.env.JWT_SECRET,
@@ -59,6 +66,8 @@ exports.register = async (req, res) => {
         username: newUser.username,
         email: newUser.email,
         role: newUser.role,
+        organizationName: newUser.organizationName,
+        electionId: newUser.electionId || null,
       },
     });
   } catch (err) {
@@ -66,17 +75,6 @@ exports.register = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-
-const otpStore = {}; // In-memory OTP store
-
-// Setup email transporter with Gmail
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
 
 // Send OTP to user email
 exports.sendOtp = async (req, res) => {
@@ -89,10 +87,14 @@ exports.sendOtp = async (req, res) => {
 
     // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = Date.now() + 5 * 60 * 1000; // valid for 5 minutes
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // valid for 5 minutes
 
-    // Store OTP and expiry
-    otpStore[email] = { otp, expiresAt };
+    // Upsert OTP record for this email
+    await Otp.findOneAndUpdate(
+      { email },
+      { otp, expiresAt },
+      { upsert: true, new: true }
+    );
 
     // Send email with OTP
     await transporter.sendMail({
@@ -121,28 +123,33 @@ exports.verifyOtp = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    const record = otpStore[email];
-    if (!record || Date.now() > record.expiresAt) {
+    const record = await Otp.findOne({ email });
+
+    if (!record || record.expiresAt < new Date()) {
       return res.status(400).json({ message: "OTP expired or not found" });
     }
 
     if (record.otp !== otp) {
       return res.status(400).json({ message: "Invalid OTP" });
     }
-    // OTP is valid - create JWT token
+
+    // OTP valid - create JWT token
     const token = jwt.sign(
-  {
-    id: user._id,
-    role: user.role,
-    email: user.email,
-    username: user.username,
-    organizationName: user.organizationName,
-  },
-  process.env.JWT_SECRET,
-  { expiresIn: "6h" }
-);
-    // Remove OTP from store after successful login
-    delete otpStore[email];
+      {
+        id: user._id,
+        role: user.role,
+        email: user.email,
+        username: user.username,
+        organizationName: user.organizationName,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "6h" }
+    );
+console.log(`🔐 OTP for ${userEmail}: ${otpCode}`);
+
+
+    // Delete OTP record after successful login
+    await Otp.deleteOne({ email });
 
     res.json({ message: "Login successful", token, user });
   } catch (err) {
