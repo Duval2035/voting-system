@@ -1,0 +1,59 @@
+.message-container {
+  padding: 2rem;
+  max-width: 1000px;
+  margin: 0 auto;
+  font-family: Arial, sans-serif;
+}
+
+.message-heading {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  color: #2c3e50;
+  text-align: center;
+}
+
+.message-loading,
+.message-empty,
+.message-error {
+  text-align: center;
+  font-size: 1rem;
+  margin-top: 1rem;
+}
+
+.message-error {
+  color: #e74c3c;
+  font-weight: bold;
+}
+
+.message-table-wrapper {
+  overflow-x: auto;
+  margin-top: 1rem;
+}
+
+.message-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #ddd;
+  background: #fff;
+}
+
+.message-table th,
+.message-table td {
+  padding: 12px 16px;
+  border: 1px solid #ddd;
+  text-align: left;
+  vertical-align: top;
+}
+
+.message-table th {
+  background-color: #f4f4f4;
+  font-weight: bold;
+  color: #333;
+}
+
+.message-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+.message-table tr:hover {
+  background-color: #f1f1f1;
+}

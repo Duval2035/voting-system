@@ -1,0 +1,43 @@
+.create-election-container {
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 2rem;
+  border: 1px solid #ddd;
+  background-color: #f9f9f9;
+  border-radius: 10px;
+}
+
+.create-election-container h2 {
+  text-align: center;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.create-election-container form {
+  display: flex;
+  flex-direction: column;
+}
+
+.create-election-container input,
+.create-election-container textarea,
+.create-election-container select {
+  margin-bottom: 1rem;
+  padding: 0.8rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.create-election-container button {
+  padding: 0.8rem;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  font-size: 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.create-election-container button:hover {
+  background-color: #218838;
+}

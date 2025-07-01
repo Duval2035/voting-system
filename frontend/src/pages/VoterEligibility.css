@@ -1,0 +1,28 @@
+/* src/pages/VoterEligibility.css */
+.eligibility-container {
+  max-width: 800px;
+  margin: auto;
+  padding: 2rem;
+}
+
+.voter-list {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 1rem;
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  padding: 1rem;
+}
+
+.voter-list li {
+  margin-bottom: 0.5rem;
+}
+
+.message {
+  margin: 1rem 0;
+  font-weight: bold;
+}
+.error {
+  color: red;
+}

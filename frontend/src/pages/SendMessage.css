@@ -1,0 +1,74 @@
+.send-messages-container {
+  display: flex;
+}
+
+.admin-sidebar {
+  width: 220px;
+  background: #2c3e50;
+  color: #fff;
+  padding: 20px;
+  height: 100vh;
+}
+
+.admin-sidebar ul {
+  list-style: none;
+  padding: 0;
+}
+
+.admin-sidebar li {
+  margin: 12px 0;
+  cursor: pointer;
+}
+
+.send-messages-main {
+  flex: 1;
+  padding: 30px;
+  background: #f4f6f9;
+}
+
+.message-form input,
+.message-form textarea {
+  display: block;
+  width: 100%;
+  margin-bottom: 12px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.message-form button {
+  padding: 10px 20px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.voter-list {
+  margin-top: 20px;
+  max-height: 200px;
+  overflow-y: auto;
+  background: #fff;
+  padding: 10px;
+  border: 1px solid #ddd;
+}
+
+.status-msg {
+  margin-bottom: 20px;
+  padding: 10px;
+  border-radius: 4px;
+  background-color: #e0e0e0;
+}
+.select-buttons {
+  margin-bottom: 10px;
+}
+.select-buttons button {
+  margin-right: 10px;
+  padding: 6px 20px;
+  cursor: pointer;
+}
+.status-msg {
+  margin-top: 10px;
+  font-weight: bold;
+}

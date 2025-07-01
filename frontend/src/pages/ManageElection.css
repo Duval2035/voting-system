@@ -1,0 +1,96 @@
+/* src/pages/ManageElection.css */
+
+.manage-election-container {
+  max-width: 1000px;
+  margin: auto;
+  padding: 2rem;
+  font-family: "Segoe UI", sans-serif;
+}
+
+.candidate-form {
+  background: #f9f9f9;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+}
+
+.candidate-form h3 {
+  margin-bottom: 1rem;
+}
+
+.candidate-form input,
+.candidate-form textarea {
+  width: 100%;
+  padding: 0.6rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.image-preview {
+  width: 150px;
+  height: auto;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  object-fit: cover;
+  border: 1px solid #ddd;
+}
+
+.candidate-form button {
+  padding: 0.6rem 1.2rem;
+  background-color: #0066ff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.candidate-list {
+  display: flex;
+  flex-wrap: initial;
+  gap: 2rem;
+  justify-content: center;
+}
+
+.candidate-card {
+  display: flex;
+  gap: 1rem;
+  background: #fff;
+  border-radius: 10px;
+  padding: 1rem;
+  align-items: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.candidate-img {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-right: 1rem;
+}
+
+.actions {
+  margin-top: 0.5rem;
+}
+
+.actions button {
+  margin-right: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.actions .danger {
+  background-color: crimson;
+  color: white;
+}
+
+.actions button:first-child {
+  background-color: #007bff;
+  color: white;
+}

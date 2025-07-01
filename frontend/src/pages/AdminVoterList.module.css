@@ -1,0 +1,83 @@
+.container {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.label {
+  margin-top: 10px;
+  display: block;
+  font-weight: bold;
+}
+
+.select {
+  margin-bottom: 20px;
+  padding: 8px;
+  width: 100%;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.table th, .table td {
+  padding: 10px;
+  border: 1px solid #ccc;
+}
+
+.exportBtn {
+  background-color: #4CAF50;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.addBtn {
+  margin-top: 10px;
+  padding: 8px 16px;
+  background: #2196f3;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.addVoterBox {
+  margin-top: 40px;
+  background: #f9f9f9;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.form input, .form select {
+  display: block;
+  width: 100%;
+  margin: 10px 0;
+  padding: 8px;
+}
+
+.message {
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+.error {
+  color: red;
+  margin-top: 10px;
+}
+
+.summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+}
+.summary div {
+  background: #e0f7fa;
+  padding: 10px;
+  border-radius: 5px;
+  flex: 1;
+  margin: 0 10px;
+}
