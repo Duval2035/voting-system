@@ -6,6 +6,11 @@ const User = require("../models/User");
 const Election = require("../models/Election");
 const Otp = require("../models/Otp");
 
+// Check for email credentials on startup
+if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+  console.warn("⚠️ EMAIL credentials missing. OTP delivery may fail.");
+}
+
 // Setup email transporter with Gmail
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -26,8 +31,7 @@ exports.register = async (req, res) => {
         return res.status(400).json({ message: "Invalid electionId" });
       }
     } else {
-      // Avoid sending electionId for non-candidates
-      electionId = undefined;
+      electionId = undefined; // Remove for other roles
     }
 
     const existingUser = await User.findOne({ email });
@@ -76,7 +80,7 @@ exports.register = async (req, res) => {
   }
 };
 
-// ✅ Send OTP to user email
+// ✅ Send OTP to user email (with logging for sendMail)
 exports.sendOtp = async (req, res) => {
   try {
     const email = req.body.email?.trim().toLowerCase();
@@ -89,22 +93,34 @@ exports.sendOtp = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    const existingOtp = await Otp.findOne({ email });
+
+    // Throttle: wait at least 1 minute before resending
+    if (existingOtp && existingOtp.expiresAt > Date.now() - 60 * 1000) {
+      return res.status(429).json({ message: "Please wait before requesting a new OTP" });
+    }
+
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // expires in 5 minutes
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 mins
 
     await Otp.findOneAndUpdate(
       { email },
-      { otp, expiresAt },
+      { otp, expiresAt, used: false },
       { upsert: true, new: true }
     );
 
-    await transporter.sendMail({
-      from: `"YourAppName" <${process.env.EMAIL_USER}>`,
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
       to: email,
       subject: "Your Login OTP",
       text: `Your OTP is: ${otp}. It will expire in 5 minutes.`,
-    });
+    };
 
+    const result = await transporter.sendMail(mailOptions);
+
+    console.log("📧 Email send result:");
+    console.log(`➡️  Message ID: ${result.messageId}`);
+    console.log(`➡️  Response: ${result.response}`);
     console.log(`🔐 OTP sent to ${email}: ${otp}`);
 
     res.json({ message: "OTP sent to your email" });
@@ -124,6 +140,10 @@ exports.verifyOtp = async (req, res) => {
       return res.status(400).json({ message: "Email and OTP required" });
     }
 
+    if (!/^\d{6}$/.test(otp)) {
+      return res.status(400).json({ message: "Invalid OTP format" });
+    }
+
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -131,8 +151,8 @@ exports.verifyOtp = async (req, res) => {
 
     const record = await Otp.findOne({ email });
 
-    if (!record || record.expiresAt < new Date()) {
-      return res.status(400).json({ message: "OTP expired or not found" });
+    if (!record || record.expiresAt < new Date() || record.used) {
+      return res.status(400).json({ message: "OTP expired, used, or not found" });
     }
 
     if (record.otp !== otp) {
@@ -153,7 +173,8 @@ exports.verifyOtp = async (req, res) => {
 
     console.log(`✅ OTP verified for ${email}`);
 
-    await Otp.deleteOne({ email });
+    // Option 1: mark as used instead of deleting
+    await Otp.updateOne({ email }, { $set: { used: true } });
 
     res.json({
       message: "Login successful",
