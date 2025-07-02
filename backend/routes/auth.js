@@ -1,3 +1,4 @@
+// backend/routes/auth.js
 const express = require("express");
 const Joi = require("joi");
 const mongoose = require("mongoose");
@@ -8,7 +9,67 @@ const User = require("../models/User");
 
 const router = express.Router();
 
-// Registration schema with conditional electionId validation
+// 🔐 In-memory OTP store (replace with DB or Redis in production)
+const otpStore = new Map();
+
+// 🔢 Generate 6-digit OTP
+const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
+
+// 📩 Send OTP (mocked console output)
+router.post("/send-otp", async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ message: "Email is required." });
+
+  const user = await User.findOne({ email: email.trim().toLowerCase() });
+  if (!user) return res.status(404).json({ message: "User not found." });
+
+  const otp = generateOtp();
+  otpStore.set(email, otp);
+
+  // 📨 Mock email
+  console.log(`📨 OTP for ${email}: ${otp}`);
+
+  res.json({ message: "OTP sent to your email" });
+});
+
+// ✅ Verify OTP and issue token
+router.post("/verify-otp", async (req, res) => {
+  const { email, otp } = req.body;
+  if (!email || !otp) {
+    return res.status(400).json({ message: "Email and OTP are required." });
+  }
+
+  const storedOtp = otpStore.get(email);
+  if (storedOtp !== otp) {
+    return res.status(400).json({ message: "Invalid or expired OTP." });
+  }
+
+  otpStore.delete(email); // One-time use
+
+  const user = await User.findOne({ email: email.trim().toLowerCase() });
+  if (!user) return res.status(404).json({ message: "User not found." });
+
+  const token = jwt.sign(
+    { id: user._id, role: user.role },
+    process.env.JWT_SECRET,
+    { expiresIn: "1h" }
+  );
+
+  res.json({
+    message: "OTP verified successfully.",
+    token,
+    user: {
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      organizationName: user.organizationName,
+      electionId: user.electionId || null,
+    },
+  });
+});
+
+// 📦 Registration schema
 const registerSchema = Joi.object({
   username: Joi.string().required(),
   email: Joi.string().email().required(),
@@ -29,7 +90,7 @@ const registerSchema = Joi.object({
   }),
 });
 
-// Validation middleware
+// 🧪 Validation middleware
 const validate = (schema) => (req, res, next) => {
   const { error } = schema.validate(req.body);
   if (error) {
@@ -38,13 +99,12 @@ const validate = (schema) => (req, res, next) => {
   next();
 };
 
-// Register route
+// 👤 Register route
 router.post("/register", validate(registerSchema), async (req, res) => {
   try {
     let { username, email, password, organizationName, role, electionId } = req.body;
     email = email.trim().toLowerCase();
 
-    // Ignore electionId if role is not candidate
     if (role !== "candidate") {
       electionId = undefined;
     }
@@ -94,5 +154,7 @@ router.post("/register", validate(registerSchema), async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
+console.log("✅ authRoutes loaded");
 
 module.exports = router;

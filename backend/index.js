@@ -128,5 +128,6 @@ const startServer = async () => {
     console.log(`🚀 Server running on port ${PORT}`);
   });
 };
+console.log("🔥 backend/index.js is running");
 
 startServer();
