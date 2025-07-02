@@ -29,7 +29,7 @@ const sendOtp = async (req, res) => {
     from: process.env.EMAIL_USER,
     to: email,
     subject: "Your OTP Code",
-    text: `Your OTP code is ${otp}. It expires in 10 minutes.`,
+    text: `Your OTP code is ${otp}. It expires in 5 minutes.`,
   };
 
   

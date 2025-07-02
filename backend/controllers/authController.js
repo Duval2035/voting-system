@@ -2,7 +2,6 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 const mongoose = require("mongoose");
-
 const User = require("../models/User");
 const Election = require("../models/Election");
 const Otp = require("../models/Otp");
@@ -19,7 +18,7 @@ const transporter = nodemailer.createTransport({
 // ✅ Register User
 exports.register = async (req, res) => {
   let { username, email, password, organizationName, role, electionId } = req.body;
-  email = email.trim().toLowerCase();
+  email = email?.trim().toLowerCase();
 
   try {
     if (role === "candidate") {
@@ -27,12 +26,14 @@ exports.register = async (req, res) => {
         return res.status(400).json({ message: "Invalid electionId" });
       }
     } else {
-      // Remove electionId if role is not candidate to avoid validation errors
+      // Avoid sending electionId for non-candidates
       electionId = undefined;
     }
 
     const existingUser = await User.findOne({ email });
-    if (existingUser) return res.status(400).json({ message: "User already exists" });
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists" });
+    }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -51,7 +52,6 @@ exports.register = async (req, res) => {
     const newUser = new User(newUserData);
     await newUser.save();
 
-    // Generate JWT token
     const token = jwt.sign(
       { id: newUser._id, role: newUser.role },
       process.env.JWT_SECRET,
@@ -76,27 +76,28 @@ exports.register = async (req, res) => {
   }
 };
 
-// Send OTP to user email
+// ✅ Send OTP to user email
 exports.sendOtp = async (req, res) => {
   try {
     const email = req.body.email?.trim().toLowerCase();
-    if (!email) return res.status(400).json({ message: "Email is required" });
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
 
     const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
-    // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // valid for 5 minutes
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // expires in 5 minutes
 
-    // Upsert OTP record for this email
     await Otp.findOneAndUpdate(
       { email },
       { otp, expiresAt },
       { upsert: true, new: true }
     );
 
-    // Send email with OTP
     await transporter.sendMail({
       from: `"YourAppName" <${process.env.EMAIL_USER}>`,
       to: email,
@@ -104,7 +105,7 @@ exports.sendOtp = async (req, res) => {
       text: `Your OTP is: ${otp}. It will expire in 5 minutes.`,
     });
 
-    console.log(`🔐 OTP for ${email}: ${otp}`); // log OTP in terminal
+    console.log(`🔐 OTP sent to ${email}: ${otp}`);
 
     res.json({ message: "OTP sent to your email" });
   } catch (err) {
@@ -113,15 +114,20 @@ exports.sendOtp = async (req, res) => {
   }
 };
 
-// Verify OTP and login user
+// ✅ Verify OTP and login user
 exports.verifyOtp = async (req, res) => {
   try {
     const email = req.body.email?.trim().toLowerCase();
     const { otp } = req.body;
-    if (!email || !otp) return res.status(400).json({ message: "Email and OTP required" });
+
+    if (!email || !otp) {
+      return res.status(400).json({ message: "Email and OTP required" });
+    }
 
     const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     const record = await Otp.findOne({ email });
 
@@ -133,7 +139,6 @@ exports.verifyOtp = async (req, res) => {
       return res.status(400).json({ message: "Invalid OTP" });
     }
 
-    // OTP valid - create JWT token
     const token = jwt.sign(
       {
         id: user._id,
@@ -145,13 +150,23 @@ exports.verifyOtp = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: "6h" }
     );
-console.log(`🔐 OTP for ${userEmail}: ${otpCode}`);
 
+    console.log(`✅ OTP verified for ${email}`);
 
-    // Delete OTP record after successful login
     await Otp.deleteOne({ email });
 
-    res.json({ message: "Login successful", token, user });
+    res.json({
+      message: "Login successful",
+      token,
+      user: {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        organizationName: user.organizationName,
+        electionId: user.electionId || null,
+      },
+    });
   } catch (err) {
     console.error("❌ Verify OTP error:", err);
     res.status(500).json({ message: "Server error" });

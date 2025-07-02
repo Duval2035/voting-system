@@ -29,14 +29,17 @@ const userSchema = new mongoose.Schema(
       enum: ["admin", "user", "auditor", "candidate"],
       default: "user",
     },
-    // Add electionId only for candidates (optional)
     electionId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Election",
-      required: function() {
+      required: function () {
         return this.role === "candidate";
       },
     },
+
+    // You can optionally remove these if using separate Otp model only
+    otp: String,
+    otpExpires: Date,
   },
   {
     timestamps: true,

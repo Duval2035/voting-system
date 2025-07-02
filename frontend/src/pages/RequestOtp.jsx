@@ -24,7 +24,7 @@ const RequestOtp = () => {
 
       if (res.ok) {
         setMessage(data.message || "OTP sent successfully.");
-        localStorage.setItem("otpEmail", email); // store email for next step
+        localStorage.setItem("otpEmail", email);
       } else {
         setError(data.message || "Failed to send OTP.");
       }
@@ -44,7 +44,7 @@ const RequestOtp = () => {
           onChange={(e) => setEmail(e.target.value)}
           required
         />
-        <button type="submit">Send OTP</button>
+        <button type="submit">Send Password</button>
       </form>
       {message && <p style={{ color: "green" }}>{message}</p>}
       {error && <p style={{ color: "red" }}>{error}</p>}
