@@ -22,15 +22,42 @@ const { contract, wallet, provider } = require("./blockchain/contractService");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
-// Middleware
-app.use(cors({ origin: FRONTEND_URL, credentials: true }));
+// ✅ Allow multiple frontend origins
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://voting-system-blue.vercel.app",
+  "https://voting-system-duval2035s-projects.vercel.app",
+  "https://voting-system-git-main-duval2035s-projects.vercel.app"
+];
+
+// ✅ General CORS middleware
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+}));
+
 app.use(express.json());
 
+// ✅ Uploads with CORS too
 app.use(
   "/uploads",
-  cors({ origin: FRONTEND_URL, credentials: true }),
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  }),
   express.static(path.join(__dirname, "uploads"))
 );
 
@@ -45,7 +72,7 @@ const connectMongo = async () => {
   }
 };
 
-// Setup all routes
+// Routes setup
 const setupRoutes = () => {
   app.use("/api/auth", authRoutes);
   app.use("/api/elections", electionRoutes);
@@ -59,7 +86,6 @@ const setupRoutes = () => {
   app.use("/api/blockchain", blockchainRoutes);
   app.use("/api/blockchain-results", blockchainResultsRoutes);
 
-  // Election results endpoint
   app.get("/votes/results/:electionId", async (req, res) => {
     try {
       await getElectionResults(req, res);
@@ -70,14 +96,13 @@ const setupRoutes = () => {
   });
 };
 
-// Log environment variables (excluding sensitive values)
+// Log environment variables (safely)
 console.log("ENV VARIABLES:");
 console.log("RPC_URL:", process.env.RPC_URL);
 console.log("PRIVATE_KEY:", process.env.PRIVATE_KEY ? "present" : "missing");
 console.log("CONTRACT_ADDRESS:", process.env.CONTRACT_ADDRESS);
 console.log("MONGO_URI:", process.env.MONGO_URI ? "present" : "missing");
 
-// Start server
 const startServer = async () => {
   await connectMongo();
 
