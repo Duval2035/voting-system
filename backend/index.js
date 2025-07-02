@@ -9,7 +9,7 @@ const voteRoutes = require("./routes/voteRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const voterRoutes = require("./routes/voterRoutes");
 const messageRoutes = require("./routes/messageRoutes");
-const authRoutes = require("./routes/auth");
+const authRoutes = require("./routes/auth"); // ✅ contains /send-otp
 const electionRoutes = require("./routes/electionRoutes");
 const candidateRoutes = require("./routes/candidateRoutes");
 const auditorRoutes = require("./routes/auditorRoutes");
@@ -31,12 +31,13 @@ const allowedOrigins = [
   "https://voting-system-git-main-duval2035s-projects.vercel.app"
 ];
 
-// ✅ General CORS middleware
+// ✅ General CORS middleware with debug logging
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      console.warn("❌ CORS blocked:", origin);
       callback(new Error("Not allowed by CORS"));
     }
   },
@@ -53,6 +54,7 @@ app.use(
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
+        console.warn("❌ CORS blocked on uploads:", origin);
         callback(new Error("Not allowed by CORS"));
       }
     },
