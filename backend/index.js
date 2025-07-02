@@ -22,16 +22,19 @@ const { contract, wallet, provider } = require("./blockchain/contractService");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
-app.use(cors({ origin: "http://localhost:5173", credentials: true }));
+// Middleware
+app.use(cors({ origin: FRONTEND_URL, credentials: true }));
 app.use(express.json());
 
 app.use(
   "/uploads",
-  cors({ origin: "http://localhost:5173", credentials: true }),
+  cors({ origin: FRONTEND_URL, credentials: true }),
   express.static(path.join(__dirname, "uploads"))
 );
 
+// MongoDB connection
 const connectMongo = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
@@ -42,6 +45,7 @@ const connectMongo = async () => {
   }
 };
 
+// Setup all routes
 const setupRoutes = () => {
   app.use("/api/auth", authRoutes);
   app.use("/api/elections", electionRoutes);
@@ -55,6 +59,7 @@ const setupRoutes = () => {
   app.use("/api/blockchain", blockchainRoutes);
   app.use("/api/blockchain-results", blockchainResultsRoutes);
 
+  // Election results endpoint
   app.get("/votes/results/:electionId", async (req, res) => {
     try {
       await getElectionResults(req, res);
@@ -64,12 +69,15 @@ const setupRoutes = () => {
     }
   });
 };
+
+// Log environment variables (excluding sensitive values)
 console.log("ENV VARIABLES:");
 console.log("RPC_URL:", process.env.RPC_URL);
 console.log("PRIVATE_KEY:", process.env.PRIVATE_KEY ? "present" : "missing");
 console.log("CONTRACT_ADDRESS:", process.env.CONTRACT_ADDRESS);
 console.log("MONGO_URI:", process.env.MONGO_URI ? "present" : "missing");
 
+// Start server
 const startServer = async () => {
   await connectMongo();
 
