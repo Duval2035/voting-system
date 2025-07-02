@@ -28,11 +28,13 @@ contract Voting {
         admin = msg.sender;
     }
 
-    function addCandidate(string memory _name, string memory _electionId) public onlyAdmin {
+    // UPDATED: return the new candidate ID
+    function addCandidate(string memory _name, string memory _electionId) public onlyAdmin returns (uint) {
         candidates[nextId] = Candidate(nextId, _name, _electionId, 0);
         electionToCandidateIds[_electionId].push(nextId);
         emit CandidateAdded(nextId, _name, _electionId);
         nextId++;
+        return nextId - 1; // return the newly assigned candidate ID
     }
 
     function vote(uint _candidateId, string memory _electionId) public {
@@ -62,7 +64,6 @@ contract Voting {
         return (c.id, c.name, c.electionId, c.voteCount);
     }
 
-    // Fixed: return empty array instead of reverting when no candidates
     function getCandidatesByElection(string memory _electionId) public view returns (Candidate[] memory) {
         uint[] memory ids = electionToCandidateIds[_electionId];
         Candidate[] memory result = new Candidate[](ids.length);

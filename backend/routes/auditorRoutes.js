@@ -1,14 +1,14 @@
-// backend/routes/auditorRoutes.js
 const express = require("express");
 const router = express.Router();
-const authMiddleware = require("../middleware/authMiddleware");
+const { protectUser } = require("../middleware/authMiddleware"); // ✅ use correct middleware
+
 const {
   getAuditorElections,
   getElectionIntegrity,
 } = require("../controllers/auditorController");
 
-router.get("/elections", authMiddleware, getAuditorElections);
-router.get("/integrity/:electionId", authMiddleware, getElectionIntegrity);
-
+// Use protectUser (or protectAdmin if auditors are admins)
+router.get("/elections", protectUser, getAuditorElections);
+router.get("/integrity/:electionId", protectUser, getElectionIntegrity);
 
 module.exports = router;

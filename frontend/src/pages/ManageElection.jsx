@@ -4,7 +4,7 @@ import API_BASE_URL from "../config";
 import "./ManageElection.css";
 
 const ManageElection = () => {
-  const { id } = useParams(); // election ID from route params
+  const { id } = useParams(); // election ID
   const token = localStorage.getItem("token");
 
   const [candidates, setCandidates] = useState([]);
@@ -17,18 +17,19 @@ const ManageElection = () => {
   const [preview, setPreview] = useState(null);
   const [editing, setEditing] = useState(null);
 
-  // Fetch candidates for the election
   useEffect(() => {
     const fetchCandidates = async () => {
       try {
         const res = await fetch(`${API_BASE_URL}/candidates/election/${id}`);
+
         if (!res.ok) {
           const errorData = await res.json().catch(() => null);
           const errorMsg = errorData?.message || `Failed to load candidates: ${res.status}`;
           console.error(errorMsg);
-          setCandidates([]);
+          setCandidates([]); // clear on failure
           return;
         }
+
         const data = await res.json();
         setCandidates(data);
       } catch (err) {
@@ -62,12 +63,12 @@ const ManageElection = () => {
     formData.append("name", newCandidate.name);
     formData.append("position", newCandidate.position);
     formData.append("bio", newCandidate.bio);
-    formData.append("election", id);
+    formData.append("election", id); // <-- REQUIRED: send election ID
     if (newCandidate.image) formData.append("image", newCandidate.image);
 
     const url = editing
       ? `${API_BASE_URL}/candidates/${editing}`
-      : `${API_BASE_URL}/candidates/${id}`; // POST to /candidates/:id (electionId)
+      : `${API_BASE_URL}/candidates`;
     const method = editing ? "PUT" : "POST";
 
     try {
@@ -83,8 +84,6 @@ const ManageElection = () => {
       let updated;
       if (contentType && contentType.includes("application/json")) {
         updated = await res.json();
-      } else {
-        updated = null;
       }
 
       if (!res.ok) {
@@ -92,17 +91,14 @@ const ManageElection = () => {
         return;
       }
 
-      if (editing && updated) {
+      if (editing) {
         setCandidates((prev) =>
           prev.map((c) => (c._id === updated._id ? updated : c))
         );
       } else if (updated) {
         setCandidates((prev) => [...prev, updated]);
       } else {
-        // fallback refetch
-        const refreshed = await fetch(`${API_BASE_URL}/candidates/election/${id}`).then((res) =>
-          res.json()
-        );
+        const refreshed = await fetch(`${API_BASE_URL}/candidates/election/${id}`).then((res) => res.json());
         setCandidates(refreshed);
       }
 

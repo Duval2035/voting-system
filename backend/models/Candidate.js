@@ -8,6 +8,6 @@ const candidateSchema = new mongoose.Schema({
   election: { type: mongoose.Schema.Types.ObjectId, ref: "Election", required: true },
   image: { type: String },
   blockchainId: { type: Number },
-});
+}, { timestamps: true });
 
 module.exports = mongoose.model("Candidate", candidateSchema);

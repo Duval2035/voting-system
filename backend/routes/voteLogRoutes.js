@@ -1,16 +1,16 @@
 const express = require("express");
 const router = express.Router();
-const authMiddleware = require("../middleware/authMiddleware");
+const { protectAdmin } = require("../middleware/authMiddleware"); // ✅ Destructure correct function
 const {
   getVoteLogs,
   exportVoteLogsCSV,
 } = require("../controllers/voteController");
 
 // More specific route first
-router.get("/export/:electionId", authMiddleware, exportVoteLogsCSV);
+router.get("/export/:electionId", protectAdmin, exportVoteLogsCSV);
 
-// Get vote logs for a specific election, always return JSON array (never 204 or empty)
-router.get("/:electionId", authMiddleware, async (req, res) => {
+// Get vote logs for a specific election
+router.get("/:electionId", protectAdmin, async (req, res) => {
   try {
     const logs = await getVoteLogs(req.params.electionId);
     if (!logs) {

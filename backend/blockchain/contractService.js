@@ -1,34 +1,61 @@
-// backend/blockchain/contractService.js
+require("dotenv").config();
 const { ethers } = require("ethers");
-const path = require("path");
-require("dotenv").config({ path: path.resolve(__dirname, "./.env") }); // load .env inside blockchain folder
+const contractABI = require("./abi.json");
 
-const provider = new ethers.providers.JsonRpcProvider(process.env.SEPOLIA_RPC_URL);
-
-const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
-
+// Load from .env (use exact key names)
+const rpcUrl = process.env.RPC_URL;
 const contractAddress = process.env.CONTRACT_ADDRESS;
+const privateKey = process.env.PRIVATE_KEY;
 
-if (!ethers.utils.isAddress(contractAddress)) {
-  throw new Error("Invalid contract address in .env");
+if (!rpcUrl || !contractAddress || !privateKey) {
+  console.error("❌ Missing required environment variables (RPC_URL, CONTRACT_ADDRESS, PRIVATE_KEY)");
+  process.exit(1);
 }
 
-const abi = require("./abi.json");
+const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
 
-const contract = new ethers.Contract(contractAddress, abi, wallet);
+let wallet;
+try {
+  wallet = new ethers.Wallet(privateKey, provider);
+  console.log("🛡️ Wallet address:", wallet.address);
+} catch (err) {
+  console.error("❌ Blockchain connection error (wallet):", err.message);
+  process.exit(1);
+}
 
-(async () => {
-  try {
-    const network = await provider.getNetwork();
-    console.log(`🔗 Connected to network: ${network.name} (chainId: ${network.chainId})`);
+let contract;
+try {
+  contract = new ethers.Contract(contractAddress, contractABI, wallet);
+  console.log("📡 Contract address:", contract.address);
+} catch (err) {
+  console.error("❌ Blockchain connection error (contract):", err.message);
+  process.exit(1);
+}
 
-    const walletAddress = await wallet.getAddress();
-    console.log(`🔐 Wallet address: ${walletAddress}`);
-
-    // You can add additional contract checks here if needed
-  } catch (err) {
-    console.error("❌ Blockchain initialization error:", err);
+async function addCandidate(name, electionId) {
+  if (!contract) {
+    throw new Error("Contract is not initialized.");
   }
-})();
 
-module.exports = { provider, wallet, contract };
+  try {
+    const tx = await contract.addCandidate(name, electionId);
+    const receipt = await tx.wait();
+
+    const event = receipt.events.find(e => e.event === "CandidateAdded");
+    if (!event) throw new Error("CandidateAdded event not found in transaction receipt.");
+
+    const blockchainId = event.args.id.toNumber();
+
+    return blockchainId;
+  } catch (error) {
+    console.error("Blockchain addCandidate error:", error);
+    throw error;
+  }
+}
+
+module.exports = {
+  contract,
+  wallet, 
+  provider,
+  addCandidateToBlockchain: addCandidate,
+};

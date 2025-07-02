@@ -23,11 +23,9 @@ const { contract, wallet, provider } = require("./blockchain/contractService");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// CORS setup for frontend origin
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use(express.json());
 
-// Static uploads folder
 app.use(
   "/uploads",
   cors({ origin: "http://localhost:5173", credentials: true }),
@@ -57,7 +55,6 @@ const setupRoutes = () => {
   app.use("/api/blockchain", blockchainRoutes);
   app.use("/api/blockchain-results", blockchainResultsRoutes);
 
-  // Additional vote results endpoint
   app.get("/votes/results/:electionId", async (req, res) => {
     try {
       await getElectionResults(req, res);
@@ -67,6 +64,11 @@ const setupRoutes = () => {
     }
   });
 };
+console.log("ENV VARIABLES:");
+console.log("RPC_URL:", process.env.RPC_URL);
+console.log("PRIVATE_KEY:", process.env.PRIVATE_KEY ? "present" : "missing");
+console.log("CONTRACT_ADDRESS:", process.env.CONTRACT_ADDRESS);
+console.log("MONGO_URI:", process.env.MONGO_URI ? "present" : "missing");
 
 const startServer = async () => {
   await connectMongo();

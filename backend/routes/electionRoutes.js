@@ -7,7 +7,7 @@ const Voter = require("../models/Voter");
 const User = require("../models/User");
 
 const authenticateAdmin = require("../middleware/authenticateAdmin");
-const auth = require("../middleware/authMiddleware");
+const { protectUser, protectAdmin } = require("../middleware/authMiddleware");
 
 const {
   createElection,
@@ -26,10 +26,10 @@ const {
 router.get("/admin/all", authenticateAdmin, getAllElectionsAdmin);
 
 // Get elections for auditor
-router.get("/auditor/all", auth, getElectionsForAuditor);
+router.get("/auditor/all", protectUser, getElectionsForAuditor);
 
 // Get voters for a specific election
-router.get("/:id/voters", auth, getVotersByElection);
+router.get("/:id/voters", protectUser, getVotersByElection);
 
 // Export voters assigned to an election (Admin only)
 router.get("/:id/export-voters", authenticateAdmin, async (req, res) => {
@@ -63,17 +63,14 @@ router.get("/export/:electionId", authenticateAdmin, async (req, res) => {
     }
 
     const logs = await VoteLog.find({ election: electionId })
-      .select("voterId candidateId timestamp") // adjust fields as needed
+      .select("voterId candidateId timestamp")
       .lean();
 
     if (!logs.length) {
       return res.status(404).json({ message: "No logs found for this election" });
     }
 
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename=logs-${electionId}.json`
-    );
+    res.setHeader("Content-Disposition", `attachment; filename=logs-${electionId}.json`);
     res.setHeader("Content-Type", "application/json");
 
     res.send(JSON.stringify(logs, null, 2));
@@ -83,44 +80,23 @@ router.get("/export/:electionId", authenticateAdmin, async (req, res) => {
   }
 });
 
-router.get("/public/available", async (req, res) => {
-  try {
-    const elections = await Election.find({});
-    res.json(elections);
-  } catch (err) {
-    console.error("Error fetching elections:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-});
+router.get("/public/available", getAvailableElections);
+
 router.get("/candidate/elections", async (req, res) => {
   try {
-    const elections = await Election.find({}); 
+    const elections = await Election.find({});
     res.json(elections);
   } catch (error) {
     console.error("Failed to fetch elections:", error);
     res.status(500).json({ message: "Server error fetching elections" });
   }
 });
-// Get election by ID
 
-router.get("/:id", auth, getElectionById);
-
-// Update election status
-router.patch("/:id/status", auth, updateElectionStatus);
-
-// Update election
-router.patch("/:id", auth, updateElection);
-
-// Delete election
-router.delete("/:id", auth, deleteElection);
-
-// Get elections by organization
-router.get("/", auth, getElectionsByOrganization);
-
-// Create new election
-router.post("/", auth, createElection);
-
-// Public: available elections
-router.get("/public/available", getAvailableElections);
+router.get("/:id", protectUser, getElectionById);
+router.patch("/:id/status", protectUser, updateElectionStatus);
+router.patch("/:id", protectUser, updateElection);
+router.delete("/:id", protectUser, deleteElection);
+router.get("/", protectUser, getElectionsByOrganization);
+router.post("/", protectUser, createElection);
 
 module.exports = router;
