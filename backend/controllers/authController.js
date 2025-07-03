@@ -6,9 +6,16 @@ const User = require("../models/User");
 const Election = require("../models/Election");
 const Otp = require("../models/Otp");
 
+// Load .env if not already loaded
+require("dotenv").config();
+
 // Check for email credentials on startup
 if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
   console.warn("⚠️ EMAIL credentials missing. OTP delivery may fail.");
+} else {
+  console.log("📧 Email setup loaded:");
+  console.log("➡️ EMAIL_USER:", process.env.EMAIL_USER);
+  console.log("🔑 EMAIL_PASS:", process.env.EMAIL_PASS); // Remove this later!
 }
 
 // Setup email transporter with Gmail
@@ -31,7 +38,7 @@ exports.register = async (req, res) => {
         return res.status(400).json({ message: "Invalid electionId" });
       }
     } else {
-      electionId = undefined; // Remove for other roles
+      electionId = undefined;
     }
 
     const existingUser = await User.findOne({ email });
@@ -80,7 +87,7 @@ exports.register = async (req, res) => {
   }
 };
 
-// ✅ Send OTP to user email (with logging for sendMail)
+// ✅ Send OTP to user email
 exports.sendOtp = async (req, res) => {
   try {
     const email = req.body.email?.trim().toLowerCase();
@@ -95,7 +102,6 @@ exports.sendOtp = async (req, res) => {
 
     const existingOtp = await Otp.findOne({ email });
 
-    // Throttle: wait at least 1 minute before resending
     if (existingOtp && existingOtp.expiresAt > Date.now() - 60 * 1000) {
       return res.status(429).json({ message: "Please wait before requesting a new OTP" });
     }
@@ -110,20 +116,25 @@ exports.sendOtp = async (req, res) => {
     );
 
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: `"Voting System" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: "Your Login OTP",
       text: `Your OTP is: ${otp}. It will expire in 5 minutes.`,
     };
 
-    const result = await transporter.sendMail(mailOptions);
-
-    console.log("📧 Email send result:");
-    console.log(`➡️  Message ID: ${result.messageId}`);
-    console.log(`➡️  Response: ${result.response}`);
-    console.log(`🔐 OTP sent to ${email}: ${otp}`);
-
-    res.json({ message: "OTP sent to your email" });
+    transporter.sendMail(mailOptions, (err, info) => {
+      if (err) {
+        console.error("❌ Failed to send email:", err);
+        return res.status(500).json({ message: "Error sending OTP" });
+      } else {
+        console.log("✅ Email sent successfully");
+        console.log("➡️ Message ID:", info.messageId);
+        console.log("➡️ Response:", info.response);
+        console.log("🔐 OTP sent to:", email, "is:", otp);
+        console.log("🔑 Email Password used:", process.env.EMAIL_PASS); // DEBUG only
+        res.json({ message: "OTP sent to your email" });
+      }
+    });
   } catch (err) {
     console.error("❌ Send OTP error:", err);
     res.status(500).json({ message: "Error sending OTP" });
@@ -173,7 +184,6 @@ exports.verifyOtp = async (req, res) => {
 
     console.log(`✅ OTP verified for ${email}`);
 
-    // Option 1: mark as used instead of deleting
     await Otp.updateOne({ email }, { $set: { used: true } });
 
     res.json({

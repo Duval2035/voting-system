@@ -12,7 +12,7 @@ const authenticateAdmin = (req, res, next) => {
 
   try {
     // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "yourVerySecretKey");
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     // Ensure user has admin role
     if (decoded.role !== "admin") {

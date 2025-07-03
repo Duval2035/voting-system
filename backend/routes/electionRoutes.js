@@ -1,10 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const VoteLog = require("../models/VoteLog");
 const mongoose = require("mongoose");
+
+const VoteLog = require("../models/VoteLog");
 const Election = require("../models/Election");
 const Voter = require("../models/Voter");
-const User = require("../models/User");
 
 const authenticateAdmin = require("../middleware/authenticateAdmin");
 const { protectUser, protectAdmin } = require("../middleware/authMiddleware");
@@ -25,15 +25,19 @@ const {
 // Admin-only: get all elections
 router.get("/admin/all", authenticateAdmin, getAllElectionsAdmin);
 
-// Get elections for auditor
+// Get elections for auditor (authenticated user)
 router.get("/auditor/all", protectUser, getElectionsForAuditor);
 
-// Get voters for a specific election
+// Get voters for a specific election (authenticated user)
 router.get("/:id/voters", protectUser, getVotersByElection);
 
 // Export voters assigned to an election (Admin only)
 router.get("/:id/export-voters", authenticateAdmin, async (req, res) => {
   const electionId = req.params.id;
+  if (!mongoose.Types.ObjectId.isValid(electionId)) {
+    return res.status(400).json({ message: "Invalid election ID" });
+  }
+
   try {
     const voters = await Voter.find({ election: electionId })
       .select("name email _id")
@@ -53,15 +57,15 @@ router.get("/:id/export-voters", authenticateAdmin, async (req, res) => {
   }
 });
 
-// Export logs for an election
+// Export logs for an election (Admin only)
 router.get("/export/:electionId", authenticateAdmin, async (req, res) => {
   const { electionId } = req.params;
 
-  try {
-    if (!mongoose.Types.ObjectId.isValid(electionId)) {
-      return res.status(400).json({ message: "Invalid election ID" });
-    }
+  if (!mongoose.Types.ObjectId.isValid(electionId)) {
+    return res.status(400).json({ message: "Invalid election ID" });
+  }
 
+  try {
     const logs = await VoteLog.find({ election: electionId })
       .select("voterId candidateId timestamp")
       .lean();
@@ -80,8 +84,10 @@ router.get("/export/:electionId", authenticateAdmin, async (req, res) => {
   }
 });
 
+// Public route: Get available elections with status
 router.get("/public/available", getAvailableElections);
 
+// Get all elections (no filter) - open for candidates (or public)
 router.get("/candidate/elections", async (req, res) => {
   try {
     const elections = await Election.find({});
@@ -92,11 +98,22 @@ router.get("/candidate/elections", async (req, res) => {
   }
 });
 
+// Election details - protected user
 router.get("/:id", protectUser, getElectionById);
+
+// Update election status - protected user
 router.patch("/:id/status", protectUser, updateElectionStatus);
+
+// Update election details - protected user
 router.patch("/:id", protectUser, updateElection);
+
+// Delete election - protected user
 router.delete("/:id", protectUser, deleteElection);
+
+// Get elections by organization - protected user
 router.get("/", protectUser, getElectionsByOrganization);
+
+// Create new election - protected user
 router.post("/", protectUser, createElection);
 
 module.exports = router;

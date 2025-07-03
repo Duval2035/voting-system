@@ -2,7 +2,7 @@
 import { ethers } from "ethers";
 
 // ✅ Use the correct Sepolia deployed address here
-const contractAddress = "0xb1107D6F2ECAdb6E5782692c75eE2a2b265f2D37";
+const contractAddress = "0x9Cf55a18fd221501013A84813DE220f3B7ED7D62";
 
 // ✅ Updated ABI from artifacts
 const contractABI = [

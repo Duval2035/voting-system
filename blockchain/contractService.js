@@ -8,7 +8,7 @@ const abi = JSON.parse(fs.readFileSync(abiPath, "utf8"));
 
 // Setup provider and wallet
 const provider = new ethers.providers.JsonRpcProvider("http://localhost:8545");
-const privateKey = "0xde9be858da4a475276426320d5e9262ecfc3ba460bfac56360bfa6c4c28b4ee0"; // <-- Replace with your private key
+const privateKey = "0xde9be858da4a475276426320d5e9262ecfc3ba460bfac56360bfa6c4c28b4ee0"; 
 const wallet = new ethers.Wallet(privateKey, provider);
 
 // Contract address (replace with your deployed contract address)

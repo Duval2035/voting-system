@@ -13,11 +13,11 @@ contract Voting {
     uint public nextId = 1;
 
     mapping(uint => Candidate) public candidates;
-    mapping(string => uint[]) public electionToCandidateIds;
+    mapping(string => uint[]) private electionToCandidateIds;
     mapping(string => mapping(address => bool)) public hasVoted;
 
-    event CandidateAdded(uint id, string name, string electionId);
-    event Voted(address indexed voter, uint candidateId, string electionId);
+    event CandidateAdded(uint indexed id, string name, string electionId);
+    event Voted(address indexed voter, uint indexed candidateId, string electionId);
 
     modifier onlyAdmin() {
         require(msg.sender == admin, "Only admin can perform this action");
@@ -28,13 +28,22 @@ contract Voting {
         admin = msg.sender;
     }
 
-    // UPDATED: return the new candidate ID
-    function addCandidate(string memory _name, string memory _electionId) public onlyAdmin returns (uint) {
-        candidates[nextId] = Candidate(nextId, _name, _electionId, 0);
+    function addCandidate(string memory _name, string memory _electionId)
+        public onlyAdmin returns (uint)
+    {
+        candidates[nextId] = Candidate({
+            id: nextId,
+            name: _name,
+            electionId: _electionId,
+            voteCount: 0
+        });
+
         electionToCandidateIds[_electionId].push(nextId);
+
         emit CandidateAdded(nextId, _name, _electionId);
+
         nextId++;
-        return nextId - 1; // return the newly assigned candidate ID
+        return nextId - 1;
     }
 
     function vote(uint _candidateId, string memory _electionId) public {
@@ -45,8 +54,10 @@ contract Voting {
             keccak256(bytes(candidate.electionId)) == keccak256(bytes(_electionId)),
             "Invalid candidate"
         );
+
         candidate.voteCount++;
         hasVoted[_electionId][msg.sender] = true;
+
         emit Voted(msg.sender, _candidateId, _electionId);
     }
 
@@ -54,22 +65,25 @@ contract Voting {
         return electionToCandidateIds[_electionId].length;
     }
 
-    function getCandidate(uint _id) public view returns (
-        uint id,
-        string memory name,
-        string memory electionId,
-        uint voteCount
-    ) {
+    function getCandidate(uint _id)
+        public view
+        returns (uint, string memory, string memory, uint)
+    {
         Candidate memory c = candidates[_id];
         return (c.id, c.name, c.electionId, c.voteCount);
     }
 
-    function getCandidatesByElection(string memory _electionId) public view returns (Candidate[] memory) {
+    function getCandidatesByElection(string memory _electionId)
+        public view
+        returns (Candidate[] memory)
+    {
         uint[] memory ids = electionToCandidateIds[_electionId];
         Candidate[] memory result = new Candidate[](ids.length);
+
         for (uint i = 0; i < ids.length; i++) {
             result[i] = candidates[ids[i]];
         }
+
         return result;
     }
 }

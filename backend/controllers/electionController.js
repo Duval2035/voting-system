@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Election = require("../models/Election");
 const Vote = require("../models/Voter");
 const User = require("../models/User");
@@ -46,7 +47,12 @@ exports.getElectionsByOrganization = async (req, res) => {
 // Get Election by ID
 exports.getElectionById = async (req, res) => {
   try {
-    const election = await Election.findById(req.params.id);
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid election ID." });
+    }
+
+    const election = await Election.findById(id);
     if (!election) {
       return res.status(404).json({ message: "Election not found" });
     }
@@ -67,6 +73,10 @@ exports.getElectionById = async (req, res) => {
 exports.updateElection = async (req, res) => {
   try {
     const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid election ID." });
+    }
+
     const updatedElection = await Election.findByIdAndUpdate(id, req.body, {
       new: true,
       runValidators: true,
@@ -88,9 +98,16 @@ exports.updateElectionStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid election ID." });
+    }
+
     if (!status) {
       return res.status(400).json({ message: "Status is required" });
     }
+
+    // Optional: validate allowed status values here (e.g., live, ended, upcoming)
 
     const updatedElection = await Election.findByIdAndUpdate(
       id,
@@ -112,7 +129,12 @@ exports.updateElectionStatus = async (req, res) => {
 // Delete Election
 exports.deleteElection = async (req, res) => {
   try {
-    const deleted = await Election.findByIdAndDelete(req.params.id);
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid election ID." });
+    }
+
+    const deleted = await Election.findByIdAndDelete(id);
     if (!deleted) {
       return res.status(404).json({ message: "Election not found" });
     }
@@ -138,7 +160,10 @@ exports.getElectionsForAuditor = async (req, res) => {
 // Get Voters by Election ID
 exports.getVotersByElection = async (req, res) => {
   try {
-    const electionId = req.params.id;
+    const { id: electionId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(electionId)) {
+      return res.status(400).json({ message: "Invalid election ID." });
+    }
 
     const votes = await Vote.find({ election: electionId }).populate("user", "username email role");
 

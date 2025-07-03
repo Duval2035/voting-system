@@ -5,11 +5,12 @@ const cors = require("cors");
 const path = require("path");
 require("dotenv").config();
 
+// Import routes
 const voteRoutes = require("./routes/voteRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const voterRoutes = require("./routes/voterRoutes");
 const messageRoutes = require("./routes/messageRoutes");
-const authRoutes = require("./routes/auth"); // ✅ contains /send-otp
+const authRoutes = require("./routes/auth");
 const electionRoutes = require("./routes/electionRoutes");
 const candidateRoutes = require("./routes/candidateRoutes");
 const auditorRoutes = require("./routes/auditorRoutes");
@@ -17,13 +18,15 @@ const voteLogRoutes = require("./routes/voteLogRoutes");
 const blockchainRoutes = require("./routes/blockchainRoutes");
 const blockchainResultsRoutes = require("./routes/blockchainResultsRoutes");
 
+// Blockchain tools
 const { getElectionResults } = require("./controllers/voteController");
 const { contract, wallet, provider } = require("./blockchain/contractService");
 
+// App init
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ✅ Allow multiple frontend origins
+// ✅ CORS CONFIG
 const allowedOrigins = [
   "http://localhost:5173",
   "https://voting-system-blue.vercel.app",
@@ -31,9 +34,8 @@ const allowedOrigins = [
   "https://voting-system-git-main-duval2035s-projects.vercel.app"
 ];
 
-// ✅ General CORS middleware with debug logging
 app.use(cors({
-  origin: function (origin, callback) {
+  origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -46,11 +48,11 @@ app.use(cors({
 
 app.use(express.json());
 
-// ✅ Uploads with CORS too
+// ✅ Serve uploads
 app.use(
   "/uploads",
   cors({
-    origin: function (origin, callback) {
+    origin: (origin, callback) => {
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
@@ -63,7 +65,7 @@ app.use(
   express.static(path.join(__dirname, "uploads"))
 );
 
-// MongoDB connection
+// ✅ Connect MongoDB
 const connectMongo = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
@@ -74,7 +76,7 @@ const connectMongo = async () => {
   }
 };
 
-// Routes setup
+// ✅ Setup routes
 const setupRoutes = () => {
   app.use("/api/auth", authRoutes);
   app.use("/api/elections", electionRoutes);
@@ -98,7 +100,7 @@ const setupRoutes = () => {
   });
 };
 
-// Log environment variables (safely)
+// ✅ Log ENV variables
 console.log("ENV VARIABLES:");
 console.log("RPC_URL:", process.env.RPC_URL);
 console.log("PRIVATE_KEY:", process.env.PRIVATE_KEY ? "present" : "missing");
@@ -128,6 +130,6 @@ const startServer = async () => {
     console.log(`🚀 Server running on port ${PORT}`);
   });
 };
-console.log("🔥 backend/index.js is running");
 
+console.log("🔥 backend/server.js is running");
 startServer();

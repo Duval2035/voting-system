@@ -1,8 +1,8 @@
 const mongoose = require("mongoose");
 const Candidate = require("../models/Candidate");
-const { addCandidate: addCandidateToBlockchain, contract } = require("../blockchain/contractService");
+const { addCandidateToBlockchain, contract } = require("../blockchain/contractService");
 
-// ✅ Add New Candidate (Blockchain + DB)
+// Add new candidate (blockchain + DB)
 const addCandidate = async (req, res) => {
   try {
     const { name, position, bio, electionId } = req.body;
@@ -11,7 +11,11 @@ const addCandidate = async (req, res) => {
       return res.status(400).json({ message: "Name and election ID are required." });
     }
 
-    const blockchainId = await addCandidateToBlockchain(name, electionId);
+    console.log("📤 Creating candidate:", { name, position, bio, electionId });
+    console.log("📎 Uploaded file:", req.file?.path);
+
+    // Add candidate to blockchain, electionId must be string
+    const blockchainId = await addCandidateToBlockchain(name, electionId.toString());
 
     const newCandidate = new Candidate({
       name,
@@ -26,21 +30,20 @@ const addCandidate = async (req, res) => {
     res.status(201).json({ message: "Candidate created.", candidate: newCandidate });
   } catch (error) {
     console.error("❌ Error in addCandidate:", error);
-    res.status(500).json({ message: "Failed to add candidate." });
+    res.status(500).json({ message: "Failed to add candidate.", error: error.message });
   }
 };
 
-// ✅ Add or Update Candidate (single endpoint)
+// Add or update candidate
 const addOrUpdateCandidate = async (req, res) => {
   try {
-    const { id: electionId, candidateId } = req.params;
-    const { name, position, bio } = req.body;
+    const { candidateId } = req.params;
+    const { name, position, bio, electionId } = req.body;
 
     if (!name || !electionId) {
       return res.status(400).json({ message: "Name and election ID are required." });
     }
 
-    // 🔁 Update
     if (candidateId) {
       const candidate = await Candidate.findById(candidateId);
       if (!candidate) {
@@ -60,7 +63,7 @@ const addOrUpdateCandidate = async (req, res) => {
       return res.status(200).json({ message: "Candidate updated.", candidate });
     }
 
-    // ➕ Add new
+    // If no candidateId, create new candidate
     const blockchainId = await addCandidateToBlockchain(name, electionId);
 
     const newCandidate = new Candidate({
@@ -76,15 +79,14 @@ const addOrUpdateCandidate = async (req, res) => {
     return res.status(201).json({ message: "Candidate created.", candidate: newCandidate });
   } catch (error) {
     console.error("❌ Error in addOrUpdateCandidate:", error);
-    res.status(500).json({ message: "Server error saving candidate." });
+    res.status(500).json({ message: "Server error saving candidate.", error: error.message });
   }
 };
 
-// ✅ Get Candidates (MongoDB)
+// Get candidates by election (MongoDB)
 const getCandidatesByElectionDB = async (req, res) => {
   try {
     const { electionId } = req.params;
-
     if (!electionId) {
       return res.status(400).json({ message: "Election ID is required." });
     }
@@ -93,11 +95,11 @@ const getCandidatesByElectionDB = async (req, res) => {
     res.status(200).json(candidates);
   } catch (error) {
     console.error("❌ Failed to get candidates from DB:", error);
-    res.status(500).json({ message: "Failed to get candidates." });
+    res.status(500).json({ message: "Failed to get candidates.", error: error.message });
   }
 };
 
-// ✅ Get Candidates (Blockchain)
+// Get candidates by election (blockchain)
 const getCandidatesByElectionBlockchain = async (req, res) => {
   try {
     const { electionId } = req.params;
@@ -118,11 +120,11 @@ const getCandidatesByElectionBlockchain = async (req, res) => {
     res.status(200).json(formatted);
   } catch (error) {
     console.error("❌ Error fetching candidates from blockchain:", error);
-    res.status(500).json({ message: "Blockchain fetch failed." });
+    res.status(500).json({ message: "Blockchain fetch failed.", error: error.message });
   }
 };
 
-// ✅ Get Candidate by ID (MongoDB)
+// Get candidate by ID (MongoDB)
 const getCandidateById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -139,11 +141,11 @@ const getCandidateById = async (req, res) => {
     res.status(200).json(candidate);
   } catch (error) {
     console.error("❌ Failed to get candidate by ID:", error);
-    res.status(500).json({ message: "Failed to get candidate." });
+    res.status(500).json({ message: "Failed to get candidate.", error: error.message });
   }
 };
 
-// ✅ Delete Candidate (MongoDB only)
+// Delete candidate (MongoDB)
 const deleteCandidate = async (req, res) => {
   try {
     const { id } = req.params;
@@ -160,23 +162,22 @@ const deleteCandidate = async (req, res) => {
     res.status(200).json({ message: "Candidate deleted successfully." });
   } catch (error) {
     console.error("❌ Failed to delete candidate:", error);
-    res.status(500).json({ message: "Failed to delete candidate." });
+    res.status(500).json({ message: "Failed to delete candidate.", error: error.message });
   }
 };
 
-// ✅ Get Candidates (Generic)
+// Generic get candidates by election (MongoDB)
 const getCandidatesByElection = async (req, res) => {
   try {
     const { electionId } = req.params;
     const candidates = await Candidate.find({ election: electionId });
     res.status(200).json(candidates);
   } catch (error) {
-    console.error("Error fetching candidates:", error);
-    res.status(500).json({ message: "Failed to fetch candidates" });
+    console.error("❌ Error fetching candidates:", error);
+    res.status(500).json({ message: "Failed to fetch candidates", error: error.message });
   }
 };
 
-// ✅ Export all functions
 module.exports = {
   addCandidate,
   addOrUpdateCandidate,

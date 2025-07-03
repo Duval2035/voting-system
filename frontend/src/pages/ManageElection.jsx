@@ -4,7 +4,7 @@ import API_BASE_URL from "../config";
 import "./ManageElection.css";
 
 const ManageElection = () => {
-  const { id } = useParams(); // election ID
+  const { id } = useParams(); // election ID from URL params
   const token = localStorage.getItem("token");
 
   const [candidates, setCandidates] = useState([]);
@@ -20,13 +20,15 @@ const ManageElection = () => {
   useEffect(() => {
     const fetchCandidates = async () => {
       try {
+        if (!id) return; // guard clause if no election id
+
         const res = await fetch(`${API_BASE_URL}/candidates/election/${id}`);
 
         if (!res.ok) {
           const errorData = await res.json().catch(() => null);
           const errorMsg = errorData?.message || `Failed to load candidates: ${res.status}`;
           console.error(errorMsg);
-          setCandidates([]); // clear on failure
+          setCandidates([]);
           return;
         }
 
@@ -59,15 +61,25 @@ const ManageElection = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Validate required fields
+    if (!newCandidate.name || !id) {
+      alert("Name and election ID are required.");
+      return;
+    }
+
     const formData = new FormData();
     formData.append("name", newCandidate.name);
     formData.append("position", newCandidate.position);
     formData.append("bio", newCandidate.bio);
-    formData.append("election", id); // <-- REQUIRED: send election ID
-    if (newCandidate.image) formData.append("image", newCandidate.image);
+    formData.append("electionId", id);
 
+    if (newCandidate.image) {
+      formData.append("image", newCandidate.image);
+    }
+
+    // Use correct URL and method depending on editing state
     const url = editing
-      ? `${API_BASE_URL}/candidates/${editing}`
+      ? `${API_BASE_URL}/candidates/${editing}/update/${editing}`
       : `${API_BASE_URL}/candidates`;
     const method = editing ? "PUT" : "POST";
 
@@ -76,6 +88,7 @@ const ManageElection = () => {
         method,
         headers: {
           Authorization: `Bearer ${token}`,
+          // Do NOT set Content-Type header when sending FormData
         },
         body: formData,
       });
@@ -92,16 +105,22 @@ const ManageElection = () => {
       }
 
       if (editing) {
+        // Update candidate in list
         setCandidates((prev) =>
-          prev.map((c) => (c._id === updated._id ? updated : c))
+          prev.map((c) => (c._id === updated.candidate._id ? updated.candidate : c))
         );
       } else if (updated) {
-        setCandidates((prev) => [...prev, updated]);
+        // Add new candidate to list
+        setCandidates((prev) => [...prev, updated.candidate]);
       } else {
-        const refreshed = await fetch(`${API_BASE_URL}/candidates/election/${id}`).then((res) => res.json());
+        // Fallback: reload candidate list
+        const refreshed = await fetch(`${API_BASE_URL}/candidates/election/${id}`).then((res) =>
+          res.json()
+        );
         setCandidates(refreshed);
       }
 
+      // Reset form
       setNewCandidate({ name: "", position: "", bio: "", image: null });
       setEditing(null);
       setPreview(null);
@@ -163,14 +182,12 @@ const ManageElection = () => {
           placeholder="Position"
           value={newCandidate.position}
           onChange={handleChange}
-          required
         />
         <textarea
           name="bio"
           placeholder="Biography"
           value={newCandidate.bio}
           onChange={handleChange}
-          required
         />
         <label>Candidate Image:</label>
         <input type="file" accept="image/*" onChange={handleImageChange} />
