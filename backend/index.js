@@ -5,7 +5,6 @@ const cors = require("cors");
 const path = require("path");
 require("dotenv").config();
 
-// Import routes
 const voteRoutes = require("./routes/voteRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const voterRoutes = require("./routes/voterRoutes");
@@ -18,15 +17,12 @@ const voteLogRoutes = require("./routes/voteLogRoutes");
 const blockchainRoutes = require("./routes/blockchainRoutes");
 const blockchainResultsRoutes = require("./routes/blockchainResultsRoutes");
 
-// Blockchain tools
 const { getElectionResults } = require("./controllers/voteController");
 const { contract, wallet, provider } = require("./blockchain/contractService");
 
-// App init
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ✅ CORS CONFIG
 const allowedOrigins = [
   "http://localhost:5173",
   "https://voting-system-blue.vercel.app",
@@ -48,7 +44,7 @@ app.use(cors({
 
 app.use(express.json());
 
-// ✅ Serve uploads
+// Serve uploads with CORS
 app.use(
   "/uploads",
   cors({
@@ -65,7 +61,6 @@ app.use(
   express.static(path.join(__dirname, "uploads"))
 );
 
-// ✅ Connect MongoDB
 const connectMongo = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
@@ -76,7 +71,6 @@ const connectMongo = async () => {
   }
 };
 
-// ✅ Setup routes
 const setupRoutes = () => {
   app.use("/api/auth", authRoutes);
   app.use("/api/elections", electionRoutes);
@@ -90,6 +84,7 @@ const setupRoutes = () => {
   app.use("/api/blockchain", blockchainRoutes);
   app.use("/api/blockchain-results", blockchainResultsRoutes);
 
+  // Election results route
   app.get("/votes/results/:electionId", async (req, res) => {
     try {
       await getElectionResults(req, res);
@@ -100,7 +95,7 @@ const setupRoutes = () => {
   });
 };
 
-// ✅ Log ENV variables
+// Log environment variables for confirmation (hide secrets)
 console.log("ENV VARIABLES:");
 console.log("RPC_URL:", process.env.RPC_URL);
 console.log("PRIVATE_KEY:", process.env.PRIVATE_KEY ? "present" : "missing");
@@ -126,10 +121,12 @@ const startServer = async () => {
 
   setupRoutes();
 
+  
   app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
   });
 };
 
-console.log("🔥 backend/server.js is running");
+console.log("🔥 backend/index.js is running");
+
 startServer();

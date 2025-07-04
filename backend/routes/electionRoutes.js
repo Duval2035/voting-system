@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 
 const VoteLog = require("../models/VoteLog");
 const Election = require("../models/Election");
-const Voter = require("../models/Voter");
+const Voter = require("../models/VoteRecord");
 
 const authenticateAdmin = require("../middleware/authenticateAdmin");
 const { protectUser, protectAdmin } = require("../middleware/authMiddleware");

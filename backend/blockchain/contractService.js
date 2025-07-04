@@ -1,4 +1,3 @@
-// backend/blockchain/contractService.js
 require("dotenv").config();
 const { ethers } = require("ethers");
 const contractABI = require("./abi.json");
@@ -32,42 +31,81 @@ try {
   process.exit(1);
 }
 
-async function addCandidate(name, electionId) {
+/**
+ * Check if current wallet is admin
+ */
+async function isAdmin() {
+  try {
+    const adminAddress = await contract.admin();
+    return adminAddress.toLowerCase() === wallet.address.toLowerCase();
+  } catch (error) {
+    console.error("❌ Error fetching admin from contract:", error.message);
+    return false;
+  }
+}
+
+/**
+ * Add candidate to blockchain, verify CandidateAdded event and return blockchain ID
+ */
+async function addCandidateToBlockchain(name, electionId) {
   if (!contract) throw new Error("Contract not initialized");
 
+  const isAdminUser = await isAdmin();
+  if (!isAdminUser) {
+    throw new Error(`Wallet ${wallet.address} is NOT admin. Cannot add candidate.`);
+  }
+
   try {
+    // Simulate to check for reverts
+    await contract.callStatic.addCandidate(name, electionId);
+
     const tx = await contract.addCandidate(name, electionId);
     const receipt = await tx.wait();
 
     console.log("🧾 Transaction hash:", receipt.transactionHash);
 
-    const iface = new ethers.utils.Interface(contractABI);
-    const parsedEvents = receipt.logs.map(log => {
-      try {
-        return iface.parseLog(log);
-      } catch (err) {
-        return null;
-      }
-    });
+    const eventTopic = contract.interface.getEventTopic("CandidateAdded");
 
-    const candidateAddedEvent = parsedEvents.find(e => e && e.name === "CandidateAdded");
+    const matchingLogs = receipt.logs.filter(
+      (log) => log.topics[0] === eventTopic
+    );
 
-    if (!candidateAddedEvent) {
+    if (matchingLogs.length === 0) {
+      console.error("❌ CandidateAdded event not found in logs");
       throw new Error("CandidateAdded event not emitted");
     }
 
-    console.log("✅ CandidateAdded event args:", candidateAddedEvent.args);
+    const parsedEvent = contract.interface.parseLog(matchingLogs[0]);
 
-    return candidateAddedEvent.args.id.toNumber();
+    console.log("✅ CandidateAdded event args:", parsedEvent.args);
+
+    const blockchainId = parsedEvent.args.id.toNumber();
+    return blockchainId;
   } catch (error) {
     console.error("❌ Blockchain addCandidate error:", error.message);
     throw error;
   }
 }
 
+(async () => {
+  try {
+    const adminAddress = await contract.admin();
+    console.log("👮 Admin on chain: ", adminAddress);
+    console.log("🔐 Your wallet:    ", wallet.address);
+    console.log(
+      adminAddress.toLowerCase() === wallet.address.toLowerCase()
+        ? "✅ Wallet IS admin"
+        : "❌ Wallet is NOT admin"
+    );
+  } catch (err) {
+    console.error("❌ Failed to fetch admin:", err.message);
+  }
+})();
+
 module.exports = {
   provider,
   wallet,
   contract,
-  addCandidateToBlockchain: addCandidate,
+  addCandidateToBlockchain,
 };
+

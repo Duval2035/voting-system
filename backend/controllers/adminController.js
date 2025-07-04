@@ -1,4 +1,4 @@
-const Voter = require("../models/Voter");
+const Voter = require("../models/VoteRecord");
 const User = require("../models/User");
 const Election = require("../models/Election");
 const VoteLog = require("../models/VoteLog");

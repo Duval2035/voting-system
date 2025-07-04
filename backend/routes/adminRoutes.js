@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const Election = require("../models/Election");
-const Voter = require("../models/Voter");
+const Voter = require("../models/VoteRecord");
 const User = require("../models/User");
 
 const authenticateAdmin = require("../middleware/authenticateAdmin");
@@ -19,7 +19,7 @@ const {
   assignAllUsersToElection,
 } = adminController;
 
-// ✅ Get all elections (id, title, dates)
+// ✅ Get all elections
 router.get(
   "/elections",
   authenticateAdmin,
@@ -35,7 +35,7 @@ router.get(
   }
 );
 
-// ✅ Get all voters with role "user"
+// ✅ Get all voters
 router.get(
   "/voters",
   authenticateAdmin,
@@ -43,7 +43,7 @@ router.get(
   getAllVoters
 );
 
-// ✅ Get eligible voters for an election
+// ✅ Get eligible voters
 router.get(
   "/elections/:electionId/eligible-voters",
   authenticateAdmin,
@@ -51,7 +51,7 @@ router.get(
   getEligibleVoters
 );
 
-// ✅ Assign voters to election
+// ✅ Assign specific voters
 router.post(
   "/elections/:electionId/assign-voters",
   authenticateAdmin,
@@ -59,7 +59,7 @@ router.post(
   assignVotersToElection
 );
 
-// ✅ Assign all users to election
+// ✅ Assign all users
 router.post(
   "/assign-all/:electionId",
   authenticateAdmin,
@@ -67,7 +67,7 @@ router.post(
   assignAllUsersToElection
 );
 
-// ✅ Get voters assigned to election
+// ✅ Get voters by election
 router.get(
   "/voters-by-election/:electionId",
   authenticateAdmin,
@@ -75,7 +75,7 @@ router.get(
   getVotersByElection
 );
 
-// ✅ Export vote logs to CSV
+// ✅ Export vote logs
 router.get(
   "/voters/export/:electionId",
   authenticateAdmin,

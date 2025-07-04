@@ -45,7 +45,7 @@ const contractABI = [
 
 const contract = new Contract(contractAddress, contractABI, wallet);
 
-// Add a new candidate
+// ✅ Add a new candidate
 router.post("/add-candidate", async (req, res) => {
   try {
     const { name } = req.body;
@@ -63,7 +63,7 @@ router.post("/add-candidate", async (req, res) => {
   }
 });
 
-// Cast a vote
+// ✅ Cast a vote
 router.post("/vote", async (req, res) => {
   try {
     const { candidateId } = req.body;
@@ -81,7 +81,7 @@ router.post("/vote", async (req, res) => {
   }
 });
 
-// Get total number of candidates
+// ✅ Get total number of candidates
 router.get("/candidates-count", async (req, res) => {
   try {
     const count = await contract.candidatesCount();
@@ -92,7 +92,7 @@ router.get("/candidates-count", async (req, res) => {
   }
 });
 
-// Get all candidates
+// ✅ Get all candidates
 router.get("/candidates", async (req, res) => {
   try {
     const count = await contract.candidatesCount();

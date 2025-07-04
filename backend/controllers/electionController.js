@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const Election = require("../models/Election");
-const Vote = require("../models/Voter");
+const Vote = require("../models/VoteRecord");
 const User = require("../models/User");
 const Candidate = require("../models/Candidate");
 

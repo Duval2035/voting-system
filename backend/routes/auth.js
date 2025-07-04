@@ -8,13 +8,13 @@ const User = require("../models/User");
 
 const router = express.Router();
 
-// 🔐 In-memory OTP store (for production, use Redis or DB)
+// 🔐 In-memory OTP store
 const otpStore = new Map();
 
-// 🔢 Generate 6-digit OTP
+// 🔢 Generate OTP
 const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
 
-// ✉️ Configure Nodemailer transporter
+// ✉️ Configure Nodemailer
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
   port: Number(process.env.EMAIL_PORT),
@@ -26,7 +26,7 @@ const transporter = nodemailer.createTransport({
   service: process.env.EMAIL_SERVICE || undefined,
 });
 
-// 📩 Send OTP to email
+// 📩 Send OTP
 router.post("/send-otp", async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ message: "Email is required." });
@@ -60,7 +60,7 @@ router.post("/send-otp", async (req, res) => {
   }
 });
 
-// ✅ Verify OTP and login (returns JWT)
+// ✅ Verify OTP
 router.post("/verify-otp", async (req, res) => {
   const { email, otp } = req.body;
   if (!email || !otp)
@@ -101,7 +101,7 @@ router.post("/verify-otp", async (req, res) => {
   }
 });
 
-// 📦 Joi schema for registration
+// 📦 Joi schema
 const registerSchema = Joi.object({
   username: Joi.string().required(),
   email: Joi.string().email().required(),
@@ -124,7 +124,7 @@ const registerSchema = Joi.object({
   }),
 });
 
-// 🧪 Middleware for validation
+// 🧪 Validate
 const validate = (schema) => (req, res, next) => {
   const { error } = schema.validate(req.body);
   if (error)
@@ -132,11 +132,10 @@ const validate = (schema) => (req, res, next) => {
   next();
 };
 
-// 👤 Register user
+// 👤 Register
 router.post("/register", validate(registerSchema), async (req, res) => {
   try {
-    let { username, email, password, organizationName, role, electionId } =
-      req.body;
+    let { username, email, password, organizationName, role, electionId } = req.body;
 
     email = email.trim().toLowerCase();
     if (role !== "candidate") electionId = undefined;
