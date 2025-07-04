@@ -232,14 +232,15 @@ const ManageElection = () => {
           candidates.map((candidate) => (
             <div className="candidate-card" key={candidate._id}>
               <img
-                src={
-                  candidate.image
-                    ? `${API_BASE_URL}/${candidate.image.replace(/\\/g, "/")}`
-                    : "/default-user.png"
-                }
-                alt={candidate.name}
-                className="candidate-img"
-              />
+  src={
+    candidate.image
+      ? `${API_BASE_URL}/${candidate.image}`.replace(/\\/g, "/")
+      : "/default-user.png"
+  }
+  alt={candidate.name}
+  className="candidate-img"
+/>
+
               <div className="candidate-info">
                 <h4>{candidate.name}</h4>
                 <p>

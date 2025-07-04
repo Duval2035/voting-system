@@ -31,6 +31,9 @@ contract Voting {
     function addCandidate(string memory _name, string memory _electionId)
         public onlyAdmin returns (uint)
     {
+        require(bytes(_name).length > 0, "Candidate name is required");
+        require(bytes(_electionId).length > 0, "Election ID is required");
+
         candidates[nextId] = Candidate({
             id: nextId,
             name: _name,
@@ -39,7 +42,6 @@ contract Voting {
         });
 
         electionToCandidateIds[_electionId].push(nextId);
-
         emit CandidateAdded(nextId, _name, _electionId);
 
         nextId++;
@@ -48,11 +50,12 @@ contract Voting {
 
     function vote(uint _candidateId, string memory _electionId) public {
         require(!hasVoted[_electionId][msg.sender], "You already voted");
+
         Candidate storage candidate = candidates[_candidateId];
         require(candidate.id != 0, "Candidate does not exist");
         require(
             keccak256(bytes(candidate.electionId)) == keccak256(bytes(_electionId)),
-            "Invalid candidate"
+            "Candidate does not belong to this election"
         );
 
         candidate.voteCount++;

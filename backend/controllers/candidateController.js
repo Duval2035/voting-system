@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
+const path = require("path");
 const Candidate = require("../models/Candidate");
-const { addCandidateToBlockchain } = require("../blockchain/contractService"); // updated blockchain fn
+const { addCandidateToBlockchain } = require("../blockchain/contractService");
 
 /**
  * Add new candidate (Blockchain + MongoDB)
@@ -8,34 +9,38 @@ const { addCandidateToBlockchain } = require("../blockchain/contractService"); /
 const addCandidate = async (req, res) => {
   try {
     const { name, position, bio, electionId } = req.body;
-
     if (!name || !electionId) {
       return res.status(400).json({ message: "Name and election ID are required." });
     }
 
     console.log("📤 Creating candidate:", { name, position, bio, electionId });
-    console.log("📎 Uploaded file:", req.file?.path);
 
-    // 1. Add candidate to blockchain using improved function
+    // Blockchain add
     const blockchainId = await addCandidateToBlockchain(name, electionId);
     console.log("🧾 Blockchain ID:", blockchainId);
 
-    // 2. Save candidate to MongoDB
+    const imagePath = req.file
+      ? path.join("candidates", req.file.filename).replace(/\\/g, "/")
+      : null;
+
     const newCandidate = new Candidate({
       name,
       position,
       bio,
       election: electionId,
       blockchainId,
-      image: req.file ? req.file.path.replace(/\\/g, "/") : null,
+      image: imagePath,
     });
 
     await newCandidate.save();
 
-    res.status(201).json({ message: "Candidate created on blockchain and DB.", candidate: newCandidate });
+    res.status(201).json({
+      message: "✅ Candidate created on blockchain and DB.",
+      candidate: newCandidate,
+    });
   } catch (error) {
     console.error("❌ Error in addCandidate:", error);
-    res.status(500).json({ message: "Failed to add candidate.", error: error.message });
+    res.status(500).json({ message: "Failed to add candidate", error: error.message });
   }
 };
 
@@ -62,7 +67,7 @@ const addOrUpdateCandidate = async (req, res) => {
     candidate.election = electionId;
 
     if (req.file) {
-      candidate.image = req.file.path.replace(/\\/g, "/");
+      candidate.image = path.join("candidates", req.file.filename).replace(/\\/g, "/");
     }
 
     await candidate.save();
@@ -74,7 +79,7 @@ const addOrUpdateCandidate = async (req, res) => {
 };
 
 /**
- * Get candidates by election (MongoDB)
+ * Get candidates by election
  */
 const getCandidatesByElection = async (req, res) => {
   try {

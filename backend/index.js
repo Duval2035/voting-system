@@ -5,6 +5,7 @@ const cors = require("cors");
 const path = require("path");
 require("dotenv").config();
 
+
 const voteRoutes = require("./routes/voteRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const voterRoutes = require("./routes/voterRoutes");
@@ -85,6 +86,9 @@ const setupRoutes = () => {
   app.use("/api/blockchain-results", blockchainResultsRoutes);
 
   // Election results route
+  
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
   app.get("/votes/results/:electionId", async (req, res) => {
     try {
       await getElectionResults(req, res);
