@@ -86,11 +86,15 @@ const VotePage = () => {
             <div key={candidate._id} className="col-md-4 mb-4">
               <div className="card h-100 shadow-sm">
                 <img
-                  src={`https://voting-system-gs6m.onrender.com/${candidate.image || "uploads/default.png"}`}
-                  alt={candidate.name}
-                  className="card-img-top"
-                  style={{ height: "220px", objectFit: "cover" }}
-                />
+  src={
+    candidate.image
+      ? `${API_BASE_URL}/api/candidates/${candidate.image}`.replace(/\\/g, "/")
+      : "/default-user.png"
+  }
+  alt={candidate.name}
+  className="candidate-img"
+/>
+
                 <div className="card-body d-flex flex-column">
                   <h5 className="card-title">{candidate.name}</h5>
                   <p className="card-text text-muted">{candidate.position}</p>

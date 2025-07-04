@@ -1,96 +1,66 @@
-/* src/pages/ManageElection.css */
 
-.manage-election-container {
-  max-width: 1000px;
+.manage-container {
+  padding: 20px;
+  max-width: 900px;
   margin: auto;
-  padding: 2rem;
-  font-family: "Segoe UI", sans-serif;
 }
 
 .candidate-form {
-  background: #f9f9f9;
-  padding: 1.5rem;
-  border-radius: 8px;
   margin-bottom: 2rem;
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
-}
-
-.candidate-form h3 {
-  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .candidate-form input,
 .candidate-form textarea {
+  padding: 8px;
   width: 100%;
-  padding: 0.6rem;
-  margin-bottom: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
 }
 
-.image-preview {
+.preview-image {
   width: 150px;
-  height: auto;
-  border-radius: 6px;
-  margin-bottom: 1rem;
-  object-fit: cover;
-  border: 1px solid #ddd;
-}
-
-.candidate-form button {
-  padding: 0.6rem 1.2rem;
-  background-color: #0066ff;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-weight: bold;
-  cursor: pointer;
+  margin-top: 10px;
+  border-radius: 8px;
 }
 
 .candidate-list {
   display: flex;
-  flex-wrap: initial;
-  gap: 2rem;
-  justify-content: center;
+  flex-wrap: wrap;
+  gap: 20px;
 }
 
 .candidate-card {
-  display: flex;
-  gap: 1rem;
-  background: #fff;
+  border: 1px solid #ccc;
   border-radius: 10px;
-  padding: 1rem;
-  align-items: center;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  padding: 10px;
+  width: 220px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-.candidate-img {
-  width: 150px;
-  height: 150px;
+.candidate-card img {
+  width: 100%;
+  height: 200px;
   object-fit: cover;
-  border-radius: 10px;
-  margin-right: 1rem;
+  border-radius: 8px;
 }
 
-.actions {
-  margin-top: 0.5rem;
+.candidate-card .position {
+  font-weight: bold;
+  margin: 5px 0;
 }
 
-.actions button {
-  margin-right: 0.5rem;
-  padding: 0.5rem 1rem;
-  font-size: 0.85rem;
+.candidate-card .bio {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.delete-btn {
+  background-color: red;
+  color: white;
   border: none;
-  border-radius: 5px;
+  padding: 5px 10px;
+  border-radius: 4px;
+  margin-top: 10px;
   cursor: pointer;
-}
-
-.actions .danger {
-  background-color: crimson;
-  color: white;
-}
-
-.actions button:first-child {
-  background-color: #007bff;
-  color: white;
 }

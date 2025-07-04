@@ -5,7 +5,6 @@ const cors = require("cors");
 const path = require("path");
 require("dotenv").config();
 
-
 const voteRoutes = require("./routes/voteRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const voterRoutes = require("./routes/voterRoutes");
@@ -24,13 +23,15 @@ const { contract, wallet, provider } = require("./blockchain/contractService");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// ✅ Define allowed frontend origins
 const allowedOrigins = [
   "http://localhost:5173",
   "https://voting-system-blue.vercel.app",
   "https://voting-system-duval2035s-projects.vercel.app",
-  "https://voting-system-git-main-duval2035s-projects.vercel.app"
+  "https://voting-system-git-main-duval2035s-projects.vercel.app",
 ];
 
+// ✅ Enable CORS with dynamic origin checking
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin)) {
@@ -45,38 +46,33 @@ app.use(cors({
 
 app.use(express.json());
 
-// Serve uploads with CORS
-app.use(
-  "/uploads",
-  cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        console.warn("❌ CORS blocked on uploads:", origin);
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-  }),
-  express.static(path.join(__dirname, "uploads"))
-);
-
-const connectMongo = async () => {
-  try {
-    await mongoose.connect(process.env.MONGO_URI);
-    console.log("✅ Connected to MongoDB");
-  } catch (err) {
-    console.error("❌ MongoDB connection error:", err.message);
-    process.exit(1);
+// ✅ Serve candidate images statically at /uploads/candidates
+app.use("/uploads/candidates", (req, res, next) => {
+  const origin = req.headers.origin;
+  if (!origin || allowedOrigins.includes(origin)) {
+    res.header("Access-Control-Allow-Origin", origin || "*");
   }
-};
+  res.header("Access-Control-Allow-Credentials", "true");
+  next();
+}, express.static(path.join(__dirname, "uploads", "candidates")));
 
+// ✅ Serve all other uploaded files from /uploads
+app.use("/uploads/candidates", express.static(path.join(__dirname, "uploads/candidates")));
+app.use("/uploads", (req, res, next) => {
+  const origin = req.headers.origin;
+  if (!origin || allowedOrigins.includes(origin)) {
+    res.header("Access-Control-Allow-Origin", origin || "*");
+  }
+  res.header("Access-Control-Allow-Credentials", "true");
+  next();
+}, express.static(path.join(__dirname, "uploads")));
+
+// ✅ Setup API routes
 const setupRoutes = () => {
   app.use("/api/auth", authRoutes);
   app.use("/api/elections", electionRoutes);
   app.use("/api/admin", adminRoutes);
-  app.use("/api/candidates", candidateRoutes);
+  app.use("/api/candidates", candidateRoutes); // now separate from static
   app.use("/api/votes", voteRoutes);
   app.use("/api/voters", voterRoutes);
   app.use("/api/auditor", auditorRoutes);
@@ -85,10 +81,7 @@ const setupRoutes = () => {
   app.use("/api/blockchain", blockchainRoutes);
   app.use("/api/blockchain-results", blockchainResultsRoutes);
 
-  // Election results route
-  
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
+  // ✅ Election results endpoint
   app.get("/votes/results/:electionId", async (req, res) => {
     try {
       await getElectionResults(req, res);
@@ -99,13 +92,18 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
   });
 };
 
-// Log environment variables for confirmation (hide secrets)
-console.log("ENV VARIABLES:");
-console.log("RPC_URL:", process.env.RPC_URL);
-console.log("PRIVATE_KEY:", process.env.PRIVATE_KEY ? "present" : "missing");
-console.log("CONTRACT_ADDRESS:", process.env.CONTRACT_ADDRESS);
-console.log("MONGO_URI:", process.env.MONGO_URI ? "present" : "missing");
+// ✅ Connect MongoDB
+const connectMongo = async () => {
+  try {
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log("✅ Connected to MongoDB");
+  } catch (err) {
+    console.error("❌ MongoDB connection error:", err.message);
+    process.exit(1);
+  }
+};
 
+// ✅ Start Express server
 const startServer = async () => {
   await connectMongo();
 
@@ -125,12 +123,10 @@ const startServer = async () => {
 
   setupRoutes();
 
-  
   app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
   });
 };
 
-console.log("🔥 backend/index.js is running");
-
+console.log("🔥 backend/server.js is running");
 startServer();

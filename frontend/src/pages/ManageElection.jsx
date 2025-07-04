@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
-import API_BASE_URL from "../config";
+
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import "./ManageElection.css";
+const API_BASE_URL = "https://voting-system-gs6m.onrender.com/api";
+const IMAGE_BASE_URL = "https://voting-system-gs6m.onrender.com/uploads/candidates";
 
-const ManageElection = () => {
-  const { id } = useParams(); // election ID
-  const token = localStorage.getItem("token");
-
+const ManageElection = ({ electionId }) => {
   const [candidates, setCandidates] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [newCandidate, setNewCandidate] = useState({
     name: "",
     position: "",
@@ -15,36 +15,32 @@ const ManageElection = () => {
     image: null,
   });
   const [preview, setPreview] = useState(null);
-  const [editing, setEditing] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // Fetch candidates for the election
-  useEffect(() => {
-    const fetchCandidates = async () => {
-      if (!id) return;
-      setLoading(true);
-      try {
-        const res = await fetch(`${API_BASE_URL}/candidates/election/${id}`);
-        const data = await res.json();
-        if (res.ok) {
-          setCandidates(data);
-        } else {
-          console.error("❌ Failed to load candidates:", data.message);
-          setCandidates([]);
-        }
-      } catch (err) {
-        console.error("❌ Error fetching candidates:", err);
-        setCandidates([]);
-      }
+  const fetchCandidates = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get(`${API_BASE_URL}/candidates/election/${electionId}`);
+      setCandidates(res.data);
+    } catch (err) {
+      console.error("Failed to fetch candidates:", err);
+    } finally {
       setLoading(false);
-    };
+    }
+  };
 
-    fetchCandidates();
-  }, [id]);
+  useEffect(() => {
+    if (electionId) {
+      fetchCandidates();
+    }
+  }, [electionId]);
 
-  // Handle image preview
-  const handleImageChange = (e) => {
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewCandidate((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleFileChange = (e) => {
     const file = e.target.files[0];
     setNewCandidate((prev) => ({ ...prev, image: file }));
     if (file) {
@@ -56,213 +52,114 @@ const ManageElection = () => {
     }
   };
 
-  const handleChange = (e) => {
-    setNewCandidate({ ...newCandidate, [e.target.name]: e.target.value });
-  };
-
-  const resetForm = () => {
-    setNewCandidate({ name: "", position: "", bio: "", image: null });
-    setEditing(null);
-    setPreview(null);
-  };
-
-  const handleSubmit = async (e) => {
+  const handleAddCandidate = async (e) => {
     e.preventDefault();
-
-    if (!newCandidate.name || !id) {
-      alert("Name and election ID are required.");
+    if (!newCandidate.name) {
+      alert("Candidate name is required.");
       return;
     }
-
     setSubmitting(true);
+
     const formData = new FormData();
     formData.append("name", newCandidate.name);
     formData.append("position", newCandidate.position);
     formData.append("bio", newCandidate.bio);
-    formData.append("electionId", id);
+    formData.append("electionId", electionId);
     if (newCandidate.image) {
       formData.append("image", newCandidate.image);
     }
 
-    const url = editing
-      ? `${API_BASE_URL}/candidates/${editing}`
-      : `${API_BASE_URL}/candidates`;
-    const method = editing ? "PUT" : "POST";
-
     try {
-      const res = await fetch(url, {
-        method,
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
+      await axios.post(`${API_BASE_URL}/candidates`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
-
-      const contentType = res.headers.get("content-type");
-      const data = contentType?.includes("application/json")
-        ? await res.json()
-        : null;
-
-      if (!res.ok) {
-        alert(data?.message || "Failed to save candidate.");
-        return;
-      }
-
-      const updatedCandidate = data?.candidate;
-      if (editing && updatedCandidate) {
-        setCandidates((prev) =>
-          prev.map((c) => (c._id === updatedCandidate._id ? updatedCandidate : c))
-        );
-      } else if (updatedCandidate) {
-        setCandidates((prev) => [...prev, updatedCandidate]);
-      } else {
-        // fallback fetch
-        const refreshed = await fetch(
-          `${API_BASE_URL}/candidates/election/${id}`
-        ).then((res) => res.json());
-        setCandidates(refreshed);
-      }
-
-      resetForm();
+      setNewCandidate({ name: "", position: "", bio: "", image: null });
+      setPreview(null);
+      fetchCandidates();
     } catch (err) {
-      console.error("❌ Submit error:", err);
-      alert("Error submitting candidate.");
+      console.error("Failed to add candidate:", err);
+      alert("Failed to add candidate.");
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleEdit = (candidate) => {
-    setNewCandidate({
-      name: candidate.name,
-      position: candidate.position,
-      bio: candidate.bio,
-      image: null,
-    });
-    setEditing(candidate._id);
-    setPreview(
-      candidate.image
-        ? `${API_BASE_URL}/${candidate.image.replace(/\\/g, "/")}`
-        : null
-    );
-  };
-
-  const handleDelete = async (candidateId) => {
+  const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this candidate?")) return;
-
     try {
-      const res = await fetch(`${API_BASE_URL}/candidates/${candidateId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (res.ok) {
-        setCandidates((prev) => prev.filter((c) => c._id !== candidateId));
-      } else {
-        const errorData = await res.json();
-        alert(errorData.message || "Failed to delete candidate.");
-      }
+      await axios.delete(`${API_BASE_URL}/candidates/${id}`);
+      fetchCandidates();
     } catch (err) {
-      console.error("❌ Deletion error:", err);
-      alert("Error deleting candidate.");
+      console.error("Failed to delete candidate:", err);
+      alert("Failed to delete candidate.");
     }
   };
 
   return (
-    <div className="manage-election-container">
-      <h2>Manage Election Candidates</h2>
+    <div className="manage-container">
+      <h2>Manage Candidates</h2>
 
-      <form className="candidate-form" onSubmit={handleSubmit}>
-        <h3>{editing ? "Edit Candidate" : "Add New Candidate"}</h3>
-
+      <form className="candidate-form" onSubmit={handleAddCandidate}>
         <input
+          type="text"
           name="name"
-          placeholder="Full Name"
+          placeholder="Candidate Name"
           value={newCandidate.name}
-          onChange={handleChange}
+          onChange={handleInputChange}
           required
         />
         <input
+          type="text"
           name="position"
           placeholder="Position"
           value={newCandidate.position}
-          onChange={handleChange}
+          onChange={handleInputChange}
         />
         <textarea
           name="bio"
-          placeholder="Biography"
+          placeholder="Candidate Bio"
           value={newCandidate.bio}
-          onChange={handleChange}
+          onChange={handleInputChange}
+          rows={4}
         />
-
-        <label>Candidate Image:</label>
-        <input type="file" accept="image/*" onChange={handleImageChange} />
-        {preview && (
-          <img src={preview} alt="Preview" className="image-preview" />
-        )}
-
-        <div className="form-actions">
-          <button type="submit" disabled={submitting}>
-            {submitting
-              ? editing
-                ? "Updating..."
-                : "Submitting..."
-              : editing
-              ? "Update Candidate"
-              : "Add Candidate"}
-          </button>
-          {editing && (
-            <button
-              type="button"
-              className="cancel-btn"
-              onClick={resetForm}
-              disabled={submitting}
-            >
-              Cancel Edit
-            </button>
-          )}
-        </div>
+        <input type="file" accept="image/*" onChange={handleFileChange} />
+        {preview && <img src={preview} alt="Preview" className="preview-image" />}
+        <button type="submit" disabled={submitting}>
+          {submitting ? "Submitting..." : "Add Candidate"}
+        </button>
       </form>
 
-      <div className="candidate-list">
-        <h3>Candidate List</h3>
-        {loading ? (
-          <p>Loading candidates...</p>
-        ) : candidates.length === 0 ? (
-          <p>No candidates added yet.</p>
-        ) : (
-          candidates.map((candidate) => (
-            <div className="candidate-card" key={candidate._id}>
+      {loading ? (
+        <p>Loading candidates...</p>
+      ) : candidates.length === 0 ? (
+        <p>No candidates added yet.</p>
+      ) : (
+        <div className="candidate-list">
+          {candidates.map((candidate) => (
+            <div key={candidate._id} className="candidate-card">
               <img
-  src={
-    candidate.image
-      ? `${API_BASE_URL}/${candidate.image}`.replace(/\\/g, "/")
-      : "/default-user.png"
-  }
-  alt={candidate.name}
-  className="candidate-img"
-/>
-
-              <div className="candidate-info">
-                <h4>{candidate.name}</h4>
-                <p>
-                  <strong>Position:</strong> {candidate.position}
-                </p>
-                <p>{candidate.bio}</p>
-                <div className="actions">
-                  <button onClick={() => handleEdit(candidate)}>Edit</button>
-                  <button
-                    className="danger"
-                    onClick={() => handleDelete(candidate._id)}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
+                src={
+                  candidate.image
+                    ? `${IMAGE_BASE_URL}/${candidate.image.split("/").pop()}`
+                    : "/default-user.png"
+                }
+                alt={candidate.name}
+              />
+              <h3>{candidate.name}</h3>
+              <p className="position">{candidate.position}</p>
+              <p className="bio">{candidate.bio}</p>
+              <button onClick={() => handleDelete(candidate._id)} className="delete-btn">
+                Delete
+              </button>
             </div>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
 
 export default ManageElection;
+
