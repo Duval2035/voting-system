@@ -139,14 +139,8 @@ const ManageElection = ({ electionId }) => {
         <div className="candidate-list">
           {candidates.map((candidate) => (
             <div key={candidate._id} className="candidate-card">
-              <img
-                src={
-                  candidate.image
-                    ? `${IMAGE_BASE_URL}/${candidate.image.split("/").pop()}`
-                    : "/default-user.png"
-                }
-                alt={candidate.name}
-              />
+              <img src={`https://voting-system-gs6m.onrender.com/uploads/candidates/${candidate.image}`} />
+
               <h3>{candidate.name}</h3>
               <p className="position">{candidate.position}</p>
               <p className="bio">{candidate.bio}</p>

@@ -32,11 +32,11 @@ const Login = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Failed to send OTP.");
+        throw new Error(data.message || "Failed to send Password.");
       }
 
       localStorage.setItem("otpEmail", email.trim().toLowerCase());
-      setMessage(data.message || "OTP sent successfully.");
+      setMessage(data.message || "Password sent successfully.");
       setStep(2);
     } catch (err) {
       setError(err.message || "Network error.");
@@ -67,7 +67,7 @@ const Login = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "OTP verification failed.");
+        throw new Error(data.message || "Password verification failed.");
       }
 
       if (data.token && data.user) {
@@ -108,7 +108,7 @@ const Login = () => {
           </>
         )}
 
-        <button type="submit">{step === 1 ? "Send OTP" : "Verify OTP"}</button>
+        <button type="submit">{step === 1 ? "Send Password" : "Verify Password"}</button>
       </form>
 
       {error && <p className="error-msg">{error}</p>}

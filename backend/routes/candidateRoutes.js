@@ -11,11 +11,9 @@ const {
   deleteCandidate,
 } = require("../controllers/candidateController");
 
-// Ensure upload directory exists
 const uploadPath = path.join(__dirname, "../uploads/candidates");
 fs.mkdirSync(uploadPath, { recursive: true });
 
-// Multer setup
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadPath),
   filename: (req, file, cb) => {
@@ -40,11 +38,10 @@ const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB
+    fileSize: 5 * 1024 * 1024,
   },
 });
 
-// Routes
 router.post("/", upload.single("image"), addCandidate);
 router.put("/:candidateId", upload.single("image"), updateCandidate);
 router.get("/election/:electionId", getCandidatesByElection);

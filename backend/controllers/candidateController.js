@@ -95,9 +95,7 @@ const updateCandidate = async (req, res) => {
 const getCandidatesByElection = async (req, res) => {
   try {
     const { electionId } = req.params;
-
     const candidates = await Candidate.find({ election: electionId });
-
     return res.status(200).json(candidates);
   } catch (error) {
     console.error("❌ Error fetching candidates:", error);

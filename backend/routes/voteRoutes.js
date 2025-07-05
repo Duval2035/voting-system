@@ -1,21 +1,28 @@
 const express = require("express");
 const router = express.Router();
-const { protectUser } = require("../middleware/authMiddleware");
-const voteController = require("../controllers/voteController");
+const { protectUser } = require("../middleware/authMiddleware"); // ✅ correct import
 
-// Get votes by election (placeholder)
-router.get("/election/:electionId", protectUser, voteController.getVotesByElection);
+const {
+  submitVote,
+  getResults,
+  getVoteLogs,
+  getVotesByElection,
+  exportVoteLogsCSV,
+} = require("../controllers/voteController");
 
-// Submit a vote (protected)
-router.post("/", protectUser, voteController.submitVote);
+// 🗳️ Submit a vote (authentication required)
+router.post("/", protectUser, submitVote); // ✅ FIXED
 
-// Get vote logs for an election (protected)
-router.get("/:electionId/logs", protectUser, voteController.getVoteLogs);
+// 📊 Get election results (public)
+router.get("/results/:electionId", getResults);
 
-// Export vote logs CSV (protected)
-router.get("/:electionId/export", protectUser, voteController.exportVoteLogsCSV);
+// 🧾 View audit logs (authentication required)
+router.get("/logs/:electionId", protectUser, getVoteLogs);
 
-// Get election results (public, no auth)
-router.get("/:electionId/results", voteController.getResults);
+// 📋 View all votes in an election (authentication required)
+router.get("/election/:electionId", protectUser, getVotesByElection);
+
+// 📤 Export CSV (authentication required, placeholder)
+router.get("/export/:electionId", protectUser, exportVoteLogsCSV);
 
 module.exports = router;

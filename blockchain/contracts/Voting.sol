@@ -52,7 +52,7 @@ contract Voting {
         require(!hasVoted[_electionId][msg.sender], "You already voted");
 
         Candidate storage candidate = candidates[_candidateId];
-        require(candidate.id != 0, "Candidate does not exist");
+        require(candidate.id > 0, "Candidate does not exist");
         require(
             keccak256(bytes(candidate.electionId)) == keccak256(bytes(_electionId)),
             "Candidate does not belong to this election"
@@ -64,21 +64,8 @@ contract Voting {
         emit Voted(msg.sender, _candidateId, _electionId);
     }
 
-    function getCandidatesCount(string memory _electionId) public view returns (uint) {
-        return electionToCandidateIds[_electionId].length;
-    }
-
-    function getCandidate(uint _id)
-        public view
-        returns (uint, string memory, string memory, uint)
-    {
-        Candidate memory c = candidates[_id];
-        return (c.id, c.name, c.electionId, c.voteCount);
-    }
-
     function getCandidatesByElection(string memory _electionId)
-        public view
-        returns (Candidate[] memory)
+        public view returns (Candidate[] memory)
     {
         uint[] memory ids = electionToCandidateIds[_electionId];
         Candidate[] memory result = new Candidate[](ids.length);
@@ -88,5 +75,12 @@ contract Voting {
         }
 
         return result;
+    }
+
+    function getCandidate(uint _id)
+        public view returns (uint, string memory, string memory, uint)
+    {
+        Candidate memory c = candidates[_id];
+        return (c.id, c.name, c.electionId, c.voteCount);
     }
 }

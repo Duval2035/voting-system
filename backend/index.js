@@ -5,6 +5,7 @@ const cors = require("cors");
 const path = require("path");
 require("dotenv").config();
 
+// Import Routes
 const voteRoutes = require("./routes/voteRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const voterRoutes = require("./routes/voterRoutes");
@@ -17,21 +18,22 @@ const voteLogRoutes = require("./routes/voteLogRoutes");
 const blockchainRoutes = require("./routes/blockchainRoutes");
 const blockchainResultsRoutes = require("./routes/blockchainResultsRoutes");
 
+// Controllers and blockchain
 const { getElectionResults } = require("./controllers/voteController");
 const { contract, wallet, provider } = require("./blockchain/contractService");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ✅ Define allowed frontend origins
+// ✅ CORS Configuration
 const allowedOrigins = [
   "http://localhost:5173",
+  "https://voting-system-gs6m.onrender.com",
   "https://voting-system-blue.vercel.app",
   "https://voting-system-duval2035s-projects.vercel.app",
   "https://voting-system-git-main-duval2035s-projects.vercel.app",
 ];
 
-// ✅ Enable CORS with dynamic origin checking
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin)) {
@@ -46,34 +48,29 @@ app.use(cors({
 
 app.use(express.json());
 
-// ✅ Serve candidate images statically at /uploads/candidates
-app.use("/uploads/candidates", (req, res, next) => {
-  const origin = req.headers.origin;
-  if (!origin || allowedOrigins.includes(origin)) {
-    res.header("Access-Control-Allow-Origin", origin || "*");
-  }
-  res.header("Access-Control-Allow-Credentials", "true");
-  next();
-}, express.static(path.join(__dirname, "uploads", "candidates")));
+// ✅ Static File Middleware (candidates + uploads)
+const serveStatic = (route, folder) => {
+  app.use(route, (req, res, next) => {
+    const origin = req.headers.origin;
+    if (!origin || allowedOrigins.includes(origin)) {
+      res.header("Access-Control-Allow-Origin", origin || "*");
+    }
+    res.header("Access-Control-Allow-Credentials", "true");
+    next();
+  }, express.static(path.join(__dirname, folder)));
+};
 
-// ✅ Serve all other uploaded files from /uploads
-app.use("/uploads/candidates", express.static(path.join(__dirname, "uploads/candidates")));
-app.use("/uploads", (req, res, next) => {
-  const origin = req.headers.origin;
-  if (!origin || allowedOrigins.includes(origin)) {
-    res.header("Access-Control-Allow-Origin", origin || "*");
-  }
-  res.header("Access-Control-Allow-Credentials", "true");
-  next();
-}, express.static(path.join(__dirname, "uploads")));
+serveStatic("/uploads/candidates", "uploads/candidates");
+serveStatic("/uploads", "uploads");
 
 // ✅ Setup API routes
 const setupRoutes = () => {
   app.use("/api/auth", authRoutes);
   app.use("/api/elections", electionRoutes);
   app.use("/api/admin", adminRoutes);
-  app.use("/api/candidates", candidateRoutes); // now separate from static
-  app.use("/api/votes", voteRoutes);
+  app.use("/api/candidates", candidateRoutes);
+  app.use("/api/votes", voteRoutes); // correct main route
+  app.use("/api/vote", voteRoutes);  // alias for safety
   app.use("/api/voters", voterRoutes);
   app.use("/api/auditor", auditorRoutes);
   app.use("/api/vote-logs", voteLogRoutes);
@@ -81,7 +78,7 @@ const setupRoutes = () => {
   app.use("/api/blockchain", blockchainRoutes);
   app.use("/api/blockchain-results", blockchainResultsRoutes);
 
-  // ✅ Election results endpoint
+  // Legacy route for results
   app.get("/votes/results/:electionId", async (req, res) => {
     try {
       await getElectionResults(req, res);
@@ -92,7 +89,7 @@ const setupRoutes = () => {
   });
 };
 
-// ✅ Connect MongoDB
+// ✅ Connect to MongoDB
 const connectMongo = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
@@ -103,30 +100,30 @@ const connectMongo = async () => {
   }
 };
 
-// ✅ Start Express server
+// ✅ Start server
 const startServer = async () => {
   await connectMongo();
 
   try {
     const walletAddress = wallet.address || (await wallet.getAddress());
-    console.log(`🧾 Backend wallet address: ${walletAddress}`);
+    console.log(`🧾 Wallet address: ${walletAddress}`);
 
     const signerAddress = await wallet.getAddress();
-    console.log(`🧾 Backend signer address: ${signerAddress}`);
+    console.log(`🔐 Signer address: ${signerAddress}`);
 
     const network = await provider.getNetwork();
-    console.log(`🔗 Connected to Ethereum network: ${network.name} (chainId: ${network.chainId})`);
+    console.log(`🔗 Ethereum network: ${network.name} (chainId: ${network.chainId})`);
   } catch (err) {
-    console.error("❌ Blockchain connection error:", err.message);
+    console.error("❌ Blockchain error:", err.message);
     process.exit(1);
   }
 
   setupRoutes();
 
   app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
   });
 };
 
-console.log("🔥 backend/server.js is running");
+console.log("🔥 backend/server.js starting...");
 startServer();
