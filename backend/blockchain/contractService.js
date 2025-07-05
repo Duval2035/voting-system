@@ -56,23 +56,25 @@ async function addCandidateToBlockchain(name, electionId) {
 }
 
 // IMPORTANT: voterPrivateKey MUST be provided by the caller securely
-async function voteOnBlockchain(candidateId, electionId, voterPrivateKey) {
-  if (!candidateId || !electionId || !voterPrivateKey) {
+async function voteOnBlockchain(candidateId, electionId, backendPrivateKey) {
+  if (!candidateId || !electionId || !backendPrivateKey) {
     throw new Error("Missing required vote parameters.");
   }
 
-  const tempWallet = new ethers.Wallet(voterPrivateKey, provider);
+  const tempWallet = new ethers.Wallet(backendPrivateKey, provider); // ✅ fixed
   const tempContract = new ethers.Contract(contractAddress, contractABI, tempWallet);
 
   try {
-    logger.info("Voting on blockchain with voter wallet %s", tempWallet.address);
-    const tx = await tempContract.vote(electionId, candidateId);
-    return tx; // Caller should await tx.wait()
+    logger.info("Voting on blockchain with wallet %s", tempWallet.address);
+    const tx = await tempContract.vote(Number(candidateId), String(electionId));
+    const receipt = await tx.wait(); // ✅ ensure transaction is mined
+    return receipt;
   } catch (err) {
     logger.error("Blockchain voting error: %s", err.message);
     throw err;
   }
 }
+
 
 module.exports = {
   provider,

@@ -15,36 +15,36 @@ const submitVote = async (req, res) => {
 
   if (!userId) {
     logger.warn("Unauthorized vote attempt");
-    return res.status(401).json({ message: "Unauthorized: User not authenticated" });
+    return res.status(401).json({ success: false, message: "Unauthorized: User not authenticated" });
   }
 
   if (!mongoose.Types.ObjectId.isValid(electionId) || !mongoose.Types.ObjectId.isValid(candidateId)) {
     logger.warn("Invalid election or candidate ID");
-    return res.status(400).json({ message: "Invalid election or candidate ID" });
+    return res.status(400).json({ success: false, message: "Invalid election or candidate ID" });
   }
 
   try {
     const candidate = await Candidate.findOne({ _id: candidateId, election: electionId });
     if (!candidate) {
       logger.warn("Candidate not found for election", { candidateId, electionId });
-      return res.status(404).json({ message: "Candidate not found in this election" });
+      return res.status(404).json({ success: false, message: "Candidate not found in this election" });
     }
 
     const existingVote = await Vote.findOne({ election: electionId, user: userId });
     if (existingVote) {
       logger.warn("User already voted", { userId, electionId });
-      return res.status(409).json({ message: "You have already voted in this election." });
+      return res.status(409).json({ success: false, message: "You have already voted in this election." });
     }
 
     if (typeof candidate.blockchainId !== "number") {
       logger.warn("Candidate blockchainId invalid or missing", { candidateId });
-      return res.status(400).json({ message: "Candidate has no valid blockchain ID" });
+      return res.status(400).json({ success: false, message: "Candidate has no valid blockchain ID" });
     }
 
-    const voterPrivateKey = req.user.privateKey;
-    if (!voterPrivateKey) {
-      logger.error("Voter private key missing for user %s", userId);
-      return res.status(400).json({ message: "Voter private key missing" });
+    const backendPrivateKey = process.env.BACKEND_PRIVATE_KEY;
+    if (!backendPrivateKey) {
+      logger.error("Backend private key not configured");
+      return res.status(500).json({ success: false, message: "Server misconfiguration: Backend private key missing" });
     }
 
     let receipt;
@@ -55,18 +55,17 @@ const submitVote = async (req, res) => {
         userId,
       });
 
-      // ✅ This returns the mined receipt
-      receipt = await voteOnBlockchain(candidate.blockchainId, electionId, voterPrivateKey);
+      receipt = await voteOnBlockchain(candidate.blockchainId, electionId, backendPrivateKey);
 
       if (receipt.status !== 1) {
         logger.error("Blockchain transaction reverted", { txHash: receipt.transactionHash });
-        return res.status(500).json({ message: "Blockchain transaction failed" });
+        return res.status(500).json({ success: false, message: "Blockchain transaction failed" });
       }
 
       logger.info("Vote mined on-chain", { txHash: receipt.transactionHash });
     } catch (bcErr) {
       logger.error("Blockchain vote failed: %s", bcErr.message);
-      return res.status(500).json({ message: "Blockchain vote failed", error: bcErr.message });
+      return res.status(500).json({ success: false, message: "Blockchain vote failed", error: bcErr.message });
     }
 
     const vote = new Vote({
@@ -98,14 +97,16 @@ const submitVote = async (req, res) => {
     });
 
     return res.status(200).json({
+      success: true,
       message: "✅ Vote successfully recorded!",
       txHash: receipt.transactionHash,
     });
   } catch (err) {
     logger.error("Error in submitVote: %s", err.message);
-    return res.status(500).json({ message: "Internal server error", error: err.message });
+    return res.status(500).json({ success: false, message: "Internal server error", error: err.message });
   }
 };
+
 // 📊 Get results for an election
 const getResults = async (req, res) => {
   const { electionId } = req.params;

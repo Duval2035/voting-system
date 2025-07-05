@@ -67,9 +67,12 @@ const VotePage = () => {
       });
 
       const result = await response.json();
-      if (!response.ok) throw new Error(result.message || "Your vote could not be submitted.");
+      if (!response.ok || result.success === false) {
+  throw new Error(result.message || "Your vote could not be submitted.");
+}
 
-      setMessage("✅ Your vote has been recorded and submitted to the blockchain.");
+setMessage(result.message || "✅ Your vote has been recorded successfully.");
+
     } catch (error) {
       setMessage(`❌ ${error.message}`);
     } finally {
